@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kynap - Plataforma Fitness Modular</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Hoja de estilos del Design System Kynap -->
+  <link rel="stylesheet" href="public/css/app.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- SIDEBAR / BARRA DE NAVEGACIÓN -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">K</div>
+        <div class="brand-name">Kynap <span>AI</span></div>
+      </div>
+
+      <ul class="nav-links">
+        <li>
+          <button class="nav-btn active" onclick="switchTab('routines', this)" id="nav-routines">
+            <span class="icon">📅</span>
+            <span>Rutina Semanal</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-btn" onclick="switchTab('workouts', this)" id="nav-workouts">
+            <span class="icon">⚡</span>
+            <span>Entrenar en Vivo</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-btn" onclick="switchTab('nutrition', this)" id="nav-nutrition">
+            <span class="icon">🥗</span>
+            <span>Nutrición & Macros</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-btn" onclick="switchTab('exercises', this)" id="nav-exercises">
+            <span class="icon">📚</span>
+            <span>Librería de Ejercicios</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="user-snippet">
+        <div class="user-avatar">SC</div>
+        <div class="user-meta">
+          <h4>Savier CaS</h4>
+          <p>Plan Pro Activo</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ÁREA DE CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      
+      <!-- HEADER CON RESUMEN Y RACHA -->
+      <header class="header-bar">
+        <div class="page-title">
+          <h1>Panel de Control</h1>
+          <p>Semana actual: Bloque de Fuerza e Hipertrofia</p>
+        </div>
+        <div class="streak-badge">
+          <span>🔥</span> Racha: 4 días activos
+        </div>
+      </header>
+
+      <!-- TAB 1: CORE 1 - RUTINA SEMANAL & CHECK-IN -->
+      <section id="view-routines" class="tab-view active">
+        <div class="routine-progress-card">
+          <div class="progress-header">
+            <h3>Cumplimiento Semanal</h3>
+            <span class="progress-pct" id="weeklyProgressPct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar-fill" id="weeklyProgressBar" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="days-grid" id="daysGrid">
+          <!-- Renderizado dinámicamente por app.js -->
+        </div>
+      </section>
+
+      <!-- TAB 2: CORE 2 - WORKOUT EN VIVO & SETS -->
+      <section id="view-workouts" class="tab-view">
+        <div class="live-workout-container">
+          
+          <div class="workout-logger-card">
+            <h2 style="font-family: var(--font-heading); margin-bottom: 16px;">Sesión en Curso</h2>
+            
+            <div class="exercise-selector-bar">
+              <select id="exerciseSelector" class="select-custom" onchange="AppState.activeWorkout.exerciseId = this.value; recalculateWorkoutMetrics();">
+                <!-- Opciones de ejercicios inyectadas por app.js -->
+              </select>
+              <button class="btn-checkin" style="width: auto; padding: 0 20px;" onclick="addSetRow()">+ Serie</button>
+            </div>
+
+            <div class="sets-table-wrapper">
+              <table class="sets-table">
+                <thead>
+                  <tr>
+                    <th>Serie</th>
+                    <th>Peso (kg)</th>
+                    <th>Reps</th>
+                    <th>RPE</th>
+                    <th>Estado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="setsTableBody">
+                  <!-- Filas de series renderizadas por app.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <button class="btn-checkin" style="background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));" onclick="finishWorkoutSession()">
+              Finalizar Sesión & Guardar
+            </button>
+          </div>
+
+          <!-- SIDEBAR DE MÉTRICAS Y TEMPORIZADOR -->
+          <div class="workout-stats-sidebar">
+            <div class="stat-box">
+              <h4>Volumen Total (Tonelaje)</h4>
+              <div class="stat-number" id="statTotalVolume">0 kg</div>
+            </div>
+
+            <div class="stat-box">
+              <h4>1RM Estimada (Epley)</h4>
+              <div class="stat-number amber" id="statMax1RM">0 kg</div>
+            </div>
+
+            <div class="rest-timer-box">
+              <h4 style="color: var(--accent-purple); font-size: 13px; text-transform: uppercase;">Descanso Entre Series</h4>
+              <div class="timer-digits" id="timerDigits">01:30</div>
+              <div class="timer-controls">
+                <button class="btn-checkin" style="background: var(--accent-purple); color: #fff; width: auto; padding: 6px 14px; font-size: 12px;" onclick="startRestTimer(90)">Iniciar 90s</button>
+                <button class="btn-checkin" style="background: rgba(255,255,255,0.08); color: #fff; width: auto; padding: 6px 12px; font-size: 12px;" onclick="addTimerSeconds(30)">+30s</button>
+                <button class="btn-checkin" style="background: rgba(255,71,87,0.15); color: var(--accent-rose); width: auto; padding: 6px 12px; font-size: 12px;" onclick="resetRestTimer()">Reset</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 3: CORE 3 - NUTRICIÓN & MACROS -->
+      <section id="view-nutrition" class="tab-view">
+        <div class="nutrition-grid">
+          
+          <div class="macro-summary-card">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <h2 style="font-family: var(--font-heading);">Balance Energético</h2>
+              <button class="btn-checkin" style="width: auto; padding: 6px 14px; font-size: 13px;" onclick="quickAddMeal()">+ Añadir Comida</button>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <span id="caloriesConsumed" style="font-family: var(--font-heading); font-size: 36px; font-weight: 800; color: var(--accent-emerald);">0 kcal</span>
+              <span id="caloriesTarget" style="color: var(--text-muted); font-size: 16px;">/ 2200 kcal</span>
+            </div>
+
+            <div class="macro-bars">
+              <div class="macro-bar-item">
+                <div class="macro-label-row">
+                  <span style="color: var(--accent-cyan);">Proteínas (4 kcal/g)</span>
+                  <span id="valProtein">0g / 150g</span>
+                </div>
+                <div class="macro-bar-track">
+                  <div class="macro-bar-fill fill-protein" id="barProtein" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="macro-bar-item">
+                <div class="macro-label-row">
+                  <span style="color: var(--accent-amber);">Carbohidratos (4 kcal/g)</span>
+                  <span id="valCarbs">0g / 230g</span>
+                </div>
+                <div class="macro-bar-track">
+                  <div class="macro-bar-fill fill-carbs" id="barCarbs" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="macro-bar-item">
+                <div class="macro-label-row">
+                  <span style="color: var(--accent-rose);">Grasas (9 kcal/g)</span>
+                  <span id="valFats">0g / 65g</span>
+                </div>
+                <div class="macro-bar-track">
+                  <div class="macro-bar-fill fill-fats" id="barFats" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div class="water-tracker-card">
+              <h3 style="font-family: var(--font-heading); font-size: 18px;">Hidratación Diaria</h3>
+              <div class="water-display" id="waterDisplay">1750 ml</div>
+              <p id="waterTarget" style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">Meta: 2500 ml</p>
+              <div class="water-actions">
+                <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(250)">+250 ml</button>
+                <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(500)">+500 ml</button>
+                <button class="btn-checkin" style="width: auto; padding: 8px 12px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);" onclick="adjustWater(-250)">-250 ml</button>
+              </div>
+            </div>
+
+            <div class="macro-summary-card">
+              <h3 style="font-family: var(--font-heading); font-size: 16px; margin-bottom: 12px;">Comidas Registradas Hoy</h3>
+              <ul id="recentMealsList" style="list-style: none;">
+                <!-- Lista de comidas renderizada por app.js -->
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 4: LIBRERÍA DE EJERCICIOS CON ASSETS REALES -->
+      <section id="view-exercises" class="tab-view">
+        <div class="filter-bar">
+          <input type="text" id="exerciseSearchInput" class="search-input" placeholder="Buscar ejercicio por nombre o músculo (ej. sentadillas, glúteo, abdomen)...">
+          
+          <div class="chip-filters">
+            <button class="chip active" onclick="filterExercisesByMuscle('all', this)">Todos</button>
+            <button class="chip" onclick="filterExercisesByMuscle('cuadriceps', this)">Cuádriceps</button>
+            <button class="chip" onclick="filterExercisesByMuscle('gluteos', this)">Glúteos</button>
+            <button class="chip" onclick="filterExercisesByMuscle('abdomen', this)">Abdomen</button>
+            <button class="chip" onclick="filterExercisesByMuscle('pecho', this)">Pecho</button>
+            <button class="chip" onclick="filterExercisesByMuscle('triceps', this)">Tríceps</button>
+            <button class="chip" onclick="filterExercisesByMuscle('cardio', this)">Cardio</button>
+          </div>
+        </div>
+
+        <div class="exercise-catalog-grid" id="exerciseCatalogGrid">
+          <!-- Tarjetas con GIFs reales renderizadas por app.js -->
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL DE DETALLE DEL EJERCICIO -->
+  <div class="modal-backdrop" id="exerciseModal" onclick="if(event.target === this) closeExerciseModal()">
+    <div class="modal-sheet">
+      <img src="" id="modalMedia" class="modal-media" alt="Demostración">
+      <div class="modal-body">
+        <span class="day-badge" id="modalCategory" style="background-color: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);"></span>
+        <h2 id="modalTitle" style="margin-top: 8px;"></h2>
+        <p id="modalInstructionText" class="modal-instructions"></p>
+        <button class="btn-checkin" onclick="closeExerciseModal()" style="background-color: var(--border-subtle); color: var(--text-primary);">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script principal de la aplicación -->
+  <script src="public/js/app.js"></script>
+</body>
+</html>

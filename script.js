@@ -88,17 +88,68 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
-let totalDays = document.querySelectorAll('.mark-done').length;
-let completedDays = 0;
-
-function toggleDone(button) {
+async function toggleDone(button, dayId) {
     if (button.disabled) return;
 
-    button.textContent = "✔ Hecho";
-    button.style.backgroundColor = "#999";
-    button.style.cursor = "default";
+    // Si no se pasa dayId explícito, obtenerlo del encabezado de la tarjeta
+    if (!dayId) {
+        const card = button.closest(".day-card");
+        dayId = card ? card.querySelector("h3")?.textContent.trim().toLowerCase() : "dia";
+    }
+
+    const originalText = button.textContent;
     button.disabled = true;
-    completedDays++;
-    const progress = Math.round((completedDays / totalDays) * 100);
-    document.getElementById("progressFill").style.width = progress + "%";
+    button.textContent = "Guardando...";
+
+    try {
+        const res = await fetch("controllers/guardar_progreso.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ day_id: dayId, status: "completed" })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            button.textContent = "✔ Hecho";
+            button.style.backgroundColor = "#999";
+            button.style.cursor = "default";
+            button.classList.add("completed");
+            const fill = document.getElementById("progressFill");
+            if (fill) fill.style.width = data.progressPercentage + "%";
+        } else {
+            throw new Error(data.message || "Error al guardar");
+        }
+    } catch (err) {
+        console.error(err);
+        button.disabled = false;
+        button.textContent = originalText;
+        alert("No se pudo guardar el progreso. Intenta de nuevo.");
+    }
 }
+
+// Cargar estado guardado al iniciar
+document.addEventListener("DOMContentLoaded", async function () {
+    const fill = document.getElementById("progressFill");
+    if (!fill) return;
+
+    try {
+        const res = await fetch("controllers/guardar_progreso.php");
+        const data = await res.json();
+        if (data.success && data.completedDays) {
+            fill.style.width = data.progressPercentage + "%";
+            document.querySelectorAll(".day-card").forEach(card => {
+                const day = card.querySelector("h3")?.textContent.trim().toLowerCase();
+                const btn = card.querySelector(".mark-done");
+                if (btn && data.completedDays.includes(day)) {
+                    btn.textContent = "✔ Hecho";
+                    btn.style.backgroundColor = "#999";
+                    btn.style.cursor = "default";
+                    btn.disabled = true;
+                    btn.classList.add("completed");
+                }
+            });
+        }
+    } catch (e) {
+        console.warn("No se pudo sincronizar el estado inicial de rutinas:", e);
+    }
+});
