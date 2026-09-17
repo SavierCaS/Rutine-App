@@ -1,37 +1,38 @@
--- db/migrations/003_routines.sql
+-- db/migrations/003_routines.sql (MySQL 8.0 / MariaDB)
 
-CREATE TABLE IF NOT EXISTS routines (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+CREATE TABLE IF NOT EXISTS `routines` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `name` VARCHAR(100) NOT NULL,
+  `description` TEXT DEFAULT NULL,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_routines_user_active` (`user_id`, `is_active`),
+  CONSTRAINT `fk_routines_account` FOREIGN KEY (`user_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX IF NOT EXISTS idx_routines_user_active ON routines(user_id, is_active);
+CREATE TABLE IF NOT EXISTS `routine_days` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `routine_id` INT NOT NULL,
+  `day_name` VARCHAR(50) NOT NULL,
+  `day_order` INT NOT NULL,
+  `is_rest_day` TINYINT(1) DEFAULT 0,
+  `suggested_time` TIME DEFAULT NULL,
+  INDEX `idx_routine_days_order` (`routine_id`, `day_order`),
+  CONSTRAINT `fk_routine_days_routine` FOREIGN KEY (`routine_id`) REFERENCES `routines` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS routine_days (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    routine_id UUID NOT NULL REFERENCES routines(id) ON DELETE CASCADE,
-    day_name VARCHAR(50) NOT NULL,        -- 'Lunes', 'Martes', 'Día 1 - Pierna'
-    day_order INT NOT NULL,               -- 1 al 7
-    is_rest_day BOOLEAN DEFAULT FALSE,
-    suggested_time TIME
-);
-
-CREATE INDEX IF NOT EXISTS idx_routine_days_routine ON routine_days(routine_id, day_order);
-
-CREATE TABLE IF NOT EXISTS routine_exercises (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    routine_day_id UUID NOT NULL REFERENCES routine_days(id) ON DELETE CASCADE,
-    exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
-    order_index INT NOT NULL,
-    target_sets INT NOT NULL DEFAULT 3,
-    target_reps VARCHAR(20) NOT NULL DEFAULT '10-12',
-    target_rpe NUMERIC(3,1),              -- Ej: 8.0
-    rest_seconds INT DEFAULT 90
-);
-
-CREATE INDEX IF NOT EXISTS idx_routine_exercises_day ON routine_exercises(routine_day_id, order_index);
+CREATE TABLE IF NOT EXISTS `routine_exercises` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `routine_day_id` INT NOT NULL,
+  `exercise_id` INT NOT NULL,
+  `order_index` INT NOT NULL,
+  `target_sets` INT NOT NULL DEFAULT 3,
+  `target_reps` VARCHAR(20) NOT NULL DEFAULT '10-12',
+  `target_rpe` DECIMAL(3,1) DEFAULT 8.0,
+  `rest_seconds` INT DEFAULT 90,
+  INDEX `idx_routine_exercises_day` (`routine_day_id`, `order_index`),
+  CONSTRAINT `fk_routine_exercises_day` FOREIGN KEY (`routine_day_id`) REFERENCES `routine_days` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_routine_exercises_exercise` FOREIGN KEY (`exercise_id`) REFERENCES `exercises` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

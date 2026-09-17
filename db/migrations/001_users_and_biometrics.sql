@@ -1,27 +1,27 @@
--- db/migrations/001_users_and_biometrics.sql
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- db/migrations/001_users_and_biometrics.sql (MySQL 8.0 / MariaDB)
 
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(150) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    avatar_url TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+CREATE TABLE IF NOT EXISTS `accounts` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nombre` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(100) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `imagen_user` VARCHAR(255) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_accounts_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS user_biometrics (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    weight_kg NUMERIC(5,2) NOT NULL,
-    height_cm NUMERIC(5,2) NOT NULL,
-    age INT,
-    gender VARCHAR(20),
-    activity_level VARCHAR(50) DEFAULT 'moderado', -- 'sedentario', 'ligero', 'moderado', 'muy_activo'
-    fitness_goal VARCHAR(50) DEFAULT 'ganar_musculo', -- 'perder_peso', 'ganar_musculo', 'mantenimiento'
-    water_target_ml INT DEFAULT 2500,
-    recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_user_biometrics_user ON user_biometrics(user_id, recorded_at DESC);
+CREATE TABLE IF NOT EXISTS `user_biometrics` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `weight_kg` DECIMAL(5,2) NOT NULL,
+  `height_cm` DECIMAL(5,2) NOT NULL,
+  `age` INT DEFAULT NULL,
+  `gender` VARCHAR(20) DEFAULT NULL,
+  `activity_level` VARCHAR(50) DEFAULT 'moderado',
+  `fitness_goal` VARCHAR(50) DEFAULT 'ganar_musculo',
+  `water_target_ml` INT DEFAULT 2500,
+  `recorded_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_biometrics_user_date` (`user_id`, `recorded_at` DESC),
+  CONSTRAINT `fk_biometrics_account` FOREIGN KEY (`user_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
