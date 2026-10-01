@@ -1,77 +1,787 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <title>Landing Pages - Kynap</title>
-        <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
-        <link href="css/styles.css" rel="stylesheet" />
-    </head>
-    <body id="page-top">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
-            <div class="container px-4">
-                <a class="navbar-brand" href="#page-top">Kynap AI</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-                <div class="collapse navbar-collapse" id="navbarResponsive">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" href="#about">Sobre Nosotros</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#services">Servicios</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#contact">Terminos y Condiciones</a></li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-        <header class="bg-primary bg-gradient text-white">
-            <div class="container px-4 text-center">
-                <h1 class="fw-bolder"> Somos Kynap</h1>
-                <p class="lead">El primer paso hacía una vida saludable</p>
-                <a class="btn btn-lg btn-light" href="http://localhost/kynap/bienvenida.php">Comenzar</a>
-            </div>
-        </header>
-        <section id="about">
-            <div class="container px-4">
-                <div class="row gx-4 justify-content-center">
-                    <div class="col-lg-8">
-                        <h2>Sobre Nosotros</h2>
-                        <p class="lead">En Kynap, creemos que el bienestar integral es la base de una vida plena. Por eso, nos dedicamos a ofrecer asistencia personalizada en hábitos saludables haciendo uso de tecnología de Inteligencia Artificial, con la finalidad de brindarle una buena calidad de vida, para ello se combina el uso de tecnología, ciencia y acompañamiento humano.</p>
-                        
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="bg-light" id="services">
-            <div class="container px-4">
-                <div class="row gx-4 justify-content-center">
-                    <div class="col-lg-8">
-                        <h2>Servicios</h2>
-                        <p class="lead">generación de hábitos saludables, Asesoramiento personalizado mediante IA, Educación nutricional gratuita, Accesibilidad y disponibilidad continua</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section id="contact">
-            <div class="container px-4">
-                <div class="row gx-4 justify-content-center">
-                    <div class="col-lg-8">
-                        <h2>Terminos y Condiciones</h2>
-                        <p class="lead">Al acceder y utilizar Kynap, aceptas los siguientes términos:
-                            <br></br>
-                                                                            1.	Uso adecuado: Te comprometes a utilizar el sitio de forma legal, respetuosa y sin perjudicar a otros usuarios.<br></br>
-                                                                            2.	Propósito del servicio: Brindamos consejos y herramientas de bienestar general. No sustituimos diagnósticos ni tratamientos médicos.<br></br>
-                                                                            3.	Propiedad intelectual: Todo el contenido de este sitio (textos, imágenes, herramientas) es propiedad de Kynap y no puede ser reutilizado sin permiso, a excepción de contenido específico y citado.<br></br>
-                                                                            4.	Limitación de responsabilidad: No nos hacemos responsables por el uso indebido de la información proporcionada ni por fallos técnicos del sistema.<br></br>
-                                                                            5.	Modificaciones: Nos reservamos el derecho de actualizar estos términos cuando sea necesario. Se notificará a los usuarios en caso de cambios importantes.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <footer class="py-5 bg-dark">
-            <div class="container px-4"><p class="m-0 text-center text-white">Copyright &copy; Your Website 2023</p></div>
-        </footer>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="js/scripts.js"></script>
-    </body>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="description" content="Kynap AI - Plataforma integral de fitness, seguimiento de rutinas, registro de series en vivo, nutrición de precisión y coaching inteligente.">
+  <title>Kynap AI - Plataforma de Rendimiento Fitness & Coaching</title>
+
+  <!-- Google Fonts: Outfit (Titulares de impacto) & Inter (Lectura limpia) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Hoja de estilos del Design System Kynap -->
+  <link rel="stylesheet" href="public/css/app.css">
+  <script src="public/js/theme.js"></script>
+
+  <style>
+    /* Estilos específicos de la Landing Page adaptados al Design System Kynap */
+    .landing-body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .landing-header {
+      position: sticky;
+      top: 0;
+      z-index: 500;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .landing-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .landing-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .landing-nav a:hover {
+      color: var(--text-primary);
+    }
+
+    .landing-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-landing-login {
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.04);
+      transition: var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .btn-landing-login:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-landing-cta {
+      background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
+      color: #000;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 9px 20px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 0 16px var(--accent-emerald-glow);
+      transition: var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .btn-landing-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 24px var(--accent-emerald-glow);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 80px 24px 60px;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      color: var(--accent-emerald);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      animation: pulseGlow 2.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 rgba(0, 255, 136, 0); }
+      50% { box-shadow: 0 0 18px rgba(0, 255, 136, 0.3); }
+    }
+
+    .hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      max-width: 680px;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Active Session Banner (Smart Redirect) */
+    .session-banner {
+      display: none;
+      background: rgba(0, 217, 255, 0.12);
+      border: 1px solid rgba(0, 217, 255, 0.3);
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      margin-bottom: 28px;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .session-banner a {
+      color: var(--accent-cyan);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Features Grid */
+    .features-section {
+      padding: 60px 24px 80px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-header h2 {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      transition: var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: var(--shadow-card);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .feature-title {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Auth Modal Tabs */
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 20px;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: var(--transition-fast);
+    }
+
+    .auth-tab-btn.active {
+      color: var(--accent-emerald);
+      border-bottom-color: var(--accent-emerald);
+    }
+
+    /* Footer */
+    .landing-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 32px 24px;
+      text-align: center;
+      margin-top: auto;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .landing-nav {
+        display: none;
+      }
+      .hero-section {
+        padding: 50px 16px 40px;
+      }
+    }
+  </style>
+</head>
+<body class="landing-body">
+
+  <!-- Contenedor de Notificaciones Toast -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- ====================================================================
+       ENCABEZADO DE NAVEGACIÓN PRINCIPAL
+       ==================================================================== -->
+  <header class="landing-header">
+    <div class="brand" style="border: none; padding: 0;">
+      <div class="brand-logo">K</div>
+      <div class="brand-name">Kynap <span>AI</span></div>
+    </div>
+
+    <nav class="landing-nav">
+      <a href="#caracteristicas">Características</a>
+      <a href="#modulos">Módulos</a>
+      <a href="app.html" onclick="navigateToDashboard(event)" id="navDashboardLink">Panel de Control</a>
+    </nav>
+
+    <div class="landing-actions">
+      <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema" style="margin-right: 2px;">🌙</button>
+      <button type="button" class="btn-landing-login" id="headerLoginBtn" onclick="openAuthModal('login', event)">Iniciar Sesión</button>
+      <button type="button" class="btn-landing-cta" id="headerRegisterBtn" onclick="openAuthModal('register', event)">Registrarse</button>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       BANNER DE REDIRECCIÓN INTELIGENTE (SI YA HAY SESIÓN)
+       ==================================================================== -->
+  <div class="hero-section" style="padding-bottom: 0;">
+    <div id="smartSessionBanner" class="session-banner">
+      <span>⚡</span>
+      <span id="sessionUserGreeting">Tienes una sesión iniciada.</span>
+      <a href="app.html" onclick="navigateToDashboard(event)" id="bannerDashboardLink">Ir a mi Panel de Control ➔</a>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       SECCIÓN HERO
+       ==================================================================== -->
+  <section class="hero-section">
+    <div class="hero-badge">
+      <span>✨</span> Plataforma Integral Fitness & Inteligencia Artificial
+    </div>
+
+    <h1 class="hero-title">
+      Entrena con Precisión.<br>
+      <span>Evoluciona tu Físico.</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Kynap integra seguimiento de fuerza en vivo, cálculo automático de 1RM (Epley), balance calórico con macronutrientes Atwater, hidratación y coaching inteligente en una experiencia SaaS de vanguardia.
+    </p>
+
+    <div class="hero-buttons">
+      <button type="button" class="btn-landing-cta" style="padding: 13px 28px; font-size: 16px; border: none;" onclick="openAuthModal('register', event)">
+        Comenzar Ahora Gratis
+      </button>
+      <button type="button" class="btn-landing-login" style="padding: 13px 24px; font-size: 16px;" onclick="openAuthModal('login', event)">
+        Acceder a mi Cuenta
+      </button>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       CARACTERÍSTICAS Y MÓDULOS DE ALTO RENDIMIENTO
+       ==================================================================== -->
+  <section class="features-section" id="caracteristicas">
+    <div class="section-header">
+      <h2>Diseñado para Resultados Reales</h2>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 15px;">
+        Una suite completa que unifica tu entrenamiento, nutrición y recuperación con sincronización en tiempo real.
+      </p>
+    </div>
+
+    <div class="features-grid" id="modulos">
+      <!-- Módulo 1 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="color: var(--accent-emerald);">📅</div>
+        <h3 class="feature-title">Rutinas & Adherencia</h3>
+        <p class="feature-desc">
+          Planificación semanal estructurada con tachado táctil de entrenamientos, cálculo automático de porcentaje de cumplimiento y seguimiento de racha activa.
+        </p>
+      </div>
+
+      <!-- Módulo 2 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="color: var(--accent-cyan);">⚡</div>
+        <h3 class="feature-title">Workout Logger en Vivo</h3>
+        <p class="feature-desc">
+          Registro instantáneo de series, peso (kg), repeticiones y RPE. Estimación en vivo de tu 1RM por la fórmula de Epley y cálculo acumulativo de tonelaje total.
+        </p>
+      </div>
+
+      <!-- Módulo 3 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="color: var(--accent-amber);">🥗</div>
+        <h3 class="feature-title">Nutrición & Macronutrientes</h3>
+        <p class="feature-desc">
+          Metas energéticas calculadas científicamente (Mifflin-St Jeor). Control de proteínas, carbohidratos, grasas y registro de hidratación con ajuste rápido.
+        </p>
+      </div>
+
+      <!-- Módulo 4 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="color: var(--accent-rose);">📚</div>
+        <h3 class="feature-title">Catálogo con GIFs Reales</h3>
+        <p class="feature-desc">
+          Librería de ejercicios categorizada por grupo muscular y equipamiento con demostraciones animadas e instrucciones técnicas paso a paso.
+        </p>
+      </div>
+
+      <!-- Módulo 5 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="color: var(--accent-purple);">🤖</div>
+        <h3 class="feature-title">Kynap Coach AI</h3>
+        <p class="feature-desc">
+          Asistente inteligente disponible 24/7 para resolver dudas sobre periodización, ajuste de calorías, suplementación y prevención del sobreentrenamiento.
+        </p>
+      </div>
+
+      <!-- Módulo 6 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="color: var(--accent-cyan);">🧘</div>
+        <h3 class="feature-title">Mente Sana & Respiración</h3>
+        <p class="feature-desc">
+          Esfera de respiración guiada interactiva con patrones Box 4-4-4, 4-7-8 y 2-2 para regular tu sistema nervioso y maximizar la recuperación.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       MODAL DE AUTENTICACIÓN INTEGRADO (LOGIN Y REGISTRO SIN DESCARGA)
+       ==================================================================== -->
+  <div class="modal-backdrop" id="authModal" onclick="if(event.target === this) closeAuthModal(event)">
+    <div class="modal-sheet" style="padding: 32px 28px; max-width: 520px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="brand" style="border: none; padding: 0;">
+          <div class="brand-logo" style="width: 32px; height: 32px; font-size: 18px;">K</div>
+          <div class="brand-name" style="font-size: 18px;">Kynap <span>AI</span></div>
+        </div>
+        <button class="btn-icon" onclick="closeAuthModal(event)" style="font-size: 16px;">✕</button>
+      </div>
+
+      <!-- Pestañas del Modal -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login', event)">Iniciar Sesión</button>
+        <button class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register', event)">Crear Cuenta</button>
+      </div>
+
+      <div id="authAlertBox" style="display: none; background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.35); color: var(--accent-rose); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 16px; line-height: 1.4;"></div>
+
+      <!-- Formulario 1: Iniciar Sesión -->
+      <form id="authLoginForm" action="#" method="POST" onsubmit="handleAuthLogin(event)" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group" style="margin: 0;">
+          <label for="modalLoginEmail">Correo Electrónico</label>
+          <input type="email" id="modalLoginEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label for="modalLoginPassword">Contraseña</label>
+          <input type="password" id="modalLoginPassword" class="input-custom" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
+          Ingresar al Panel ➔
+        </button>
+      </form>
+
+      <!-- Formulario 2: Crear Cuenta Completo -->
+      <form id="authRegisterForm" action="#" method="POST" onsubmit="handleAuthRegister(event)" style="display: none; flex-direction: column; gap: 12px;">
+        <div class="form-group" style="margin: 0;">
+          <label for="modalRegName">Nombre Completo *</label>
+          <input type="text" id="modalRegName" class="input-custom" placeholder="Ej: Savier Casiani" required autocomplete="name">
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label for="modalRegEmail">Correo Electrónico *</label>
+          <input type="email" id="modalRegEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group" style="margin: 0;">
+            <label for="modalRegPassword">Contraseña *</label>
+            <input type="password" id="modalRegPassword" class="input-custom" placeholder="Mín. 6 caracteres" required autocomplete="new-password" oninput="checkModalPasswordMatch()">
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label for="modalRegConfirm">Confirmar *</label>
+            <input type="password" id="modalRegConfirm" class="input-custom" placeholder="Repite contraseña" required autocomplete="new-password" oninput="checkModalPasswordMatch()">
+          </div>
+        </div>
+        <div id="modalMatchIndicator" style="display: none; font-size: 11px; margin-top: -6px;"></div>
+
+        <!-- Parámetros Biométricos Iniciales -->
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent-cyan); margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+          <span>⚡ Perfil Físico Inicial</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <div class="form-group" style="margin: 0;">
+            <label for="modalRegEdad" style="font-size: 11px;">Edad</label>
+            <input type="number" id="modalRegEdad" class="input-custom" value="25" min="12" max="100" required>
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label for="modalRegPeso" style="font-size: 11px;">Peso (kg)</label>
+            <input type="number" id="modalRegPeso" class="input-custom" value="70.0" step="0.5" min="30" max="300" required>
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label for="modalRegAltura" style="font-size: 11px;">Altura (cm)</label>
+            <input type="number" id="modalRegAltura" class="input-custom" value="175" min="100" max="250" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="form-group" style="margin: 0;">
+            <label for="modalRegSexo" style="font-size: 11px;">Sexo</label>
+            <select id="modalRegSexo" class="input-custom" style="padding: 8px 10px;">
+              <option value="masculino" selected>Masculino</option>
+              <option value="femenino">Femenino</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label for="modalRegObjetivo" style="font-size: 11px;">Objetivo</label>
+            <select id="modalRegObjetivo" class="input-custom" style="padding: 8px 10px;">
+              <option value="ganar_musculo" selected>Ganar Músculo</option>
+              <option value="perder_grasa">Perder Grasa</option>
+              <option value="mantener">Mantener</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 8px;">
+          Crear Cuenta y Entrar al Panel ➔
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       PIE DE PÁGINA
+       ==================================================================== -->
+  <footer class="landing-footer">
+    <p>© 2026 Kynap Fitness AI. Todos los derechos reservados.</p>
+    <div style="margin-top: 8px; display: flex; gap: 16px; justify-content: center;">
+      <a href="login.html" onclick="openAuthModal('login', event)" style="color: var(--text-muted); cursor: pointer;">Iniciar Sesión</a>
+      <a href="registro.html" onclick="openAuthModal('register', event)" style="color: var(--text-muted); cursor: pointer;">Crear Cuenta</a>
+      <a href="app.html" onclick="navigateToDashboard(event)" style="color: var(--text-muted); cursor: pointer;">Panel de Control</a>
+    </div>
+  </footer>
+
+  <!-- LÓGICA DE CONTROLADORES & NAVEGACIÓN RESILIENTE -->
+  <script>
+    function getDashboardUrl() {
+      return 'app.html';
+    }
+
+    function navigateToDashboard(e) {
+      if (e) e.preventDefault();
+      const token = localStorage.getItem('kynap_auth_token');
+      if (!token || token === 'local_demo_token') {
+        openAuthModal('login');
+        showAuthAlert('Debes iniciar sesión con una cuenta válida para ingresar al panel.');
+        return;
+      }
+      window.location.href = getDashboardUrl();
+    }
+
+    function openAuthModal(tab = 'login', e) {
+      if (e) e.preventDefault();
+      const modal = document.getElementById('authModal');
+      if (modal) {
+        modal.classList.add('open');
+        switchAuthTab(tab);
+      }
+    }
+
+    function closeAuthModal(e) {
+      if (e) e.preventDefault();
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.remove('open');
+      hideAuthAlert();
+    }
+
+    function switchAuthTab(tab = 'login', e) {
+      if (e) e.preventDefault();
+      const btnLog = document.getElementById('tabBtnLogin');
+      const btnReg = document.getElementById('tabBtnRegister');
+      const formLog = document.getElementById('authLoginForm');
+      const formReg = document.getElementById('authRegisterForm');
+
+      hideAuthAlert();
+
+      if (tab === 'login') {
+        btnLog.classList.add('active');
+        btnReg.classList.remove('active');
+        formLog.style.display = 'flex';
+        formReg.style.display = 'none';
+      } else {
+        btnReg.classList.add('active');
+        btnLog.classList.remove('active');
+        formReg.style.display = 'flex';
+        formLog.style.display = 'none';
+      }
+    }
+
+    function showAuthAlert(msg, actionHtml = '') {
+      const box = document.getElementById('authAlertBox');
+      if (box) {
+        box.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start;"><span>⚠</span><div>${msg}</div></div>${actionHtml}`;
+        box.style.display = 'block';
+      }
+    }
+
+    function hideAuthAlert() {
+      const box = document.getElementById('authAlertBox');
+      if (box) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+      }
+    }
+
+    function checkModalPasswordMatch() {
+      const p1 = document.getElementById('modalRegPassword').value;
+      const p2 = document.getElementById('modalRegConfirm').value;
+      const ind = document.getElementById('modalMatchIndicator');
+      if (!p2) {
+        ind.style.display = 'none';
+        return;
+      }
+      ind.style.display = 'block';
+      if (p1 === p2) {
+        ind.textContent = '✓ Las contraseñas coinciden';
+        ind.style.color = 'var(--accent-emerald)';
+      } else {
+        ind.textContent = '✕ Las contraseñas no coinciden';
+        ind.style.color = 'var(--accent-rose)';
+      }
+    }
+
+    /**
+     * Procesamiento de Login con validación estricta de base de datos
+     */
+    async function handleAuthLogin(e) {
+      if (e) e.preventDefault();
+      hideAuthAlert();
+
+      const email = document.getElementById('modalLoginEmail').value.trim();
+      const password = document.getElementById('modalLoginPassword').value;
+
+      if (!email || !password) {
+        showAuthAlert('Por favor completa todos los campos.');
+        return;
+      }
+
+      try {
+        const res = await fetch('controllers/api_auth.php?action=login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (data.success && data.data?.token) {
+          localStorage.setItem('kynap_auth_token', data.data.token);
+          window.location.href = getDashboardUrl();
+          return;
+        } else {
+          // Bloqueo estricto si no existe o clave errónea
+          let promptBtn = '';
+          if (data.data?.suggest_register || res.status === 404) {
+            promptBtn = `<button type="button" class="btn-checkin" style="background:var(--accent-emerald);color:#000;font-weight:700;margin-top:10px;padding:8px 12px;font-size:13px;" onclick="switchAuthTab('register'); document.getElementById('modalRegEmail').value = '${email}';">Crear Cuenta Ahora ➔</button>`;
+          }
+          showAuthAlert(data.message || 'Credenciales incorrectas o usuario no registrado.', promptBtn);
+        }
+      } catch (err) {
+        showAuthAlert('Error al conectar con el servidor de autenticación. Verifica tu conexión.');
+      }
+    }
+
+    /**
+     * Procesamiento de Registro con biometría completa y cálculo de macros
+     */
+    async function handleAuthRegister(e) {
+      if (e) e.preventDefault();
+      hideAuthAlert();
+
+      const nombre = document.getElementById('modalRegName').value.trim();
+      const email = document.getElementById('modalRegEmail').value.trim();
+      const password = document.getElementById('modalRegPassword').value;
+      const confirm = document.getElementById('modalRegConfirm').value;
+
+      const edad = parseInt(document.getElementById('modalRegEdad').value, 10);
+      const peso = parseFloat(document.getElementById('modalRegPeso').value);
+      const altura = parseFloat(document.getElementById('modalRegAltura').value);
+      const sexo = document.getElementById('modalRegSexo').value;
+      const objetivo = document.getElementById('modalRegObjetivo').value;
+
+      if (!nombre || !email || !password) {
+        showAuthAlert('Por favor completa todos los campos requeridos.');
+        return;
+      }
+
+      if (password.length < 6) {
+        showAuthAlert('La contraseña debe tener al menos 6 caracteres.');
+        return;
+      }
+
+      if (password !== confirm) {
+        showAuthAlert('Las contraseñas no coinciden. Por favor verifícalas.');
+        return;
+      }
+
+      try {
+        const res = await fetch('controllers/api_auth.php?action=register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre,
+            email,
+            password,
+            confirm_password: confirm,
+            edad,
+            peso,
+            altura,
+            sexo,
+            objetivo,
+            nivel_actividad: 'moderado'
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && data.data?.token) {
+          localStorage.setItem('kynap_auth_token', data.data.token);
+          window.location.href = getDashboardUrl();
+          return;
+        } else {
+          showAuthAlert(data.message || 'Error al registrar la cuenta.');
+        }
+      } catch (err) {
+        showAuthAlert('Error al conectar con el servidor para registrar la cuenta.');
+      }
+    }
+
+    // Comprobación de sesión o redirecciones protegidas
+    document.addEventListener('DOMContentLoaded', () => {
+      const banner = document.getElementById('smartSessionBanner');
+      const token = localStorage.getItem('kynap_auth_token');
+
+      // 1. Mensaje de protección si venimos expulsados de app.html
+      const authError = sessionStorage.getItem('kynap_auth_message');
+      if (authError) {
+        sessionStorage.removeItem('kynap_auth_message');
+        openAuthModal('login');
+        showAuthAlert(authError);
+      } else {
+        // 2. Comprobar parámetros de URL ?auth=login o ?auth=register
+        const urlParams = new URLSearchParams(window.location.search);
+        const authAction = urlParams.get('auth');
+        if (authAction === 'login' || authAction === 'register') {
+          openAuthModal(authAction);
+        }
+      }
+
+      // 3. Verificación de sesión legítima en background
+      if (token && token !== 'local_demo_token') {
+        fetch('controllers/api_auth.php?action=verify', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then(r => r.json())
+          .then(res => {
+            if (res.success && res.data?.authenticated) {
+              if (banner) {
+                document.getElementById('sessionUserGreeting').textContent = `¡Hola de nuevo, ${res.data.user.nombre || 'Atleta'}!`;
+                banner.style.display = 'flex';
+              }
+            } else {
+              localStorage.removeItem('kynap_auth_token');
+              if (banner) banner.style.display = 'none';
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  </script>
+</body>
 </html>

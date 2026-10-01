@@ -2,16 +2,34 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kynap - Plataforma Fitness Modular</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Kynap - Plataforma Fitness Modular & App Bridge</title>
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   <!-- Hoja de estilos del Design System Kynap -->
   <link rel="stylesheet" href="public/css/app.css">
+  <script src="public/js/theme.js"></script>
+
+  <!-- PROTECCIÓN ESTRICTA DE RUTA (SESSION & BEARER TOKEN GUARD) -->
+  <script>
+    (function() {
+      const token = localStorage.getItem('kynap_auth_token');
+      if (!token || token === 'local_demo_token') {
+        sessionStorage.setItem('kynap_auth_message', 'Acceso denegado: Debes iniciar sesión con una cuenta válida para ingresar a la plataforma.');
+        window.location.replace('index.html?auth=login');
+      }
+    })();
+  </script>
 </head>
 <body>
+
+  <!-- Contenedor de Notificaciones Toast -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <div class="app-container">
     
@@ -47,12 +65,42 @@
             <span>Librería de Ejercicios</span>
           </button>
         </li>
+        <li style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+          <button class="nav-btn" onclick="openBreathingModal()" id="nav-breathing">
+            <span class="icon">🧘</span>
+            <span>Mente Sana</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-btn" onclick="toggleAICoach()" id="nav-aicoach">
+            <span class="icon">🤖</span>
+            <span>Coach AI</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-btn" onclick="toggleTheme()" id="nav-theme">
+            <span class="icon">🌓</span>
+            <span>Modo Oscuro / Claro</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-btn" onclick="openConfigModal()" id="nav-config">
+            <span class="icon">⚙️</span>
+            <span>Configuración</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-btn" onclick="handleLogout(event)" style="color: var(--accent-rose);" id="nav-logout">
+            <span class="icon">🚪</span>
+            <span>Cerrar Sesión</span>
+          </button>
+        </li>
       </ul>
 
-      <div class="user-snippet">
-        <div class="user-avatar">SC</div>
+      <div class="user-snippet" onclick="openConfigModal()" style="cursor: pointer;" title="Configurar Perfil">
+        <div class="user-avatar" id="sidebarAvatar">SC</div>
         <div class="user-meta">
-          <h4>Savier CaS</h4>
+          <h4 id="sidebarUserName">Savier CaS</h4>
           <p>Plan Pro Activo</p>
         </div>
       </div>
@@ -64,11 +112,26 @@
       <!-- HEADER CON RESUMEN Y RACHA -->
       <header class="header-bar">
         <div class="page-title">
-          <h1>Panel de Control</h1>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+            <h1>Panel de Control</h1>
+            <div id="onlineStatusPill" class="status-pill online">
+              <span class="status-dot"></span>
+              <span>Sincronizado</span>
+            </div>
+          </div>
           <p>Semana actual: Bloque de Fuerza e Hipertrofia</p>
         </div>
-        <div class="streak-badge">
-          <span>🔥</span> Racha: 4 días activos
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
+          <div class="streak-badge">
+            <span>🔥</span> <span id="streakCounter">4 días activos</span>
+          </div>
+          <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);" onclick="openBreathingModal()">
+            🧘 Respiración
+          </button>
+          <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700;" onclick="toggleAICoach()">
+            🤖 Coach AI
+          </button>
         </div>
       </header>
 
@@ -76,7 +139,10 @@
       <section id="view-routines" class="tab-view active">
         <div class="routine-progress-card">
           <div class="progress-header">
-            <h3>Cumplimiento Semanal</h3>
+            <div>
+              <h3>Cumplimiento Semanal</h3>
+              <p style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">4 entrenamientos programados para esta semana</p>
+            </div>
             <span class="progress-pct" id="weeklyProgressPct">0%</span>
           </div>
           <div class="progress-track">
@@ -94,10 +160,13 @@
         <div class="live-workout-container">
           
           <div class="workout-logger-card">
-            <h2 style="font-family: var(--font-heading); margin-bottom: 16px;">Sesión en Curso</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 style="font-family: var(--font-heading);">Sesión en Curso</h2>
+              <span class="day-badge" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">En Progreso</span>
+            </div>
             
             <div class="exercise-selector-bar">
-              <select id="exerciseSelector" class="select-custom" onchange="AppState.activeWorkout.exerciseId = this.value; recalculateWorkoutMetrics();">
+              <select id="exerciseSelector" class="select-custom" onchange="AppState.activeWorkout.exerciseId = this.value; recalculateWorkoutMetrics();" aria-label="Seleccionar ejercicio">
                 <!-- Opciones de ejercicios inyectadas por app.js -->
               </select>
               <button class="btn-checkin" style="width: auto; padding: 0 20px;" onclick="addSetRow()">+ Serie</button>
@@ -121,8 +190,8 @@
               </table>
             </div>
 
-            <button class="btn-checkin" style="background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));" onclick="finishWorkoutSession()">
-              Finalizar Sesión & Guardar
+            <button class="btn-checkin" style="background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 18px;" onclick="finishWorkoutSession()">
+              Finalizar Sesión & Guardar Tonelaje
             </button>
           </div>
 
@@ -131,15 +200,17 @@
             <div class="stat-box">
               <h4>Volumen Total (Tonelaje)</h4>
               <div class="stat-number" id="statTotalVolume">0 kg</div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Sumatoria de Peso × Reps completadas</p>
             </div>
 
             <div class="stat-box">
               <h4>1RM Estimada (Epley)</h4>
               <div class="stat-number amber" id="statMax1RM">0 kg</div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Fuerza máxima calculada para el ejercicio</p>
             </div>
 
             <div class="rest-timer-box">
-              <h4 style="color: var(--accent-purple); font-size: 13px; text-transform: uppercase;">Descanso Entre Series</h4>
+              <h4 style="color: var(--accent-purple); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Descanso Entre Series</h4>
               <div class="timer-digits" id="timerDigits">01:30</div>
               <div class="timer-controls">
                 <button class="btn-checkin" style="background: var(--accent-purple); color: #fff; width: auto; padding: 6px 14px; font-size: 12px;" onclick="startRestTimer(90)">Iniciar 90s</button>
@@ -159,18 +230,18 @@
           <div class="macro-summary-card">
             <div style="display: flex; justify-content: space-between; align-items: baseline;">
               <h2 style="font-family: var(--font-heading);">Balance Energético</h2>
-              <button class="btn-checkin" style="width: auto; padding: 6px 14px; font-size: 13px;" onclick="quickAddMeal()">+ Añadir Comida</button>
+              <button class="btn-checkin" style="width: auto; padding: 8px 16px; font-size: 13px;" onclick="openAddMealModal()">+ Añadir Comida</button>
             </div>
 
             <div style="margin-top: 16px;">
-              <span id="caloriesConsumed" style="font-family: var(--font-heading); font-size: 36px; font-weight: 800; color: var(--accent-emerald);">0 kcal</span>
+              <span id="caloriesConsumed" style="font-family: var(--font-heading); font-size: 38px; font-weight: 800; color: var(--accent-emerald);">0 kcal</span>
               <span id="caloriesTarget" style="color: var(--text-muted); font-size: 16px;">/ 2200 kcal</span>
             </div>
 
             <div class="macro-bars">
               <div class="macro-bar-item">
                 <div class="macro-label-row">
-                  <span style="color: var(--accent-cyan);">Proteínas (4 kcal/g)</span>
+                  <span style="color: var(--accent-cyan); font-weight: 600;">Proteínas (4 kcal/g)</span>
                   <span id="valProtein">0g / 150g</span>
                 </div>
                 <div class="macro-bar-track">
@@ -180,7 +251,7 @@
 
               <div class="macro-bar-item">
                 <div class="macro-label-row">
-                  <span style="color: var(--accent-amber);">Carbohidratos (4 kcal/g)</span>
+                  <span style="color: var(--accent-amber); font-weight: 600;">Carbohidratos (4 kcal/g)</span>
                   <span id="valCarbs">0g / 230g</span>
                 </div>
                 <div class="macro-bar-track">
@@ -190,7 +261,7 @@
 
               <div class="macro-bar-item">
                 <div class="macro-label-row">
-                  <span style="color: var(--accent-rose);">Grasas (9 kcal/g)</span>
+                  <span style="color: var(--accent-rose); font-weight: 600;">Grasas (9 kcal/g)</span>
                   <span id="valFats">0g / 65g</span>
                 </div>
                 <div class="macro-bar-track">
@@ -202,7 +273,7 @@
 
           <div style="display: flex; flex-direction: column; gap: 24px;">
             <div class="water-tracker-card">
-              <h3 style="font-family: var(--font-heading); font-size: 18px;">Hidratación Diaria</h3>
+              <h3 style="font-family: var(--font-heading); font-size: 18px;">Hidratación Diaria 💧</h3>
               <div class="water-display" id="waterDisplay">1750 ml</div>
               <p id="waterTarget" style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">Meta: 2500 ml</p>
               <div class="water-actions">
@@ -226,7 +297,7 @@
       <!-- TAB 4: LIBRERÍA DE EJERCICIOS CON ASSETS REALES -->
       <section id="view-exercises" class="tab-view">
         <div class="filter-bar">
-          <input type="text" id="exerciseSearchInput" class="search-input" placeholder="Buscar ejercicio por nombre o músculo (ej. sentadillas, glúteo, abdomen)...">
+          <input type="text" id="exerciseSearchInput" class="search-input" placeholder="Buscar ejercicio por nombre o músculo (ej. sentadillas, glúteo, abdomen)..." aria-label="Buscar ejercicio">
           
           <div class="chip-filters">
             <button class="chip active" onclick="filterExercisesByMuscle('all', this)">Todos</button>
@@ -247,7 +318,97 @@
     </main>
   </div>
 
-  <!-- MODAL DE DETALLE DEL EJERCICIO -->
+  <!-- NAVEGACIÓN INFERIOR PARA MÓVILES -->
+  <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
+    <button class="mobile-nav-item active" id="mobile-nav-routines" onclick="switchTab('routines')">
+      <span class="icon">📅</span>
+      <span>Rutina</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-workouts" onclick="switchTab('workouts')">
+      <span class="icon">⚡</span>
+      <span>Entrenar</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-nutrition" onclick="switchTab('nutrition')">
+      <span class="icon">🥗</span>
+      <span>Nutrición</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-exercises" onclick="switchTab('exercises')">
+      <span class="icon">📚</span>
+      <span>Ejercicios</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-coach" onclick="toggleAICoach()">
+      <span class="icon">🤖</span>
+      <span>Coach AI</span>
+    </button>
+  </nav>
+
+  <!-- BOTÓN FLOTANTE Y DRAWER DE KYNAP AI COACH -->
+  <button class="floating-ai-btn" onclick="toggleAICoach()" aria-label="Abrir asistente inteligente Kynap AI">
+    🤖
+  </button>
+
+  <aside class="chat-drawer" id="aiCoachDrawer" aria-label="Chat con Asistente Kynap AI">
+    <div class="chat-drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">🤖</span>
+        <strong style="font-family: var(--font-heading); font-size: 15px;">Kynap Coach AI</strong>
+      </div>
+      <button class="btn-icon" onclick="toggleAICoach()" style="font-size: 16px;">✕</button>
+    </div>
+    <div class="chat-drawer-messages" id="aiCoachMessages">
+      <div class="chat-bubble bot">
+        ¡Hola atleta! Soy tu coach personal Kynap AI. ¿En qué te puedo asesorar hoy para llevar tu entrenamiento al siguiente nivel?
+      </div>
+    </div>
+    <div class="chat-drawer-input">
+      <input type="text" id="aiCoachInput" class="input-custom" placeholder="Escribe tu consulta fitness..." style="flex-grow: 1;">
+      <button class="btn-checkin" style="width: auto; padding: 0 16px;" onclick="sendAICoachMessage()">Enviar</button>
+    </div>
+  </aside>
+
+  <!-- MODAL 1: AÑADIR COMIDA CON MACROS -->
+  <div class="modal-backdrop" id="addMealModal" onclick="if(event.target === this) closeAddMealModal()">
+    <div class="modal-sheet" style="padding: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-family: var(--font-heading); font-size: 20px;">Registrar Alimento</h2>
+        <button class="btn-icon" onclick="closeAddMealModal()">✕</button>
+      </div>
+      <form id="addMealForm" action="#" method="POST" onsubmit="submitAddMealForm(event)">
+        <div class="form-group">
+          <label for="mealNameInput">Nombre de la Comida / Plato</label>
+          <input type="text" id="mealNameInput" class="input-custom" placeholder="Ej: Pollo con batata y ensalada" required>
+        </div>
+        <div class="form-group">
+          <label for="mealTypeInput">Momento del Día</label>
+          <select id="mealTypeInput" class="input-custom">
+            <option value="Desayuno">Desayuno</option>
+            <option value="Almuerzo" selected>Almuerzo</option>
+            <option value="Cena">Cena</option>
+            <option value="Snack">Snack / Post-Entreno</option>
+          </select>
+        </div>
+        <div class="macro-inputs-grid">
+          <div class="form-group">
+            <label for="mealProteinInput" style="color: var(--accent-cyan);">Proteínas (g)</label>
+            <input type="number" id="mealProteinInput" class="input-custom" placeholder="0" min="0" step="0.5" required>
+          </div>
+          <div class="form-group">
+            <label for="mealCarbsInput" style="color: var(--accent-amber);">Carbos (g)</label>
+            <input type="number" id="mealCarbsInput" class="input-custom" placeholder="0" min="0" step="0.5" required>
+          </div>
+          <div class="form-group">
+            <label for="mealFatsInput" style="color: var(--accent-rose);">Grasas (g)</label>
+            <input type="number" id="mealFatsInput" class="input-custom" placeholder="0" min="0" step="0.5" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 10px;">
+          Guardar Comida
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: DETALLE DEL EJERCICIO -->
   <div class="modal-backdrop" id="exerciseModal" onclick="if(event.target === this) closeExerciseModal()">
     <div class="modal-sheet">
       <img src="" id="modalMedia" class="modal-media" alt="Demostración">
@@ -255,10 +416,91 @@
         <span class="day-badge" id="modalCategory" style="background-color: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);"></span>
         <h2 id="modalTitle" style="margin-top: 8px;"></h2>
         <p id="modalInstructionText" class="modal-instructions"></p>
-        <button class="btn-checkin" onclick="closeExerciseModal()" style="background-color: var(--border-subtle); color: var(--text-primary);">
+        <button class="btn-checkin" onclick="closeExerciseModal()" style="background-color: var(--border-subtle); color: var(--text-primary); margin-top: 12px;">
           Cerrar
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: MENTE SANA & RESPIRACIÓN GUIADA -->
+  <div class="modal-backdrop" id="breathingModal" onclick="if(event.target === this) closeBreathingModal()">
+    <div class="modal-sheet" style="padding: 24px; text-align: center;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="font-family: var(--font-heading); font-size: 20px;">🧘 Mente Sana: Respiración Guiada</h2>
+        <button class="btn-icon" onclick="closeBreathingModal()">✕</button>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+        Reduce el estrés pre o post-entreno sincronizando el ritmo de tu respiración.
+      </p>
+
+      <div class="breathing-sphere-container">
+        <div class="breathing-sphere" id="breathingSphere" onclick="toggleBreathingExercise()">
+          <span class="breathing-text" id="breathingSphereText">Iniciar</span>
+        </div>
+      </div>
+
+      <div style="margin: 20px 0;">
+        <label for="breathingPresetSelect" style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Patrón de Respiración:</label>
+        <select id="breathingPresetSelect" class="input-custom" style="width: 100%; margin-top: 6px;">
+          <option value="4-4-4" selected>4-4-4 Box Breathing (Equilibrio Mental)</option>
+          <option value="4-7-8">4-7-8 Respiración Profunda (Sueño y Calma)</option>
+          <option value="2-2">2-2 Respiración Energizante (Pre-Entreno)</option>
+          <option value="5-5">5-5 Coherencia Cardíaca (Relajación)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button class="btn-checkin" id="breathingToggleBtn" style="background: var(--accent-cyan); color: #000; width: auto; padding: 10px 24px; font-weight: 700;" onclick="toggleBreathingExercise()">
+          Comenzar
+        </button>
+        <button class="btn-checkin" style="background: var(--border-subtle); color: var(--text-primary); width: auto; padding: 10px 20px;" onclick="closeBreathingModal()">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: CONFIGURACIÓN DE PERFIL & BIOMETRÍA -->
+  <div class="modal-backdrop" id="configModal" onclick="if(event.target === this) closeConfigModal()">
+    <div class="modal-sheet" style="padding: 24px; max-width: 480px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-family: var(--font-heading); font-size: 20px;">⚙️ Configuración del Atleta</h2>
+        <button class="btn-icon" onclick="closeConfigModal()">✕</button>
+      </div>
+      <form id="profileConfigForm" action="#" method="POST" onsubmit="handleProfileUpdate(event)" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group" style="margin: 0;">
+          <label for="cfgNombre">Nombre Completo</label>
+          <input type="text" id="cfgNombre" class="input-custom" required autocomplete="name">
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label for="cfgEmail">Correo Electrónico</label>
+          <input type="email" id="cfgEmail" class="input-custom" required autocomplete="email">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group" style="margin: 0;">
+            <label for="cfgPeso">Peso Actual (kg)</label>
+            <input type="number" id="cfgPeso" class="input-custom" step="0.5" min="30" max="300" required>
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label for="cfgAltura">Altura (cm)</label>
+            <input type="number" id="cfgAltura" class="input-custom" min="100" max="250" required>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group" style="margin: 0;">
+            <label for="cfgEdad">Edad (Años)</label>
+            <input type="number" id="cfgEdad" class="input-custom" min="12" max="100" required>
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label for="cfgAgua">Meta de Agua (L)</label>
+            <input type="number" id="cfgAgua" class="input-custom" step="0.5" min="1" max="10" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 8px;">
+          Guardar Configuración
+        </button>
+      </form>
     </div>
   </div>
 

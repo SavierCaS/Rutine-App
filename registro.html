@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <title>Crear Cuenta - Kynap AI</title>
+
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Hoja de estilos del Design System Kynap -->
+  <link rel="stylesheet" href="public/css/app.css">
+  <script src="public/js/theme.js"></script>
+
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      background-color: var(--bg-primary);
+      position: relative;
+    }
+
+    .theme-top-bar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: var(--shadow-card);
+      animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .auth-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .auth-brand .brand-logo {
+      width: 48px;
+      height: 48px;
+      font-size: 26px;
+    }
+
+    .auth-brand h1 {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .auth-brand p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: -6px;
+    }
+
+    .section-title-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+    }
+    .section-title-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .auth-alert-error {
+      display: none;
+      background: rgba(255, 71, 87, 0.12);
+      border: 1px solid rgba(255, 71, 87, 0.35);
+      color: var(--accent-rose);
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+
+    .password-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .password-match-indicator {
+      font-size: 11px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .auth-footer-links {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .auth-footer-links a {
+      color: var(--accent-emerald);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .auth-footer-links a:hover {
+      text-decoration: underline;
+    }
+
+    .back-to-home {
+      color: var(--text-muted) !important;
+      font-size: 12px;
+    }
+
+    @media (max-width: 580px) {
+      .auth-card {
+        padding: 24px 20px;
+      }
+      .form-grid-2, .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="auth-page">
+
+  <div class="theme-top-bar">
+    <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
+  </div>
+
+  <main class="auth-card" role="main">
+    <div class="auth-brand">
+      <div class="brand-logo">K</div>
+      <h1>Crear Cuenta en <span>Kynap</span></h1>
+      <p>Comienza tu transformación física y nutricional con IA</p>
+    </div>
+
+    <div id="registerAlertBox" class="auth-alert-error" role="alert"></div>
+
+    <form id="completeRegisterForm" action="#" method="POST" onsubmit="handleRegisterSubmit(event)" class="auth-form" novalidate>
+      
+      <!-- SECCIÓN 1: CREDENCIALES DE ACCESO -->
+      <div class="section-title-divider">
+        <span>1. Datos de Acceso</span>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="nombreInput">Nombre Completo *</label>
+        <input 
+          type="text" 
+          id="nombreInput" 
+          name="nombre" 
+          class="input-custom" 
+          placeholder="Ej: Savier Casiani" 
+          required 
+          autocomplete="name"
+        >
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="emailInput">Correo Electrónico *</label>
+        <input 
+          type="email" 
+          id="emailInput" 
+          name="email" 
+          class="input-custom" 
+          placeholder="tu_correo@ejemplo.com" 
+          required 
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="passwordInput">Contraseña *</label>
+          <input 
+            type="password" 
+            id="passwordInput" 
+            name="password" 
+            class="input-custom" 
+            placeholder="Mín. 6 caracteres" 
+            required 
+            autocomplete="new-password"
+            oninput="checkPasswordMatch()"
+          >
+          <div class="password-hint">Mínimo 6 caracteres</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="confirmPasswordInput">Confirmar Contraseña *</label>
+          <input 
+            type="password" 
+            id="confirmPasswordInput" 
+            name="confirm_password" 
+            class="input-custom" 
+            placeholder="Repite la contraseña" 
+            required 
+            autocomplete="new-password"
+            oninput="checkPasswordMatch()"
+          >
+          <div id="matchIndicator" class="password-match-indicator"></div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: DATOS BIOMÉTRICOS & OBJETIVOS FITNESS -->
+      <div class="section-title-divider">
+        <span>2. Perfil Físico & Nutricional</span>
+      </div>
+
+      <div class="form-grid-3">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="edadInput">Edad (Años)</label>
+          <input 
+            type="number" 
+            id="edadInput" 
+            name="edad" 
+            class="input-custom" 
+            value="25" 
+            min="12" 
+            max="100" 
+            required
+          >
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="pesoInput">Peso (kg)</label>
+          <input 
+            type="number" 
+            id="pesoInput" 
+            name="peso" 
+            class="input-custom" 
+            value="70.0" 
+            step="0.5" 
+            min="30" 
+            max="300" 
+            required
+          >
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="alturaInput">Altura (cm)</label>
+          <input 
+            type="number" 
+            id="alturaInput" 
+            name="altura" 
+            class="input-custom" 
+            value="175" 
+            min="100" 
+            max="250" 
+            required
+          >
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="sexoInput">Sexo Biológico</label>
+          <select id="sexoInput" name="sexo" class="input-custom" required>
+            <option value="masculino" selected>Masculino</option>
+            <option value="femenino">Femenino</option>
+            <option value="otro">Otro / Prefiero no decir</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="objetivoInput">Objetivo Principal</label>
+          <select id="objetivoInput" name="objetivo" class="input-custom" required>
+            <option value="ganar_musculo" selected>Ganar Músculo (Hipertrofia)</option>
+            <option value="perder_grasa">Perder Grasa (Definición)</option>
+            <option value="mantener">Mantener y Salud General</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="actividadInput">Nivel de Actividad Diaria</label>
+        <select id="actividadInput" name="nivel_actividad" class="input-custom" required>
+          <option value="sedentario">Sedentario (Poco o ningún ejercicio)</option>
+          <option value="ligero">Ligero (1-3 días de ejercicio por semana)</option>
+          <option value="moderado" selected>Moderado (3-5 días de ejercicio por semana)</option>
+          <option value="muy_activo">Muy Activo (6-7 días de entrenamiento intenso)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 13px; font-size: 15px; margin-top: 10px;">
+        Crear Cuenta & Entrar al Panel ➔
+      </button>
+    </form>
+
+    <div class="auth-footer-links">
+      <p>¿Ya tienes una cuenta registrada? <a href="login.html">Inicia sesión</a></p>
+      <a href="index.html" class="back-to-home">← Volver a la página principal</a>
+    </div>
+  </main>
+
+  <script>
+    function getTargetUrl() {
+      return 'app.html';
+    }
+
+    function checkPasswordMatch() {
+      const p1 = document.getElementById('passwordInput').value;
+      const p2 = document.getElementById('confirmPasswordInput').value;
+      const indicator = document.getElementById('matchIndicator');
+
+      if (!p2) {
+        indicator.style.display = 'none';
+        return;
+      }
+
+      indicator.style.display = 'block';
+      if (p1 === p2) {
+        indicator.textContent = '✓ Las contraseñas coinciden';
+        indicator.style.color = 'var(--accent-emerald)';
+      } else {
+        indicator.textContent = '✕ Las contraseñas no coinciden';
+        indicator.style.color = 'var(--accent-rose)';
+      }
+    }
+
+    // Prellenar email si viene por parámetro de URL
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get('email');
+      if (email) {
+        const emailInput = document.getElementById('emailInput');
+        if (emailInput) emailInput.value = email;
+      }
+    });
+
+    async function handleRegisterSubmit(e) {
+      if (e) e.preventDefault();
+      const alertBox = document.getElementById('registerAlertBox');
+      alertBox.style.display = 'none';
+      alertBox.textContent = '';
+
+      const nombre = document.getElementById('nombreInput').value.trim();
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const confirmPassword = document.getElementById('confirmPasswordInput').value;
+
+      const edad = parseInt(document.getElementById('edadInput').value, 10);
+      const peso = parseFloat(document.getElementById('pesoInput').value);
+      const altura = parseFloat(document.getElementById('alturaInput').value);
+      const sexo = document.getElementById('sexoInput').value;
+      const objetivo = document.getElementById('objetivoInput').value;
+      const nivel_actividad = document.getElementById('actividadInput').value;
+
+      if (!nombre || !email || !password) {
+        alertBox.textContent = 'Por favor completa todos los campos obligatorios.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      if (password.length < 6) {
+        alertBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alertBox.textContent = 'Las contraseñas no coinciden. Por favor verifícalas.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch('controllers/api_auth.php?action=register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre,
+            email,
+            password,
+            confirm_password: confirmPassword,
+            edad,
+            peso,
+            altura,
+            sexo,
+            objetivo,
+            nivel_actividad
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && data.data?.token) {
+          localStorage.setItem('kynap_auth_token', data.data.token);
+          window.location.href = getTargetUrl();
+          return;
+        } else {
+          alertBox.textContent = data.message || 'Error al registrar la cuenta.';
+          alertBox.style.display = 'block';
+        }
+      } catch (err) {
+        alertBox.textContent = 'Error de conexión con el servidor. Intenta nuevamente.';
+        alertBox.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
