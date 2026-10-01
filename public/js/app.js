@@ -433,7 +433,7 @@ function renderWorkoutLogger() {
   if (!tableBody || !select) return;
 
   if (select.children.length === 0) {
-    select.innerHTML = INITIAL_EXERCISES.map(ex => 
+    select.innerHTML = INITIAL_EXERCISES.map(ex =>
       `<option value="${ex.id}" ${ex.id === AppState.activeWorkout.exerciseId ? 'selected' : ''}>${ex.name} (${ex.muscleGroup})</option>`
     ).join('');
   }
@@ -802,8 +802,8 @@ function renderExerciseCatalog() {
 
   const filtered = INITIAL_EXERCISES.filter(ex => {
     const matchesFilter = activeFilter === 'all' || ex.muscleGroup === activeFilter;
-    const matchesQuery = !query || 
-      normalizeText(ex.name).includes(query) || 
+    const matchesQuery = !query ||
+      normalizeText(ex.name).includes(query) ||
       normalizeText(ex.muscleGroup).includes(query) ||
       normalizeText(ex.equipment).includes(query);
     return matchesFilter && matchesQuery;
@@ -1217,78 +1217,14 @@ window.handleProfileUpdate = async function (e) {
   } catch (err) {
     // Sincronización local
   }
-// ==============================================================================
-// 13. CLIENTE DE API REST & VERIFICACIÓN DE SESIÓN EN TIEMPO REAL
-// ==============================================================================
-const ApiClient = {
-  async request(endpoint, options = {}) {
-    const token = localStorage.getItem('kynap_auth_token');
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...(options.headers || {})
-    };
-    const res = await fetch(endpoint, { credentials: 'same-origin', ...options, headers });
-    return res.json();
-  }
 };
-
-async function syncInitialData() {
-  const token = localStorage.getItem('kynap_auth_token');
-  if (!token || token === 'local_demo_token') {
-    sessionStorage.setItem('kynap_auth_message', 'Acceso denegado: Debes iniciar sesión con una cuenta válida para ingresar a la plataforma.');
-    window.location.replace('index.html?auth=login');
-    return;
-  }
-
-  try {
-    const res = await ApiClient.request('controllers/api_auth.php?action=verify');
-    if (!res.success || !res.data?.authenticated) {
-      localStorage.removeItem('kynap_auth_token');
-      sessionStorage.setItem('kynap_auth_message', 'Tu sesión ha expirado o no es válida. Por favor inicia sesión nuevamente.');
-      window.location.replace('index.html?auth=login');
-      return;
-    }
-
-    // Sincronizar datos del atleta en la interfaz
-    if (res.data?.user) {
-      const u = res.data.user;
-      const nameEl = document.getElementById('sidebarUserName');
-      if (nameEl) nameEl.textContent = u.nombre || 'Atleta';
-      
-      const initials = (u.nombre || 'Atleta')
-        .split(' ')
-        .map(w => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-      const avatarEl = document.getElementById('sidebarAvatar');
-      if (avatarEl) avatarEl.textContent = initials;
-      
-      const cfgN = document.getElementById('cfgNombre');
-      const cfgE = document.getElementById('cfgEmail');
-      if (cfgN) cfgN.value = u.nombre || '';
-      if (cfgE) cfgE.value = u.email || '';
-    }
-
-    if (res.data?.biometrics) {
-      const b = res.data.biometrics;
-      if (document.getElementById('cfgPeso')) document.getElementById('cfgPeso').value = b.peso || 70;
-      if (document.getElementById('cfgAltura')) document.getElementById('cfgAltura').value = b.altura || 170;
-      if (document.getElementById('cfgEdad')) document.getElementById('cfgEdad').value = b.edad || 25;
-      if (document.getElementById('cfgAgua')) document.getElementById('cfgAgua').value = b.agua || 3;
-    }
-  } catch (err) {
-    // Si la conexión falla temporalmente, mantener almacenamiento local
-  }
-}
 
 window.handleLogout = function (e) {
   if (e) e.preventDefault();
   localStorage.removeItem('kynap_auth_token');
   try {
-    fetch('controllers/api_auth.php?action=logout', { method: 'POST' }).catch(() => {});
-  } catch (err) {}
+    fetch('controllers/api_auth.php?action=logout', { method: 'POST' }).catch(() => { });
+  } catch (err) { }
   window.location.href = 'index.html?auth=login';
 };
 

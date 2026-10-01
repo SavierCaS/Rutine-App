@@ -35,7 +35,10 @@ if ($action === 'verify' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         // Consultar biometría asociada directamente desde la tabla maestra
         $biometrics = null;
         if ($dbAvailable) {
-            $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
+            $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM usuarios WHERE user_id = ? LIMIT 1");
+            if (!$stmt) {
+                $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
+            }
             if ($stmt) {
                 $stmt->bind_param("i", $user['id']);
                 $stmt->execute();
@@ -78,10 +81,13 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         apiError('El servidor de base de datos no está disponible. Intente más tarde.', 503);
     }
 
-    // Consulta estricta a la tabla users
-    $stmt = $conn->prepare("SELECT id, nombre, email, password, imagen_user, chat_activado FROM users WHERE email = ? LIMIT 1");
+    // Consulta estricta a la tabla accounts (con fallback a users)
+    $stmt = $conn->prepare("SELECT id, nombre, email, password, imagen_user, chat_activado FROM accounts WHERE email = ? LIMIT 1");
     if (!$stmt) {
-        apiError('Error interno en la consulta de autenticación.', 500);
+        $stmt = $conn->prepare("SELECT id, nombre, email, password, imagen_user, chat_activado FROM users WHERE email = ? LIMIT 1");
+    }
+    if (!$stmt) {
+        apiError('Error interno en la consulta de autenticación: ' . $conn->error, 500);
     }
 
     $stmt->bind_param("s", $email);
@@ -102,9 +108,12 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // Generar Bearer Token HMAC firmado para clientes móviles y PWA
             $token = generateAuthToken($userId, $row['email']);
 
-            // Obtener biometría del atleta
+            // Obtener biometría del atleta (desde usuarios o user_biometrics)
             $biometrics = null;
-            $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
+            $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM usuarios WHERE user_id = ? LIMIT 1");
+            if (!$bioStmt) {
+                $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
+            }
             if ($bioStmt) {
                 $bioStmt->bind_param("i", $userId);
                 $bioStmt->execute();
@@ -167,18 +176,51 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         apiError('Servicio de base de datos no disponible.', 503);
     }
 
-    // 2. Parámetros biométricos iniciales (con valores saludables por defecto)
+    // 2. Parámetros biométricos iniciales (con valores saludables por defecto y compatibilidad formNutricion)
     $edad = max(12, min(100, (int)($input['edad'] ?? 25)));
     $peso = max(30.0, min(300.0, (float)($input['peso'] ?? 70.0)));
     $altura = max(100.0, min(250.0, (float)($input['altura'] ?? 170.0)));
     $sexo = in_array($input['sexo'] ?? '', ['masculino', 'femenino', 'otro']) ? $input['sexo'] : 'masculino';
-    $objetivo = in_array($input['objetivo'] ?? '', ['ganar_musculo', 'perder_grasa', 'mantener']) ? $input['objetivo'] : 'ganar_musculo';
-    $nivelActividad = in_array($input['nivel_actividad'] ?? '', ['sedentario', 'ligero', 'moderado', 'muy_activo']) ? $input['nivel_actividad'] : 'moderado';
 
-    // 3. Verificar si el correo electrónico ya existe en la tabla users
-    $checkStmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+    // Normalizar objetivo (admite tanto bajar_peso/perder_grasa como mantener/mantener_peso)
+    $rawObj = trim($input['objetivo'] ?? 'ganar_musculo');
+    if ($rawObj === 'bajar_peso') {
+        $objetivo = 'perder_grasa';
+    } elseif ($rawObj === 'mantener_peso') {
+        $objetivo = 'mantener';
+    } elseif (in_array($rawObj, ['ganar_musculo', 'perder_grasa', 'mantener'])) {
+        $objetivo = $rawObj;
+    } else {
+        $objetivo = 'ganar_musculo';
+    }
+
+    // Normalizar nivel de actividad (admite sedentario, ligero, moderado, activo, muy_activo)
+    $rawAct = trim($input['nivel_actividad'] ?? 'moderado');
+    if (in_array($rawAct, ['sedentario', 'ligero', 'moderado', 'activo', 'muy_activo'])) {
+        $nivelActividad = $rawAct;
+    } else {
+        $nivelActividad = 'moderado';
+    }
+
+    // Consumo de agua diario ingresado por el usuario o estimado por peso
+    $rawAgua = isset($input['agua']) ? (float)$input['agua'] : 0;
+    if ($rawAgua >= 1.0 && $rawAgua <= 15.0) {
+        $aguaLitros = round($rawAgua, 1);
+    } else {
+        $aguaLitros = max(2.0, min(6.0, round($peso * 0.035, 1))); // 35 ml por kg de peso
+    }
+
+    $condiciones = isset($input['condiciones']) ? (is_array($input['condiciones']) ? implode(', ', $input['condiciones']) : trim($input['condiciones'])) : '';
+    $alergias = trim($input['alergias'] ?? '');
+    $preferencia = trim($input['preferencia'] ?? 'cualquierCosa');
+
+    // 3. Verificar si el correo electrónico ya existe en la tabla accounts o users
+    $checkStmt = $conn->prepare("SELECT id FROM accounts WHERE email = ? LIMIT 1");
     if (!$checkStmt) {
-        apiError('Error de base de datos al validar usuario.', 500);
+        $checkStmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+    }
+    if (!$checkStmt) {
+        apiError('Error de base de datos al validar usuario: ' . $conn->error, 500);
     }
     $checkStmt->bind_param("s", $email);
     $checkStmt->execute();
@@ -198,8 +240,11 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $defaultAvatar = 'iconos/profile.svg';
     $defaultChat = 1;
 
-    // 5. Inserción en la tabla users
-    $insertStmt = $conn->prepare("INSERT INTO users (nombre, email, password, imagen_user, chat_activado) VALUES (?, ?, ?, ?, ?)");
+    // 5. Inserción en la tabla accounts (con fallback a users)
+    $insertStmt = $conn->prepare("INSERT INTO accounts (nombre, email, password, imagen_user, chat_activado) VALUES (?, ?, ?, ?, ?)");
+    if (!$insertStmt) {
+        $insertStmt = $conn->prepare("INSERT INTO users (nombre, email, password, imagen_user, chat_activado) VALUES (?, ?, ?, ?, ?)");
+    }
     if (!$insertStmt) {
         apiError('Error al preparar inserción en base de datos: ' . $conn->error, 500);
     }
@@ -210,13 +255,29 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $newUserId = (int)$insertStmt->insert_id;
         $insertStmt->close();
 
-        // 6. Inserción de biometría completa en user_biometrics
-        $aguaLitros = max(2.0, min(6.0, round($peso * 0.035, 1))); // 35 ml por kg de peso
-        $bioStmt = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
+        // 6. Inserción de biometría completa en user_biometrics y sincronización con tabla usuarios
+        $bioStmt = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
         if ($bioStmt) {
-            $bioStmt->bind_param("iddiissd", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros);
+            $bioStmt->bind_param("iddiissdsss", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros, $condiciones, $alergias, $preferencia);
             $bioStmt->execute();
             $bioStmt->close();
+        } else {
+            // Fallback si la estructura aún no tiene columnas adicionales
+            $bioStmtFallback = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
+            if ($bioStmtFallback) {
+                $bioStmtFallback->bind_param("iddiissd", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros);
+                $bioStmtFallback->execute();
+                $bioStmtFallback->close();
+            }
+        }
+
+        // Sincronización compatible con tabla legacy usuarios si está presente
+        $uStmt = $conn->prepare("INSERT INTO usuarios (user_id, edad, peso, altura, objetivo, nivel_actividad, sexo, condiciones, alergias, preferencia, agua) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE edad = VALUES(edad), peso = VALUES(peso), altura = VALUES(altura), objetivo = VALUES(objetivo), nivel_actividad = VALUES(nivel_actividad), sexo = VALUES(sexo), condiciones = VALUES(condiciones), alergias = VALUES(alergias), preferencia = VALUES(preferencia), agua = VALUES(agua)");
+        if ($uStmt) {
+            $aguaInt = (int)round($aguaLitros);
+            $uStmt->bind_param("iidsssssssi", $newUserId, $edad, $peso, $altura, $objetivo, $nivelActividad, $sexo, $condiciones, $alergias, $preferencia, $aguaInt);
+            $uStmt->execute();
+            $uStmt->close();
         }
 
         // 7. Cálculo personalizado de metas nutricionales según objetivo y biometría
@@ -271,7 +332,10 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'sexo' => $sexo,
                 'objetivo' => $objetivo,
                 'nivel_actividad' => $nivelActividad,
-                'agua' => $aguaLitros
+                'agua' => $aguaLitros,
+                'condiciones' => $condiciones,
+                'alergias' => $alergias,
+                'preferencia' => $preferencia
             ],
             'goals' => [
                 'calories' => $targetCalories,

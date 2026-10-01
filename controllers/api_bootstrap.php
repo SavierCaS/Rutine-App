@@ -26,7 +26,7 @@ header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 
 // Responder inmediatamente a peticiones preflight OPTIONS
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     echo json_encode(['status' => 'ok', 'message' => 'Preflight OK']);
     exit;
@@ -53,6 +53,23 @@ $dbAvailable = false;
 if (!$conn->connect_error) {
     $dbAvailable = true;
     $conn->set_charset('utf8mb4');
+
+    // Auto-reparación y compatibilidad de esquemas (accounts <-> users, usuarios <-> user_biometrics)
+    @$conn->query("CREATE OR REPLACE VIEW `users` AS SELECT `id`, `nombre`, `email`, `password`, `imagen_user`, `chat_activado`, `mensajes_enviados`, `created_at`, `modified_at` FROM `accounts`");
+    @$conn->query("CREATE OR REPLACE VIEW `user_biometrics` AS SELECT * FROM `usuarios`");
+    @$conn->query("CREATE TABLE IF NOT EXISTS `nutrition_goals` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_id` INT NOT NULL,
+        `daily_calories` INT NOT NULL DEFAULT 2200,
+        `protein_g` INT NOT NULL DEFAULT 150,
+        `carbs_g` INT NOT NULL DEFAULT 230,
+        `fats_g` INT NOT NULL DEFAULT 65,
+        `water_ml` INT NOT NULL DEFAULT 2500,
+        `is_active` TINYINT(1) DEFAULT 1,
+        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY `uq_nutrition_user` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 /**
@@ -166,9 +183,12 @@ function resolveAuthUser(?mysqli $db): array {
         'isGuest' => $isGuest
     ];
 
-    // Cargar datos reales desde la tabla users si la BD está conectada
+    // Cargar datos reales desde la tabla accounts o users si la BD está conectada
     if ($db && !$db->connect_error) {
-        $stmt = $db->prepare("SELECT id, nombre, email, imagen_user FROM users WHERE id = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT id, nombre, email, imagen_user FROM accounts WHERE id = ? LIMIT 1");
+        if (!$stmt) {
+            $stmt = $db->prepare("SELECT id, nombre, email, imagen_user FROM users WHERE id = ? LIMIT 1");
+        }
         if ($stmt) {
             $stmt->bind_param("i", $userId);
             $stmt->execute();
