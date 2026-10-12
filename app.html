@@ -123,9 +123,14 @@
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
           <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
-          <div class="streak-badge">
-            <span>🔥</span> <span id="streakCounter">4 días activos</span>
+          <div class="streak-badge" id="headerStreakBadge" onclick="openStreakModal()" title="Ver detalles de mi racha y calendario" style="cursor: pointer;">
+            <span class="flame-animated">🔥</span>
+            <span id="streakCounter">1 día activo</span>
+            <span class="streak-medal-pill" id="streakMedalTag">🔥 Fuego</span>
           </div>
+          <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);" onclick="openBiometricsModal()">
+            📊 Evolución Física
+          </button>
           <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);" onclick="openBreathingModal()">
             🧘 Respiración
           </button>
@@ -148,6 +153,21 @@
           <div class="progress-track">
             <div class="progress-bar-fill" id="weeklyProgressBar" style="width: 0%;"></div>
           </div>
+        </div>
+
+        <!-- BANNER DE GENERACIÓN INTELIGENTE CON GROQ AI (LLAMA 3.3) -->
+        <div class="ai-routine-generator-card" style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(0, 217, 255, 0.08)); border: 1px solid rgba(0, 255, 136, 0.25); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">🤖</span>
+              <h4 style="font-family: var(--font-heading); font-size: 16px; margin: 0; font-weight: 700;">Diseñador de Rutinas Kynap AI</h4>
+              <span class="day-badge" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan); font-size: 11px;">Llama 3.3 Versatile</span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0;">Genera una rutina de entrenamiento personalizada según tu biometría, objetivo y nivel físico.</p>
+          </div>
+          <button type="button" class="btn-checkin" id="btnOpenAiRoutineModal" onclick="openAiRoutineModal()" style="width: auto; padding: 10px 20px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(0,255,136,0.25);">
+            ✨ Generar Nueva Rutina con IA
+          </button>
         </div>
 
         <div class="days-grid" id="daysGrid">
@@ -223,74 +243,119 @@
         </div>
       </section>
 
-      <!-- TAB 3: CORE 3 - NUTRICIÓN & MACROS -->
+      <!-- TAB 3: CORE 3 - NUTRICIÓN, HORARIOS DE COMIDAS & MACROS -->
       <section id="view-nutrition" class="tab-view">
-        <div class="nutrition-grid">
+        
+        <!-- SELECTOR INTERACTIVO DE DÍA DE LA SEMANA (LUNES A DOMINGO CON DÍA ACTUAL DESTACADO) -->
+        <div class="meal-day-tabs-wrapper">
+          <div style="display: flex; align-items: center; gap: 8px; margin-right: 12px; white-space: nowrap;">
+            <span style="font-size: 18px;">📅</span>
+            <strong style="font-size: 13px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Plan Semanal:</strong>
+          </div>
+          <div class="meal-day-tabs" id="mealDayTabs">
+            <!-- Inyectado dinámicamente con los 7 días y badge '⭐ HOY' -->
+          </div>
+        </div>
+
+        <div class="meal-schedule-section">
           
-          <div class="macro-summary-card">
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-              <h2 style="font-family: var(--font-heading);">Balance Energético</h2>
-              <button class="btn-checkin" style="width: auto; padding: 8px 16px; font-size: 13px;" onclick="openAddMealModal()">+ Añadir Comida</button>
+          <!-- BANNER INFORMATIVO DE REINICIO DIARIO AUTOMÁTICO A MEDIANOCHE -->
+          <div style="background: rgba(0, 217, 255, 0.08); border: 1px solid rgba(0, 217, 255, 0.22); border-radius: var(--radius-md); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">🔄</span>
+              <div>
+                <strong style="color: var(--accent-cyan); font-size: 13px;">Reinicio Automático a Medianoche</strong>
+                <p style="font-size: 12px; color: var(--text-secondary); margin: 2px 0 0;">Cada medianoche el estado diario de comidas se renueva automáticamente. Todo tu historial permanece seguro en la base de datos.</p>
+              </div>
             </div>
-
-            <div style="margin-top: 16px;">
-              <span id="caloriesConsumed" style="font-family: var(--font-heading); font-size: 38px; font-weight: 800; color: var(--accent-emerald);">0 kcal</span>
-              <span id="caloriesTarget" style="color: var(--text-muted); font-size: 16px;">/ 2200 kcal</span>
-            </div>
-
-            <div class="macro-bars">
-              <div class="macro-bar-item">
-                <div class="macro-label-row">
-                  <span style="color: var(--accent-cyan); font-weight: 600;">Proteínas (4 kcal/g)</span>
-                  <span id="valProtein">0g / 150g</span>
-                </div>
-                <div class="macro-bar-track">
-                  <div class="macro-bar-fill fill-protein" id="barProtein" style="width: 0%;"></div>
-                </div>
-              </div>
-
-              <div class="macro-bar-item">
-                <div class="macro-label-row">
-                  <span style="color: var(--accent-amber); font-weight: 600;">Carbohidratos (4 kcal/g)</span>
-                  <span id="valCarbs">0g / 230g</span>
-                </div>
-                <div class="macro-bar-track">
-                  <div class="macro-bar-fill fill-carbs" id="barCarbs" style="width: 0%;"></div>
-                </div>
-              </div>
-
-              <div class="macro-bar-item">
-                <div class="macro-label-row">
-                  <span style="color: var(--accent-rose); font-weight: 600;">Grasas (9 kcal/g)</span>
-                  <span id="valFats">0g / 65g</span>
-                </div>
-                <div class="macro-bar-track">
-                  <div class="macro-bar-fill fill-fats" id="barFats" style="width: 0%;"></div>
-                </div>
-              </div>
+            <div id="mealCompletionCounterBadge" class="day-badge" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald); font-size: 12px;">
+              0 / 5 Comidas Completadas (0%)
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 24px;">
-            <div class="water-tracker-card">
-              <h3 style="font-family: var(--font-heading); font-size: 18px;">Hidratación Diaria 💧</h3>
-              <div class="water-display" id="waterDisplay">1750 ml</div>
-              <p id="waterTarget" style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">Meta: 2500 ml</p>
-              <div class="water-actions">
-                <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(250)">+250 ml</button>
-                <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(500)">+500 ml</button>
-                <button class="btn-checkin" style="width: auto; padding: 8px 12px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);" onclick="adjustWater(-250)">-250 ml</button>
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px;">
+            
+            <!-- COLUMNA IZQUIERDA: BLOQUES DE COMIDAS ESTRUCTURADAS (DESAYUNO, ALMUERZO, CENA, ETC.) -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="font-family: var(--font-heading); font-size: 18px; margin: 0;" id="scheduledMealsHeading">Horarios & Alimentos Programados</h3>
+                <span class="day-badge" id="selectedDayNameBadge" style="background: rgba(255, 255, 255, 0.08); color: var(--text-primary); font-size: 11px;">Hoy</span>
+              </div>
+
+              <!-- CONTENEDOR DE BLOQUES DE COMIDAS -->
+              <div class="meal-blocks-container" id="mealScheduleContainer">
+                <!-- Renderizado por app.js con Desayuno, Media Mañana, Almuerzo, Merienda, Cena -->
               </div>
             </div>
 
-            <div class="macro-summary-card">
-              <h3 style="font-family: var(--font-heading); font-size: 16px; margin-bottom: 12px;">Comidas Registradas Hoy</h3>
-              <ul id="recentMealsList" style="list-style: none;">
-                <!-- Lista de comidas renderizada por app.js -->
-              </ul>
-            </div>
-          </div>
+            <!-- COLUMNA DERECHA: BALANCE ENERGÉTICO, HIDRATACIÓN Y COMIDAS ADICIONALES -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+              
+              <div class="macro-summary-card">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <h2 style="font-family: var(--font-heading); font-size: 18px;">Balance Energético</h2>
+                  <button class="btn-checkin" style="width: auto; padding: 6px 14px; font-size: 12px;" onclick="openAddMealModal()">+ Añadir Extra</button>
+                </div>
 
+                <div style="margin-top: 14px;">
+                  <span id="caloriesConsumed" style="font-family: var(--font-heading); font-size: 36px; font-weight: 800; color: var(--accent-emerald);">0 kcal</span>
+                  <span id="caloriesTarget" style="color: var(--text-muted); font-size: 15px;">/ 2200 kcal</span>
+                </div>
+
+                <div class="macro-bars">
+                  <div class="macro-bar-item">
+                    <div class="macro-label-row">
+                      <span style="color: var(--accent-cyan); font-weight: 600; font-size: 13px;">Proteínas</span>
+                      <span id="valProtein" style="font-size: 13px;">0g / 150g</span>
+                    </div>
+                    <div class="macro-bar-track">
+                      <div class="macro-bar-fill fill-protein" id="barProtein" style="width: 0%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="macro-bar-item">
+                    <div class="macro-label-row">
+                      <span style="color: var(--accent-amber); font-weight: 600; font-size: 13px;">Carbohidratos</span>
+                      <span id="valCarbs" style="font-size: 13px;">0g / 230g</span>
+                    </div>
+                    <div class="macro-bar-track">
+                      <div class="macro-bar-fill fill-carbs" id="barCarbs" style="width: 0%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="macro-bar-item">
+                    <div class="macro-label-row">
+                      <span style="color: var(--accent-rose); font-weight: 600; font-size: 13px;">Grasas</span>
+                      <span id="valFats" style="font-size: 13px;">0g / 65g</span>
+                    </div>
+                    <div class="macro-bar-track">
+                      <div class="macro-bar-fill fill-fats" id="barFats" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="water-tracker-card">
+                <h3 style="font-family: var(--font-heading); font-size: 18px;">Hidratación Diaria 💧</h3>
+                <div class="water-display" id="waterDisplay">1750 ml</div>
+                <p id="waterTarget" style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">Meta: 2500 ml</p>
+                <div class="water-actions">
+                  <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(250)">+250 ml</button>
+                  <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(500)">+500 ml</button>
+                  <button class="btn-checkin" style="width: auto; padding: 8px 12px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);" onclick="adjustWater(-250)">-250 ml</button>
+                </div>
+              </div>
+
+              <div class="macro-summary-card">
+                <h3 style="font-family: var(--font-heading); font-size: 16px; margin-bottom: 12px;">Alimentos Extra Registrados</h3>
+                <ul id="recentMealsList" style="list-style: none;">
+                  <!-- Lista de comidas adicionales -->
+                </ul>
+              </div>
+
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -501,6 +566,210 @@
           Guardar Configuración
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL 5: GENERADOR DE RUTINAS CON KYNAP AI (LLAMA 3.3) -->
+  <div class="modal-backdrop" id="aiRoutineModal" onclick="if(event.target === this) closeAiRoutineModal()">
+    <div class="modal-sheet" style="padding: 24px; max-width: 500px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">🤖</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; margin: 0;">Diseñar Rutina con IA</h2>
+        </div>
+        <button class="btn-icon" onclick="closeAiRoutineModal()">✕</button>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 18px;">
+        Kynap AI analiza tu perfil biométrico y programa una periodización óptima usando el modelo <strong>Llama 3.3 Versatile</strong>.
+      </p>
+
+      <form id="aiRoutineForm" onsubmit="handleGenerateAIRoutine(event)" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group" style="margin: 0;">
+          <label for="aiRoutineObjetivo">Objetivo Fisiológico Principal</label>
+          <select id="aiRoutineObjetivo" class="input-custom">
+            <option value="ganar_musculo" selected>Hipertrofia & Ganancia Muscular</option>
+            <option value="perder_grasa">Definición & Pérdida de Grasa</option>
+            <option value="mantener">Fuerza Funcional & Mantenimiento</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label for="aiRoutineDias">Días de Entrenamiento por Semana</label>
+          <select id="aiRoutineDias" class="input-custom">
+            <option value="3">3 Días (Full Body / Frecuencia Óptima)</option>
+            <option value="4" selected>4 Días (Torso / Pierna / Híbrido)</option>
+            <option value="5">5 Días (Push / Pull / Legs + Especialización)</option>
+            <option value="6">6 Días (Alto Rendimiento / Avanzado)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label for="aiRoutineEquipamiento">Equipamiento Disponible</label>
+          <select id="aiRoutineEquipamiento" class="input-custom">
+            <option value="gimnasio_completo" selected>Gimnasio Completo (Barras, Mancuernas, Máquinas)</option>
+            <option value="mancuernas">Mancuernas y Banco (En Casa)</option>
+            <option value="corporal">Peso Corporal / Calistenia</option>
+          </select>
+        </div>
+
+        <div id="aiRoutineStatusBox" style="display: none; background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; color: var(--accent-cyan); text-align: center;">
+          <span class="status-dot" style="display: inline-block; margin-right: 6px;"></span>
+          <span id="aiRoutineStatusText">Conectando con Llama 3.3...</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button type="submit" id="btnSubmitAiRoutine" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; flex: 1;">
+            ✨ Generar Rutina con Llama 3.3
+          </button>
+          <button type="button" class="btn-checkin" onclick="closeAiRoutineModal()" style="background: var(--border-subtle); color: var(--text-primary); width: auto; padding: 10px 18px;">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 6: SISTEMA DE RACHAS, MEDALLAS & CALENDARIO COMPACTO (REQUERIMIENTO 3) -->
+  <div class="modal-backdrop" id="streakModal" onclick="if(event.target === this) closeStreakModal()">
+    <div class="modal-sheet" style="padding: 26px; max-width: 480px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="font-family: var(--font-heading); font-size: 20px; margin: 0;">🔥 Tu Racha de Entrenamiento</h2>
+        <button class="btn-icon" onclick="closeStreakModal()">✕</button>
+      </div>
+
+      <div class="streak-hero-card">
+        <span class="flame-animated" style="font-size: 48px;">🔥</span>
+        <div class="streak-hero-number" id="streakModalDays">1</div>
+        <div class="streak-hero-subtitle">Días Consecutivos Activo</div>
+        <div style="margin-top: 10px;">
+          <span class="streak-medal-pill" id="streakModalMedal" style="font-size: 13px; padding: 4px 12px;">🔥 Fuego Inicial</span>
+        </div>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 6px;">
+          <span style="color: var(--text-secondary);">Próxima Medalla:</span>
+          <strong style="color: var(--accent-amber);" id="streakModalGoal">2 días para Bronce 🥉</strong>
+        </div>
+        <div class="progress-track" style="height: 8px;">
+          <div class="progress-bar-fill" id="streakModalProgressBar" style="width: 33%; background: linear-gradient(90deg, #ff7b00, #ffb300);"></div>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-family: var(--font-heading); font-size: 14px; margin-bottom: 6px;">Últimos 7 Días de Actividad</h4>
+        <div class="streak-calendar-strip" id="streakCalendarStrip">
+          <!-- Renderizado dinámicamente con los 7 días -->
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 10px; text-align: center;">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Mejor Racha Histórica</div>
+          <div style="font-size: 20px; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;" id="streakModalLongest">1 día</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 10px; text-align: center;">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Días Activo</div>
+          <div style="font-size: 20px; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;" id="streakModalTotal">1 día</div>
+        </div>
+      </div>
+
+      <button class="btn-checkin" style="margin-top: 18px; background: rgba(255,255,255,0.08); color: var(--text-primary);" onclick="closeStreakModal()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL 7: CONDICIÓN FÍSICA & EVOLUCIÓN CON REGLA DE 7 DÍAS Y 24H (REQUERIMIENTO 4) -->
+  <div class="modal-backdrop" id="biometricsModal" onclick="if(event.target === this) closeBiometricsModal()">
+    <div class="modal-sheet" style="padding: 24px; max-width: 620px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 22px;">📊</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; margin: 0;">Evolución de Condición Física</h2>
+        </div>
+        <button class="btn-icon" onclick="closeBiometricsModal()">✕</button>
+      </div>
+
+      <!-- BANNER DINÁMICO DE POLÍTICA (MODO CORRECCIÓN 24H vs COOLDOWN 7 DÍAS) -->
+      <div id="bioPolicyBanner" class="policy-banner available">
+        <!-- Inyectado dinámicamente -->
+      </div>
+
+      <!-- PESTAÑAS DEL MODAL: FORMULARIO vs HISTORIAL -->
+      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 16px;">
+        <button type="button" class="chip active" id="btnTabBioForm" onclick="switchBioSubTab('form')">✏️ Actualizar Medidas</button>
+        <button type="button" class="chip" id="btnTabBioHistory" onclick="switchBioSubTab('history')">📈 Historial de Progreso</button>
+      </div>
+
+      <!-- CONTENIDO 1: FORMULARIO DE ACTUALIZACIÓN / CORRECCIÓN -->
+      <div id="bioTabContentForm">
+        <form id="biometricsForm" onsubmit="handleBiometricsSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin: 0;">
+              <label for="bioInputPeso">Peso Corporal (kg) *</label>
+              <input type="number" id="bioInputPeso" class="input-custom" step="0.1" min="30" max="300" required>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label for="bioInputAltura">Altura (cm) *</label>
+              <input type="number" id="bioInputAltura" class="input-custom" step="0.5" min="100" max="250" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin: 0;">
+              <label for="bioInputGrasa">% Grasa Corporal (Opcional)</label>
+              <input type="number" id="bioInputGrasa" class="input-custom" step="0.1" min="3" max="60" placeholder="Ej: 14.5">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label for="bioInputCintura">Cintura (cm) (Opcional)</label>
+              <input type="number" id="bioInputCintura" class="input-custom" step="0.5" min="40" max="200" placeholder="Ej: 82.0">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin: 0;">
+              <label for="bioInputPecho">Pecho (cm) (Opcional)</label>
+              <input type="number" id="bioInputPecho" class="input-custom" step="0.5" min="40" max="200" placeholder="Ej: 102.0">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label for="bioInputBrazo">Brazo (cm) (Opcional)</label>
+              <input type="number" id="bioInputBrazo" class="input-custom" step="0.5" min="15" max="80" placeholder="Ej: 37.5">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label for="bioInputNotas">Notas de la Medición (Opcional)</label>
+            <input type="text" id="bioInputNotas" class="input-custom" placeholder="Ej: En ayunas, excelente energía semanal">
+          </div>
+
+          <button type="submit" id="btnSubmitBiometrics" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 6px;">
+            💾 Guardar Medición Semanal
+          </button>
+        </form>
+      </div>
+
+      <!-- CONTENIDO 2: TABLA DE HISTORIAL DE EVOLUCIÓN -->
+      <div id="bioTabContentHistory" style="display: none;">
+        <div style="overflow-x: auto;">
+          <table class="biometrics-history-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Peso</th>
+                <th>Variación</th>
+                <th>IMC</th>
+                <th>Cintura</th>
+                <th>Notas</th>
+              </tr>
+            </thead>
+            <tbody id="bioHistoryTableBody">
+              <!-- Inyectado dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 

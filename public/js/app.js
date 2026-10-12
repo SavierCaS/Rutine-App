@@ -140,14 +140,25 @@ function normalizeText(text) {
 const AppState = {
   activeTab: 'routines',
   isOnline: navigator.onLine,
+  currentServerDayKey: 'lunes',
+  currentServerDayName: 'Lunes',
+  serverDate: new Date().toISOString().split('T')[0],
   user: {
     id: 1,
     name: 'Usuario Kynap',
     email: 'atleta@kynap.com',
     avatar: 'iconos/profile.svg',
     plan: 'Plan Pro Activo',
-    streakDays: 4,
+    streakDays: 1,
     token: null
+  },
+  streak: {
+    currentStreak: 1,
+    longestStreak: 1,
+    hasActivityToday: false,
+    badge: { name: 'Fuego Inicial', icon: '🔥', level: 1, nextGoal: '2 días para Bronce 🥉' },
+    compactWeek: [],
+    totalActiveDays: 1
   },
   activeRoutine: {
     id: 'rot-1',
@@ -172,13 +183,20 @@ const AppState = {
     ]
   },
   nutrition: {
+    selectedDayKey: 'lunes',
+    selectedDayName: 'Lunes',
+    isToday: true,
+    schedule: [],
+    freeMeals: [],
     targets: { calories: 2200, proteinG: 150, carbsG: 230, fatsG: 65, waterMl: 2500 },
-    consumed: { calories: 1540, proteinG: 110, carbsG: 160, fatsG: 48, waterMl: 1750 },
-    meals: [
-      { id: 1, name: 'Huevos revueltos con avena', calories: 450, p: 32, c: 45, f: 14, type: 'Desayuno' },
-      { id: 2, name: 'Pechuga a la plancha con arroz', calories: 620, p: 52, c: 68, f: 12, type: 'Almuerzo' },
-      { id: 3, name: 'Batido de proteína con plátano', calories: 280, p: 26, c: 35, f: 4, type: 'Snack' }
-    ]
+    consumed: { calories: 0, proteinG: 0, carbsG: 0, fatsG: 0, waterMl: 1750 },
+    meals: [],
+    summary: { completedMeals: 0, totalMeals: 5, completionPct: 0 }
+  },
+  biometrics: {
+    current: { peso: 75, altura: 175, edad: 25, sexo: 'masculino', objetivo: 'ganar_musculo', nivel_actividad: 'moderado', agua: 3 },
+    policy: { canUpdate: true, mode: 'create', message: '', hoursRemainingCorrection: null, daysRemainingNextUpdate: 0, nextAllowedDate: null },
+    history: []
   },
   timer: {
     secondsLeft: 90,
@@ -337,7 +355,7 @@ window.addEventListener('offline', () => {
 // 5. MÓDULO 1: RUTINAS Y CHECK-IN SEMANAL
 // ==============================================================================
 /**
- * Renderiza la grilla de días y la barra de progreso semanal.
+ * Renderiza la grilla de días con validación estricta del día actual y candados en días no permitidos.
  */
 function renderRoutines() {
   const container = document.getElementById('daysGrid');
@@ -354,32 +372,73 @@ function renderRoutines() {
 
   container.innerHTML = AppState.activeRoutine.days.map(day => {
     const isDone = AppState.checkIns.has(day.id);
+    const isCurrentDay = (day.id === AppState.currentServerDayKey);
+
+    let cardClasses = ['day-card'];
+    if (isDone) cardClasses.push('completed');
+    if (day.isRest) cardClasses.push('rest-day');
+    if (isCurrentDay) cardClasses.push('is-today');
+    else if (!day.isRest) cardClasses.push('locked-day');
+
+    let badgeText = day.isRest ? 'Descanso' : (isDone ? '✔ Completado' : 'Pendiente');
+    let badgeClass = 'day-badge';
+    if (isCurrentDay && !day.isRest) {
+      badgeClass += ' badge-today';
+      badgeText = isDone ? '⭐ HOY (✔ Hecho)' : '⭐ HOY (ACTIVO)';
+    } else if (!isCurrentDay && !day.isRest) {
+      badgeText = isDone ? '✔ Completado' : '🔒 Solo Lectura';
+    }
+
     return `
-      <div class="day-card ${isDone ? 'completed' : ''} ${day.isRest ? 'rest-day' : ''}" id="card-${day.id}">
+      <div class="${cardClasses.join(' ')}" id="card-${day.id}">
         <div class="day-header">
           <span class="day-title">${day.dayName}</span>
-          <span class="day-badge">${day.isRest ? 'Descanso' : isDone ? '✔ Completado' : 'Pendiente'}</span>
+          <span class="${badgeClass}">${badgeText}</span>
         </div>
         <div class="day-subtitle">${day.focus}</div>
         <ul class="exercise-mini-list">
           ${day.isRest ? '<li class="exercise-mini-item">Recuperación muscular activa & descanso</li>' : ''}
           ${day.exercises.map(ex => `<li class="exercise-mini-item"><span>${ex}</span></li>`).join('')}
         </ul>
-        ${!day.isRest ? `
-          <button class="btn-checkin" onclick="toggleDayCheckIn('${day.id}')" aria-label="Marcar ${day.dayName}">
-            ${isDone ? '✔ Completado (Desmarcar)' : 'Tachar Día'}
-          </button>
-        ` : ''}
+        ${!day.isRest ? (
+          isCurrentDay ? `
+            <button class="btn-checkin" onclick="toggleDayCheckIn('${day.id}')" aria-label="Marcar ${day.dayName}">
+              ${isDone ? '✔ Completado (Desmarcar)' : 'Tachar Día Actual'}
+            </button>
+          ` : `
+            <button class="btn-checkin btn-locked" onclick="handleLockedDayClick('${day.dayName}')" title="Solo puedes registrar el progreso del día actual (${AppState.currentServerDayName})">
+              ${isDone ? '✔ Completado (Historial)' : '🔒 Bloqueado'}
+            </button>
+          `
+        ) : ''}
       </div>
     `;
   }).join('');
 }
 
 /**
- * Alterna el estado de cumplimiento de un día con actualización optimista y persistencia en backend.
+ * Muestra retroalimentación amigable si el usuario intenta interactuar con un día diferente al actual.
+ * @param {string} dayName 
+ */
+window.handleLockedDayClick = function (dayName) {
+  showToast(
+    'info',
+    '🔒 Día en Modo Solo Lectura',
+    `Hoy es ${AppState.currentServerDayName}. Por rigor de tu periodización, solo se permite registrar o modificar el entrenamiento del día actual.`
+  );
+};
+
+/**
+ * Alterna el estado de cumplimiento de un día con validación estricta de fecha en frontend y backend.
  * @param {string} dayId 
  */
 window.toggleDayCheckIn = async function (dayId) {
+  // Validación preventiva en cliente basada en reloj del servidor
+  if (dayId !== AppState.currentServerDayKey) {
+    window.handleLockedDayClick(dayId);
+    return;
+  }
+
   const isCurrentlyDone = AppState.checkIns.has(dayId);
 
   // 1. Actualización optimista inmediata
@@ -389,11 +448,11 @@ window.toggleDayCheckIn = async function (dayId) {
   } else {
     AppState.checkIns.add(dayId);
     triggerCelebration();
-    showToast('success', '¡Día Completado!', `Gran trabajo completando el entrenamiento de ${dayId.toUpperCase()}.`);
+    showToast('success', '¡Día Completado!', `Gran trabajo completando el entrenamiento de hoy (${dayId.toUpperCase()}).`);
   }
   renderRoutines();
 
-  // 2. Sincronización asíncrona con el backend
+  // 2. Sincronización segura con el backend
   try {
     const res = await ApiClient.request('controllers/api_routines.php', {
       method: 'POST',
@@ -403,11 +462,25 @@ window.toggleDayCheckIn = async function (dayId) {
     if (res && res.success) {
       if (res.data?.completedDays) {
         AppState.checkIns = new Set(res.data.completedDays);
-        renderRoutines();
       }
+      if (res.data?.streak) {
+        AppState.streak = res.data.streak;
+        renderStreakComponent();
+      }
+      renderRoutines();
+    } else if (res && !res.success) {
+      showToast('warning', 'Validación del Servidor', res.message || 'No se pudo registrar.');
+      // Revertir optimismo
+      if (isCurrentlyDone) AppState.checkIns.add(dayId);
+      else AppState.checkIns.delete(dayId);
+      renderRoutines();
     }
   } catch (err) {
-    // La actualización optimista se mantiene activa localmente
+    // Si el backend rechaza por discrepancia de fecha
+    showToast('warning', 'Restricción de Fecha', err.message || 'Solo puedes registrar el progreso del día presente.');
+    if (isCurrentlyDone) AppState.checkIns.add(dayId);
+    else AppState.checkIns.delete(dayId);
+    renderRoutines();
   }
 };
 
@@ -646,13 +719,219 @@ function playBeep() {
 }
 
 // ==============================================================================
-// 7. MÓDULO 3: NUTRICIÓN, MACROS E HIDRATACIÓN
+// 7. MÓDULO 3: HORARIOS DE COMIDAS, NUTRICIÓN & REINICIO DIARIO (REQUERIMIENTO 1)
 // ==============================================================================
+const MEAL_DAYS = [
+  { key: 'lunes', name: 'Lunes', short: 'L' },
+  { key: 'martes', name: 'Martes', short: 'M' },
+  { key: 'miercoles', name: 'Miércoles', short: 'X' },
+  { key: 'jueves', name: 'Jueves', short: 'J' },
+  { key: 'viernes', name: 'Viernes', short: 'V' },
+  { key: 'sabado', name: 'Sábado', short: 'S' },
+  { key: 'domingo', name: 'Domingo', short: 'D' }
+];
+
 /**
- * Renderiza el balance calórico, barras de macronutrientes y comidas del día.
+ * Carga el plan de comidas para el día seleccionado desde el backend.
+ * @param {string} [dayKey]
  */
-function renderNutrition() {
-  const { targets, consumed, meals } = AppState.nutrition;
+async function loadNutritionData(dayKey) {
+  const targetDay = dayKey || AppState.nutrition.selectedDayKey || AppState.currentServerDayKey || 'lunes';
+  try {
+    const res = await ApiClient.request(`controllers/api_nutrition.php?day=${encodeURIComponent(targetDay)}`);
+    if (res && res.success && res.data) {
+      const d = res.data;
+      if (d.currentServerDayKey) AppState.currentServerDayKey = d.currentServerDayKey;
+      if (d.currentServerDayName) AppState.currentServerDayName = d.currentServerDayName;
+      AppState.nutrition.selectedDayKey = d.selectedDayKey;
+      AppState.nutrition.selectedDayName = d.selectedDayName;
+      AppState.nutrition.isToday = !!d.isToday;
+      AppState.nutrition.schedule = Array.isArray(d.schedule) ? d.schedule : [];
+      AppState.nutrition.freeMeals = Array.isArray(d.freeMeals) ? d.freeMeals : [];
+      AppState.nutrition.consumed.waterMl = d.waterMl ?? 1750;
+      AppState.nutrition.targets.waterMl = d.waterTargetMl ?? 2500;
+      AppState.nutrition.summary = d.summary || {};
+
+      if (d.summary) {
+        AppState.nutrition.consumed.calories = d.summary.consumedCalories || 0;
+        AppState.nutrition.consumed.proteinG = d.summary.consumedProtein || 0;
+        AppState.nutrition.consumed.carbsG = d.summary.consumedCarbs || 0;
+        AppState.nutrition.consumed.fatsG = d.summary.consumedFats || 0;
+        if (d.summary.targetCalories) AppState.nutrition.targets.calories = d.summary.targetCalories;
+      }
+
+      if (d.streak) {
+        AppState.streak = d.streak;
+        renderStreakComponent();
+      }
+
+      renderNutritionSchedule();
+      renderNutritionSummary();
+    }
+  } catch (err) {
+    // Si falla la red, renderizar con datos en memoria
+    renderNutritionSchedule();
+    renderNutritionSummary();
+  }
+}
+
+/**
+ * Cambia el día activo en la vista de plan de comidas.
+ * @param {string} dayKey
+ */
+window.switchMealDay = function (dayKey) {
+  AppState.nutrition.selectedDayKey = dayKey;
+  loadNutritionData(dayKey);
+};
+
+/**
+ * Renderiza el selector de días de la semana y los bloques estructurados de comidas.
+ */
+function renderNutritionSchedule() {
+  const tabsContainer = document.getElementById('mealDayTabs');
+  const blocksContainer = document.getElementById('mealScheduleContainer');
+  const counterBadge = document.getElementById('mealCompletionCounterBadge');
+  const heading = document.getElementById('scheduledMealsHeading');
+  const dayBadge = document.getElementById('selectedDayNameBadge');
+
+  if (heading) {
+    heading.textContent = `Horarios & Alimentos (${AppState.nutrition.selectedDayName})`;
+  }
+  if (dayBadge) {
+    dayBadge.textContent = AppState.nutrition.isToday ? '⭐ Hoy' : AppState.nutrition.selectedDayName;
+    dayBadge.style.color = AppState.nutrition.isToday ? 'var(--accent-emerald)' : 'var(--text-secondary)';
+  }
+
+  // 1. Renderizar selector de días de la semana
+  if (tabsContainer) {
+    tabsContainer.innerHTML = MEAL_DAYS.map(day => {
+      const isSelected = (day.key === AppState.nutrition.selectedDayKey);
+      const isServerToday = (day.key === AppState.currentServerDayKey);
+      return `
+        <button type="button" class="meal-day-pill ${isSelected ? 'active' : ''}" onclick="switchMealDay('${day.key}')" aria-label="Ver plan de ${day.name}">
+          <span class="day-letter">${day.short} • ${day.name.slice(0, 3)}</span>
+          ${isServerToday ? '<span class="today-indicator">Hoy</span>' : ''}
+        </button>
+      `;
+    }).join('');
+  }
+
+  // 2. Renderizar contador de comidas completadas
+  if (counterBadge) {
+    const sum = AppState.nutrition.summary;
+    const done = sum.completedMeals ?? AppState.nutrition.schedule.filter(m => m.isCompleted).length;
+    const total = sum.totalMeals ?? AppState.nutrition.schedule.length;
+    const pct = sum.completionPct ?? (total > 0 ? Math.round((done / total) * 100) : 0);
+    counterBadge.textContent = `${done} / ${total} Comidas Completadas (${pct}%)`;
+    counterBadge.style.background = done === total && total > 0 ? 'rgba(0, 255, 136, 0.25)' : 'rgba(0, 255, 136, 0.12)';
+  }
+
+  // 3. Renderizar bloques de comidas estructuradas
+  if (blocksContainer) {
+    if (AppState.nutrition.schedule.length === 0) {
+      blocksContainer.innerHTML = `
+        <div style="background: var(--bg-card); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); padding: 24px; text-align: center; color: var(--text-secondary);">
+          No hay comidas programadas para este día.
+        </div>
+      `;
+      return;
+    }
+
+    blocksContainer.innerHTML = AppState.nutrition.schedule.map(meal => {
+      const isDone = !!meal.isCompleted;
+      const isTodayView = AppState.nutrition.isToday;
+
+      return `
+        <div class="meal-block-card ${isDone ? 'completed' : ''}" id="meal-card-${meal.mealKey}">
+          <div class="meal-block-header">
+            <div class="meal-title-group">
+              <span class="meal-time-tag">⏰ ${meal.suggestedTime || '08:00'}</span>
+              <h4 class="meal-block-title">${meal.name}</h4>
+            </div>
+            <div>
+              ${isTodayView ? `
+                <button type="button" class="btn-meal-check ${isDone ? 'completed' : ''}" onclick="toggleScheduledMeal('${meal.mealKey}')" aria-label="Marcar ${meal.name}">
+                  ${isDone ? '✔ Consumido' : 'Marcar Consumo'}
+                </button>
+              ` : `
+                <span class="day-badge" style="font-size: 11px; background: rgba(255, 255, 255, 0.05); color: var(--text-secondary);">
+                  Programado
+                </span>
+              `}
+            </div>
+          </div>
+
+          <p class="meal-block-desc">${meal.description || 'Alimentos equilibrados ricos en nutrientes'}</p>
+
+          <div class="meal-macros-row">
+            <span class="macro-chip cal">🔥 ${meal.calories} kcal</span>
+            <span class="macro-chip prot">🥩 ${meal.p}g Proteína</span>
+            <span class="macro-chip carb">🌾 ${meal.c}g Carbos</span>
+            <span class="macro-chip fat">🥑 ${meal.f}g Grasas</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+/**
+ * Alterna el estado de una comida programada para hoy (Desayuno, Almuerzo, etc.)
+ * y sincroniza con el backend con reinicio automático diario.
+ * @param {string} mealKey
+ */
+window.toggleScheduledMeal = async function (mealKey) {
+  // Solo se puede marcar o desmarcar en el día de hoy
+  if (!AppState.nutrition.isToday) {
+    showToast('info', 'Plan Programado', 'Solo puedes marcar como consumidas las comidas correspondientes al día de hoy.');
+    return;
+  }
+
+  // 1. Actualización optimista en el cliente
+  const mealItem = AppState.nutrition.schedule.find(m => m.mealKey === mealKey);
+  const wasDone = mealItem ? !!mealItem.isCompleted : false;
+  if (mealItem) {
+    mealItem.isCompleted = !wasDone;
+    if (mealItem.isCompleted) {
+      triggerCelebration();
+      showToast('success', '¡Comida Completada!', `${mealItem.name} registrada en tu nutrición de hoy.`);
+    } else {
+      showToast('info', 'Comida Desmarcada', `${mealItem.name} marcada como pendiente.`);
+    }
+    renderNutritionSchedule();
+  }
+
+  // 2. Persistencia en base de datos bajo fecha de hoy
+  try {
+    const res = await ApiClient.request('controllers/api_nutrition.php?action=toggle_scheduled_meal', {
+      method: 'POST',
+      body: JSON.stringify({ meal_key: mealKey })
+    });
+
+    if (res && res.success) {
+      if (res.data?.streak) {
+        AppState.streak = res.data.streak;
+        renderStreakComponent();
+      }
+      // Re-sincronizar totales precisos desde el backend
+      loadNutritionData(AppState.nutrition.selectedDayKey);
+    } else if (res && !res.success) {
+      showToast('warning', 'Error de Registro', res.message || 'No se pudo actualizar la comida.');
+      if (mealItem) {
+        mealItem.isCompleted = wasDone;
+        renderNutritionSchedule();
+      }
+    }
+  } catch (err) {
+    // Si falla la petición, mantener estado local
+  }
+};
+
+/**
+ * Renderiza el balance calórico, barras de macronutrientes, hidratación y comidas libres.
+ */
+function renderNutritionSummary() {
+  const { targets, consumed, freeMeals } = AppState.nutrition;
 
   const calConsEl = document.getElementById('caloriesConsumed');
   const calTargEl = document.getElementById('caloriesTarget');
@@ -685,14 +964,14 @@ function renderNutrition() {
 
   const list = document.getElementById('recentMealsList');
   if (list) {
-    if (meals.length === 0) {
-      list.innerHTML = `<li style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 12px;">No hay comidas registradas hoy.</li>`;
+    if (!freeMeals || freeMeals.length === 0) {
+      list.innerHTML = `<li style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 12px;">No hay alimentos extra registrados hoy.</li>`;
     } else {
-      list.innerHTML = meals.map(m => `
+      list.innerHTML = freeMeals.map(m => `
         <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-subtle);">
           <div>
             <div style="font-weight: 600; font-size: 14px;">${m.name}</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">${m.type || 'Comida'} • P: ${m.p}g | C: ${m.c}g | G: ${m.f}g</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">${m.type || 'Snack'} • P: ${m.p}g | C: ${m.c}g | G: ${m.f}g</div>
           </div>
           <span style="font-weight: 700; color: var(--accent-emerald); font-size: 14px;">+${m.calories} kcal</span>
         </li>
@@ -702,13 +981,21 @@ function renderNutrition() {
 }
 
 /**
+ * Alias de compatibilidad hacia atrás.
+ */
+function renderNutrition() {
+  renderNutritionSchedule();
+  renderNutritionSummary();
+}
+
+/**
  * Ajusta la cantidad de agua consumida en mililitros.
  * @param {number} deltaMl 
  */
 window.adjustWater = async function (deltaMl) {
   const current = AppState.nutrition.consumed.waterMl;
   AppState.nutrition.consumed.waterMl = Math.max(0, current + deltaMl);
-  renderNutrition();
+  renderNutritionSummary();
 
   showToast('info', 'Hidratación Actualizada', `${deltaMl > 0 ? '+' : ''}${deltaMl} ml registrados.`);
 
@@ -746,7 +1033,7 @@ window.submitAddMealForm = async function (e) {
   const cInput = document.getElementById('mealCarbsInput');
   const fInput = document.getElementById('mealFatsInput');
 
-  const name = nameInput ? nameInput.value.trim() : 'Comida rápida';
+  const name = nameInput ? nameInput.value.trim() : 'Alimento libre';
   const type = typeInput ? typeInput.value : 'Snack';
   const p = Math.max(0, Number(pInput?.value) || 0);
   const c = Math.max(0, Number(cInput?.value) || 0);
@@ -759,15 +1046,15 @@ window.submitAddMealForm = async function (e) {
   }
 
   const newMeal = { id: Date.now(), name, type, p, c, f, calories: cal };
-  AppState.nutrition.meals.unshift(newMeal);
+  AppState.nutrition.freeMeals.unshift(newMeal);
   AppState.nutrition.consumed.calories += cal;
   AppState.nutrition.consumed.proteinG += p;
   AppState.nutrition.consumed.carbsG += c;
   AppState.nutrition.consumed.fatsG += f;
 
-  renderNutrition();
+  renderNutritionSummary();
   closeAddMealModal();
-  showToast('success', 'Comida Registrada', `${name} (+${cal} kcal).`);
+  showToast('success', 'Alimento Registrado', `${name} (+${cal} kcal añadidos al día).`);
 
   if (nameInput) nameInput.value = '';
   if (pInput) pInput.value = '';
@@ -897,17 +1184,82 @@ window.sendAICoachMessage = async function () {
   box.scrollTop = box.scrollHeight;
 
   try {
+    const token = localStorage.getItem('kynap_auth_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const res = await fetch('chat_kynap_ai.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ message: text, user_id: AppState.user.id })
+      headers: headers,
+      body: JSON.stringify({ message: text })
     });
-    const reply = await res.text();
+    const data = await res.json();
+    const reply = data.response || 'No se recibió respuesta del entrenador virtual.';
     botMsg.innerHTML = reply.replace(/\n/g, '<br>');
   } catch (e) {
     botMsg.innerHTML = `Entendido atleta. Te sugiero mantener una hidratación de ${AppState.nutrition.targets.waterMl} ml y priorizar tu descanso nocturno para optimizar la hipertrofia.`;
   }
   box.scrollTop = box.scrollHeight;
+};
+
+// ==============================================================================
+// 9.1 MODAL DE GENERACIÓN DE RUTINAS CON GROQ (LLAMA 3.3)
+// ==============================================================================
+window.openAiRoutineModal = function () {
+  const modal = document.getElementById('aiRoutineModal');
+  if (modal) modal.classList.add('open');
+};
+
+window.closeAiRoutineModal = function () {
+  const modal = document.getElementById('aiRoutineModal');
+  if (modal) modal.classList.remove('open');
+};
+
+window.handleGenerateAIRoutine = async function (e) {
+  if (e) e.preventDefault();
+  const objetivo = document.getElementById('aiRoutineObjetivo')?.value || 'ganar_musculo';
+  const dias = parseInt(document.getElementById('aiRoutineDias')?.value || '4', 10);
+  const equipamiento = document.getElementById('aiRoutineEquipamiento')?.value || 'gimnasio_completo';
+
+  const statusBox = document.getElementById('aiRoutineStatusBox');
+  const statusText = document.getElementById('aiRoutineStatusText');
+  const submitBtn = document.getElementById('btnSubmitAiRoutine');
+
+  if (statusBox) statusBox.style.display = 'block';
+  if (statusText) statusText.textContent = '🤖 Kynap AI (Llama 3.3) analizando biometría y estructurando periodización...';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '⚡ Diseñando con Llama 3.3...';
+  }
+
+  try {
+    const res = await ApiClient.request('controllers/api_routines.php?action=generate_ai', {
+      method: 'POST',
+      body: JSON.stringify({
+        objetivo: objetivo,
+        dias_semana: dias,
+        equipamiento: equipamiento
+      })
+    });
+
+    if (res && res.success && res.data?.routine) {
+      AppState.activeRoutine = res.data.routine;
+      AppState.checkIns = new Set();
+      renderRoutines();
+      closeAiRoutineModal();
+      showToast('success', '¡Rutina IA Diseñada!', `Nueva rutina "${res.data.routine.name}" programada y guardada en tu perfil.`);
+    } else {
+      showToast('error', 'Error en la IA', res?.message || 'No se pudo generar la rutina.');
+    }
+  } catch (err) {
+    showToast('error', 'Error de Conexión', 'No se pudo conectar con el servidor para generar la rutina.');
+  } finally {
+    if (statusBox) statusBox.style.display = 'none';
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '✨ Generar Rutina con Llama 3.3';
+    }
+  }
 };
 
 // ==============================================================================
@@ -1048,8 +1400,404 @@ window.switchTab = function (tabId, navBtn) {
 };
 
 // ==============================================================================
-// 12. HIDRATACIÓN INICIAL Y SINCRONIZACIÓN CON BACKEND
+// 12. MÓDULO DE RACHAS (STREAK SYSTEM & CALENDARIO COMPACTO - REQUERIMIENTO 3)
 // ==============================================================================
+/**
+ * Renderiza el componente de la racha en el header y en el modal detallado.
+ */
+function renderStreakComponent() {
+  const streak = AppState.streak || {};
+  const currentStreak = streak.currentStreak ?? streak.current_streak ?? 1;
+  const longestStreak = streak.longestStreak ?? streak.longest_streak ?? currentStreak;
+  const totalActive = streak.totalActiveDays ?? streak.total_active_days ?? currentStreak;
+  const badge = streak.badge || { name: 'Fuego Inicial', icon: '🔥', level: 1, nextGoal: '2 días para Bronce 🥉' };
+  const compactWeek = Array.isArray(streak.compactWeek) && streak.compactWeek.length > 0
+    ? streak.compactWeek
+    : [
+        { dayLetter: 'L', isActive: true, isToday: false },
+        { dayLetter: 'M', isActive: true, isToday: false },
+        { dayLetter: 'X', isActive: false, isToday: false },
+        { dayLetter: 'J', isActive: true, isToday: false },
+        { dayLetter: 'V', isActive: false, isToday: false },
+        { dayLetter: 'S', isActive: false, isToday: false },
+        { dayLetter: 'D', isActive: false, isToday: true }
+      ];
+
+  // 1. Badge visible en el header superior
+  const headerCounter = document.getElementById('streakCounter');
+  const headerMedal = document.getElementById('streakMedalTag');
+  if (headerCounter) {
+    headerCounter.textContent = `${currentStreak} ${currentStreak === 1 ? 'día activo' : 'días activos'}`;
+  }
+  if (headerMedal) {
+    headerMedal.textContent = `${badge.icon} ${badge.name}`;
+  }
+
+  // 2. Hero y métricas dentro del modal
+  const modalDays = document.getElementById('streakModalDays');
+  const modalMedal = document.getElementById('streakModalMedal');
+  const modalGoal = document.getElementById('streakModalGoal');
+  const modalProgress = document.getElementById('streakModalProgressBar');
+  const modalLongest = document.getElementById('streakModalLongest');
+  const modalTotal = document.getElementById('streakModalTotal');
+
+  if (modalDays) modalDays.textContent = currentStreak;
+  if (modalMedal) modalMedal.textContent = `${badge.icon} ${badge.name}`;
+  if (modalGoal) modalGoal.textContent = badge.nextGoal || '¡Sigue así!';
+
+  let nextTarget = 3;
+  let prevTarget = 0;
+  if (currentStreak >= 30) {
+    nextTarget = 30;
+    prevTarget = 30;
+  } else if (currentStreak >= 14) {
+    nextTarget = 30;
+    prevTarget = 14;
+  } else if (currentStreak >= 7) {
+    nextTarget = 14;
+    prevTarget = 7;
+  } else if (currentStreak >= 3) {
+    nextTarget = 7;
+    prevTarget = 3;
+  } else {
+    nextTarget = 3;
+    prevTarget = 0;
+  }
+  const span = nextTarget - prevTarget;
+  const progressPct = span > 0 ? Math.min(100, Math.max(10, Math.round(((currentStreak - prevTarget) / span) * 100))) : 100;
+  if (modalProgress) modalProgress.style.width = `${progressPct}%`;
+
+  if (modalLongest) modalLongest.textContent = `${longestStreak} ${longestStreak === 1 ? 'día' : 'días'}`;
+  if (modalTotal) modalTotal.textContent = `${totalActive} ${totalActive === 1 ? 'día' : 'días'}`;
+
+  // 3. Mini Calendario Semanal Compacto (Últimos 7 días)
+  const stripContainer = document.getElementById('streakCalendarStrip');
+  if (stripContainer) {
+    stripContainer.innerHTML = compactWeek.map(day => {
+      const isDone = !!day.isActive;
+      const isToday = !!day.isToday;
+      let dayClass = 'strip-day-card';
+      if (isDone) dayClass += ' active';
+      if (isToday) dayClass += ' today';
+
+      return `
+        <div class="${dayClass}">
+          <span class="strip-day-letter">${day.dayLetter || 'D'}</span>
+          <span class="strip-day-icon">${isDone ? '🔥' : (isToday ? '⚡' : '⭕')}</span>
+          <span class="strip-day-status">${isDone ? 'Activo' : (isToday ? 'Hoy' : 'Libre')}</span>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+window.openStreakModal = function () {
+  renderStreakComponent();
+  const modal = document.getElementById('streakModal');
+  if (modal) modal.classList.add('open');
+};
+
+window.closeStreakModal = function () {
+  const modal = document.getElementById('streakModal');
+  if (modal) modal.classList.remove('open');
+};
+
+// ==============================================================================
+// 13. MÓDULO DE CONDICIÓN FÍSICA & EVOLUCIÓN (7 DÍAS / 24H - REQUERIMIENTO 4)
+// ==============================================================================
+/**
+ * Alterna entre pestañas del modal de biometría (Formulario vs Historial).
+ * @param {'form'|'history'} subTab 
+ */
+window.switchBioSubTab = function (subTab) {
+  const formBtn = document.getElementById('btnTabBioForm');
+  const histBtn = document.getElementById('btnTabBioHistory');
+  const formPane = document.getElementById('bioTabContentForm');
+  const histPane = document.getElementById('bioTabContentHistory');
+
+  if (formBtn) formBtn.classList.toggle('active', subTab === 'form');
+  if (histBtn) histBtn.classList.toggle('active', subTab === 'history');
+  if (formPane) formPane.style.display = subTab === 'form' ? 'block' : 'none';
+  if (histPane) histPane.style.display = subTab === 'history' ? 'block' : 'none';
+};
+
+window.openBiometricsModal = function () {
+  const modal = document.getElementById('biometricsModal');
+  if (modal) {
+    modal.classList.add('open');
+    loadBiometricsData();
+  }
+};
+
+window.closeBiometricsModal = function () {
+  const modal = document.getElementById('biometricsModal');
+  if (modal) modal.classList.remove('open');
+};
+
+/**
+ * Carga desde el backend el perfil, la política de actualización (7d/24h) y el historial de evolución.
+ */
+async function loadBiometricsData() {
+  try {
+    const res = await ApiClient.request('controllers/api_profile.php');
+    if (res && res.success && res.data) {
+      const d = res.data;
+      if (d.policy) AppState.biometrics.policy = d.policy;
+      if (Array.isArray(d.history)) AppState.biometrics.history = d.history;
+      if (d.biometrics) AppState.biometrics.current = d.biometrics;
+
+      renderBiometricsPolicyBanner(d.policy);
+      renderBiometricsForm(d.biometrics, d.policy);
+      renderBiometricsHistory(d.history);
+    }
+  } catch (err) {
+    showToast('error', 'Error de Carga', 'No se pudieron recuperar las métricas corporales.');
+  }
+}
+
+/**
+ * Renderiza el banner dinámico según el modo de negocio: corrección (24h), bloqueado (7d), o disponible.
+ * @param {object} policy 
+ */
+function renderBiometricsPolicyBanner(policy) {
+  const banner = document.getElementById('bioPolicyBanner');
+  if (!banner || !policy) return;
+
+  banner.className = 'policy-banner';
+
+  if (policy.mode === 'correction') {
+    banner.classList.add('correction');
+    banner.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 26px;">✏️</span>
+        <div>
+          <strong style="color: var(--accent-amber); font-size: 14px;">Modo Corrección Activo (Ventana de 24 horas)</strong>
+          <p style="font-size: 12px; margin: 3px 0 0; color: var(--text-secondary);">
+            ${policy.message || 'Puedes editar o corregir cualquier error tipográfico en tu última medición sin esperar la semana.'}
+          </p>
+        </div>
+      </div>
+    `;
+  } else if (policy.mode === 'locked') {
+    banner.classList.add('locked');
+    banner.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 26px;">🔒</span>
+        <div>
+          <strong style="color: var(--accent-rose); font-size: 14px;">Actualización Periódica en Pausa (Regla de 7 días)</strong>
+          <p style="font-size: 12px; margin: 3px 0 0; color: var(--text-secondary);">
+            Para mantener un registro fisiológico consistente y evitar fluctuaciones de agua, la actualización se realiza <strong>1 vez por semana</strong>. Próxima fecha: <strong>${policy.nextAllowedDate || 'En unos días'}</strong> (${policy.daysRemainingNextUpdate} días restantes).
+          </p>
+        </div>
+      </div>
+    `;
+  } else {
+    banner.classList.add('available');
+    banner.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 26px;">✅</span>
+        <div>
+          <strong style="color: var(--accent-emerald); font-size: 14px;">Actualización Semanal Habilitada</strong>
+          <p style="font-size: 12px; margin: 3px 0 0; color: var(--text-secondary);">
+            Ha transcurrido al menos una semana desde tu registro anterior. Registra tu peso y medidas en ayunas para evaluar tu evolución.
+          </p>
+        </div>
+      </div>
+    `;
+  }
+}
+
+/**
+ * Pre-llena los inputs del formulario y ajusta el estado del botón submit.
+ * @param {object} bio 
+ * @param {object} policy 
+ */
+function renderBiometricsForm(bio, policy) {
+  const pInput = document.getElementById('bioInputPeso');
+  const aInput = document.getElementById('bioInputAltura');
+  const gInput = document.getElementById('bioInputGrasa');
+  const cInput = document.getElementById('bioInputCintura');
+  const peInput = document.getElementById('bioInputPecho');
+  const bInput = document.getElementById('bioInputBrazo');
+  const nInput = document.getElementById('bioInputNotas');
+  const submitBtn = document.getElementById('btnSubmitBiometrics');
+
+  if (pInput && bio.peso) pInput.value = bio.peso;
+  if (aInput && bio.altura) aInput.value = bio.altura;
+  if (gInput) gInput.value = bio.grasa_corporal ?? '';
+  if (cInput) cInput.value = bio.cintura_cm ?? '';
+  if (peInput) peInput.value = bio.pecho_cm ?? '';
+  if (bInput) bInput.value = bio.brazo_cm ?? '';
+  if (nInput) nInput.value = bio.notas ?? '';
+
+  if (submitBtn) {
+    if (policy && !policy.canUpdate) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.5';
+      submitBtn.style.cursor = 'not-allowed';
+      submitBtn.innerHTML = `🔒 Registro Bloqueado (${policy.daysRemainingNextUpdate} días restantes)`;
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+      if (policy && policy.mode === 'correction') {
+        submitBtn.innerHTML = `✏️ Guardar Corrección (Ventana 24h)`;
+      } else {
+        submitBtn.innerHTML = `💾 Registrar Nueva Medición Semanal`;
+      }
+    }
+  }
+}
+
+/**
+ * Renderiza la tabla de historial de evolución física con deltas de peso e IMC.
+ * @param {Array} history 
+ */
+function renderBiometricsHistory(history) {
+  const tbody = document.getElementById('bioHistoryTableBody');
+  if (!tbody) return;
+
+  if (!history || history.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+          Aún no tienes registros en tu historial de evolución.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = history.map(item => {
+    const delta = Number(item.deltaPeso) || 0;
+    let deltaClass = 'neutral';
+    let deltaText = '0.0 kg';
+    if (delta > 0) {
+      deltaClass = 'up';
+      deltaText = `+${delta.toFixed(1)} kg`;
+    } else if (delta < 0) {
+      deltaClass = 'down';
+      deltaText = `${delta.toFixed(1)} kg`;
+    }
+
+    const bmi = Number(item.bmi) || 0;
+    let bmiTagText = 'Normal';
+    if (bmi < 18.5) {
+      bmiTagText = 'Bajo Peso';
+    } else if (bmi >= 25 && bmi < 30) {
+      bmiTagText = 'Sobrepeso';
+    } else if (bmi >= 30) {
+      bmiTagText = 'Obesidad';
+    }
+
+    return `
+      <tr>
+        <td><strong>${item.date || item.created_at || 'Hoy'}</strong></td>
+        <td><strong style="color: var(--accent-cyan);">${item.peso} kg</strong></td>
+        <td><span class="delta-tag ${deltaClass}">${deltaText}</span></td>
+        <td>
+          <span style="font-weight: 700;">${bmi}</span>
+          <span class="day-badge" style="font-size: 10px; margin-left: 4px;">${bmiTagText}</span>
+        </td>
+        <td>${item.cinturaCm ? `${item.cinturaCm} cm` : '-'}</td>
+        <td style="color: var(--text-secondary); font-size: 12px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.notas || ''}">
+          ${item.notas || 'Sin observaciones'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Procesa el envío del formulario de biometría respetando la validación del backend.
+ * @param {Event} e 
+ */
+window.handleBiometricsSubmit = async function (e) {
+  if (e) e.preventDefault();
+
+  const pVal = parseFloat(document.getElementById('bioInputPeso')?.value);
+  const aVal = parseFloat(document.getElementById('bioInputAltura')?.value);
+  const gVal = parseFloat(document.getElementById('bioInputGrasa')?.value);
+  const cVal = parseFloat(document.getElementById('bioInputCintura')?.value);
+  const peVal = parseFloat(document.getElementById('bioInputPecho')?.value);
+  const bVal = parseFloat(document.getElementById('bioInputBrazo')?.value);
+  const nVal = document.getElementById('bioInputNotas')?.value?.trim();
+
+  if (!pVal || !aVal) {
+    showToast('warning', 'Campos Obligatorios', 'Por favor ingresa al menos tu peso (kg) y altura (cm).');
+    return;
+  }
+
+  const submitBtn = document.getElementById('btnSubmitBiometrics');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '⏳ Guardando en Servidor...';
+  }
+
+  try {
+    const res = await ApiClient.request('controllers/api_profile.php', {
+      method: 'POST',
+      body: JSON.stringify({
+        peso: pVal,
+        altura: aVal,
+        grasa_corporal: isNaN(gVal) ? null : gVal,
+        cintura_cm: isNaN(cVal) ? null : cVal,
+        pecho_cm: isNaN(peVal) ? null : peVal,
+        brazo_cm: isNaN(bVal) ? null : bVal,
+        notas: nVal || ''
+      })
+    });
+
+    if (res && res.success) {
+      showToast('success', '¡Registro Exitoso!', res.message || 'Tu condición física ha sido actualizada.');
+      await loadBiometricsData();
+      switchBioSubTab('history');
+    } else {
+      showToast('warning', 'Restricción de Periodicidad', res.message || 'No se pudo guardar la medición.');
+      if (res.data?.daysRemaining) {
+        showToast('info', 'Regla Semanal Activa', `Podrás actualizar tus métricas en ${res.data.daysRemaining} días.`);
+      }
+    }
+  } catch (err) {
+    showToast('warning', 'Restricción de Tiempo', err.message || 'Solo se permite actualizar una vez cada 7 días.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+    }
+  }
+};
+
+// ==============================================================================
+// 14. HIDRATACIÓN INICIAL Y SINCRONIZACIÓN CON BACKEND
+// ==============================================================================
+/**
+ * Actualiza dinámicamente el nombre de usuario y el avatar con iniciales automáticas.
+ * @param {string} name - Nombre completo del usuario (ej: "Juan Pérez")
+ */
+function updateSidebarUserProfile(name) {
+  if (!name) return;
+  const nameEl = document.getElementById('sidebarUserName');
+  const avatarEl = document.getElementById('sidebarAvatar');
+
+  if (nameEl) {
+    nameEl.textContent = name;
+  }
+
+  if (avatarEl) {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    let initials = 'K';
+    if (parts.length === 1 && parts[0]) {
+      initials = parts[0].slice(0, 2).toUpperCase();
+    } else if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    avatarEl.textContent = initials;
+    avatarEl.setAttribute('aria-label', `Avatar de ${name}`);
+    avatarEl.title = name;
+  }
+}
+window.updateSidebarUserProfile = updateSidebarUserProfile;
+
 async function syncInitialData() {
   // 1. Hidratar usuario desde sesión PHP inyectada si existe
   if (window.KYNAP_USER_SESSION) {
@@ -1062,9 +1810,10 @@ async function syncInitialData() {
       AppState.user.token = s.token;
       localStorage.setItem('kynap_auth_token', s.token);
     }
+    updateSidebarUserProfile(AppState.user.name);
   }
 
-  // 2. Sincronizar perfil y metas nutricionales (controllers/api_profile.php)
+  // 2. Sincronizar perfil, biometría, racha y metas (controllers/api_profile.php)
   try {
     const profRes = await ApiClient.request('controllers/api_profile.php');
     if (profRes && profRes.success && profRes.data) {
@@ -1073,6 +1822,7 @@ async function syncInitialData() {
         AppState.user.name = d.user.nombre || AppState.user.name;
         AppState.user.email = d.user.email || AppState.user.email;
         if (d.user.imagen_user) AppState.user.avatar = d.user.imagen_user;
+        updateSidebarUserProfile(AppState.user.name);
       }
       if (d.targets) {
         AppState.nutrition.targets = {
@@ -1083,45 +1833,45 @@ async function syncInitialData() {
           waterMl: d.targets.waterMl || 2500
         };
       }
-      if (d.streakDays) {
-        AppState.user.streakDays = d.streakDays;
-        const streakEl = document.getElementById('streakCounter');
-        if (streakEl) streakEl.textContent = `${d.streakDays} días activos`;
+      if (d.streak) {
+        AppState.streak = d.streak;
+        renderStreakComponent();
       }
+      if (d.policy) AppState.biometrics.policy = d.policy;
+      if (d.history) AppState.biometrics.history = d.history;
+      if (d.biometrics) AppState.biometrics.current = d.biometrics;
+
       renderNutrition();
     }
   } catch (e) {
     // Continuar con valores por defecto
   }
 
-  // 3. Sincronizar check-ins de la semana (controllers/api_routines.php)
+  // 3. Sincronizar rutina activa, check-ins y día del servidor (controllers/api_routines.php)
   try {
     const routRes = await ApiClient.request('controllers/api_routines.php');
-    if (routRes && routRes.success && routRes.data?.completedDays) {
-      AppState.checkIns = new Set(routRes.data.completedDays);
+    if (routRes && routRes.success) {
+      if (routRes.data?.currentDayKey) AppState.currentServerDayKey = routRes.data.currentDayKey;
+      if (routRes.data?.currentDayName) AppState.currentServerDayName = routRes.data.currentDayName;
+      if (routRes.data?.routine && Array.isArray(routRes.data.routine.days)) {
+        AppState.activeRoutine = routRes.data.routine;
+      }
+      if (routRes.data?.completedDays) {
+        AppState.checkIns = new Set(routRes.data.completedDays);
+      }
+      if (routRes.data?.streak) {
+        AppState.streak = routRes.data.streak;
+        renderStreakComponent();
+      }
       renderRoutines();
     }
   } catch (e) {
     // Continuar en memoria
   }
 
-  // 4. Sincronizar nutrición del día (controllers/api_nutrition.php)
+  // 4. Sincronizar nutrición del día con horarios estructurados y reinicio a medianoche
   try {
-    const nutRes = await ApiClient.request('controllers/api_nutrition.php');
-    if (nutRes && nutRes.success && nutRes.data) {
-      const d = nutRes.data;
-      if (d.waterMl !== undefined) AppState.nutrition.consumed.waterMl = d.waterMl;
-      if (Array.isArray(d.meals) && d.meals.length > 0) {
-        AppState.nutrition.meals = d.meals;
-        if (d.consumed) {
-          AppState.nutrition.consumed.calories = d.consumed.calories;
-          AppState.nutrition.consumed.proteinG = d.consumed.proteinG;
-          AppState.nutrition.consumed.carbsG = d.consumed.carbsG;
-          AppState.nutrition.consumed.fatsG = d.consumed.fatsG;
-        }
-      }
-      renderNutrition();
-    }
+    await loadNutritionData(AppState.currentServerDayKey);
   } catch (e) {
     // Continuar en memoria
   }
@@ -1197,6 +1947,7 @@ window.handleProfileUpdate = async function (e) {
 
   const sidebarName = document.getElementById('sidebarUserName');
   if (sidebarName) sidebarName.textContent = n;
+  updateSidebarUserProfile(n);
   renderNutrition();
   closeConfigModal();
 
@@ -1229,13 +1980,15 @@ window.handleLogout = function (e) {
 };
 
 // ==============================================================================
-// 14. INICIALIZACIÓN DE LA APLICACIÓN AL CARGAR DOM
+// 16. INICIALIZACIÓN DE LA APLICACIÓN AL CARGAR DOM
 // ==============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   renderRoutines();
   renderWorkoutLogger();
   renderNutrition();
   renderExerciseCatalog();
+  renderStreakComponent();
+  updateSidebarUserProfile(AppState.user.name);
   updateTimerUI();
 
   // Búsqueda en catálogo de ejercicios
@@ -1262,6 +2015,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Formulario de condición física (regla de 7 días y 24h de margen)
+  const biometricsForm = document.getElementById('biometricsForm');
+  if (biometricsForm) {
+    biometricsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleBiometricsSubmit(e);
+    });
+  }
+
   // Enter en input de AI coach
   const aiInput = document.getElementById('aiCoachInput');
   if (aiInput) {
@@ -1273,3 +2035,4 @@ document.addEventListener('DOMContentLoaded', () => {
   // Iniciar sincronización remota
   syncInitialData();
 });
+

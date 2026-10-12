@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0a0d14">
-  <meta name="description" content="Kynap AI - Plataforma integral de fitness, seguimiento de rutinas, registro de series en vivo, nutrición de precisión y coaching inteligente.">
-  <title>Kynap AI - Plataforma de Rendimiento Fitness & Coaching</title>
+  <meta name="description" content="Kynap AI - Plataforma integral de fitness SaaS: periodización de rutinas con IA Llama 3.3, control de fuerza 1RM en vivo, nutrición en 5 bloques horarios, control fisiológico y sistema de rachas.">
+  <title>Kynap AI - Plataforma de Alto Rendimiento Fitness & Coaching Inteligente</title>
 
   <!-- Google Fonts: Outfit (Titulares de impacto) & Inter (Lectura limpia) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +17,7 @@
   <script src="public/js/theme.js"></script>
 
   <style>
-    /* Estilos específicos de la Landing Page adaptados al Design System Kynap */
+    /* Estilos específicos de la Landing Page Kynap */
     .landing-body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
@@ -31,20 +31,21 @@
       position: sticky;
       top: 0;
       z-index: 500;
-      background: rgba(10, 13, 20, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(10, 13, 20, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border-subtle);
-      padding: 16px 24px;
+      padding: 16px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      transition: background 0.3s ease;
     }
 
     .landing-nav {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 28px;
     }
 
     .landing-nav a {
@@ -57,7 +58,7 @@
     }
 
     .landing-nav a:hover {
-      color: var(--text-primary);
+      color: var(--accent-emerald);
     }
 
     .landing-actions {
@@ -77,11 +78,14 @@
       background: rgba(255, 255, 255, 0.04);
       transition: var(--transition-fast);
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .btn-landing-login:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .btn-landing-cta {
@@ -90,11 +94,15 @@
       text-decoration: none;
       font-size: 14px;
       font-weight: 700;
-      padding: 9px 20px;
+      padding: 9px 22px;
       border-radius: var(--radius-sm);
       box-shadow: 0 0 16px var(--accent-emerald-glow);
       transition: var(--transition-fast);
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
     }
 
     .btn-landing-cta:hover {
@@ -104,23 +112,24 @@
 
     /* Hero Section */
     .hero-section {
-      padding: 80px 24px 60px;
+      padding: 90px 24px 60px;
       text-align: center;
-      max-width: 900px;
+      max-width: 980px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative;
     }
 
     .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 16px;
+      padding: 6px 18px;
       border-radius: var(--radius-full);
       background: rgba(0, 255, 136, 0.1);
-      border: 1px solid rgba(0, 255, 136, 0.25);
+      border: 1px solid rgba(0, 255, 136, 0.3);
       color: var(--accent-emerald);
       font-size: 13px;
       font-weight: 600;
@@ -130,16 +139,16 @@
 
     @keyframes pulseGlow {
       0%, 100% { box-shadow: 0 0 0 rgba(0, 255, 136, 0); }
-      50% { box-shadow: 0 0 18px rgba(0, 255, 136, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.35); }
     }
 
     .hero-title {
       font-family: var(--font-heading);
-      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-size: clamp(2.5rem, 5.5vw, 4.2rem);
       font-weight: 900;
-      line-height: 1.15;
-      letter-spacing: -1px;
-      margin-bottom: 20px;
+      line-height: 1.12;
+      letter-spacing: -1.5px;
+      margin-bottom: 24px;
     }
 
     .hero-title span {
@@ -149,10 +158,10 @@
     }
 
     .hero-subtitle {
-      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
       color: var(--text-secondary);
-      max-width: 680px;
-      line-height: 1.6;
+      max-width: 740px;
+      line-height: 1.65;
       margin-bottom: 36px;
     }
 
@@ -161,13 +170,14 @@
       gap: 16px;
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: 20px;
     }
 
-    /* Active Session Banner (Smart Redirect) */
+    /* Active Session Banner */
     .session-banner {
       display: none;
       background: rgba(0, 217, 255, 0.12);
-      border: 1px solid rgba(0, 217, 255, 0.3);
+      border: 1px solid rgba(0, 217, 255, 0.35);
       padding: 12px 24px;
       border-radius: var(--radius-md);
       margin-bottom: 28px;
@@ -175,6 +185,9 @@
       gap: 12px;
       color: var(--text-primary);
       font-size: 14px;
+      width: 100%;
+      max-width: 600px;
+      justify-content: center;
     }
 
     .session-banner a {
@@ -184,73 +197,147 @@
       cursor: pointer;
     }
 
-    /* Features Grid */
+    /* Sección de Presentación de Plataforma */
     .features-section {
-      padding: 60px 24px 80px;
+      padding: 70px 24px 80px;
       max-width: 1200px;
       margin: 0 auto;
+      width: 100%;
     }
 
     .section-header {
       text-align: center;
-      margin-bottom: 48px;
+      margin-bottom: 50px;
+    }
+
+    .section-header .section-tag {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent-cyan);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: block;
     }
 
     .section-header h2 {
       font-family: var(--font-heading);
-      font-size: 2.2rem;
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
       font-weight: 800;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 24px;
     }
 
     .feature-card {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 28px 24px;
+      border-radius: var(--radius-lg);
+      padding: 32px 26px;
       transition: var(--transition-normal);
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent-emerald)), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
 
     .feature-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-6px);
       border-color: rgba(255, 255, 255, 0.2);
-      box-shadow: var(--shadow-card);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
     }
 
-    .feature-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-sm);
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon-wrapper {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      background: rgba(255, 255, 255, 0.05);
+      font-size: 26px;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-subtle);
     }
 
     .feature-title {
       font-family: var(--font-heading);
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 700;
     }
 
     .feature-desc {
-      font-size: 14px;
+      font-size: 14.5px;
       color: var(--text-secondary);
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
-    /* Auth Modal Tabs */
+    .feature-highlight-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-emerald);
+      margin-top: auto;
+      padding-top: 8px;
+    }
+
+    /* Demo Interactiva Preview */
+    .preview-section {
+      padding: 60px 24px 90px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .preview-card-mockup {
+      background: #0d111a;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-top: 16px;
+    }
+
+    .preview-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 10px;
+    }
+
+    .preview-pill {
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Modal Form Styles */
     .auth-tabs {
       display: flex;
       border-bottom: 1px solid var(--border-subtle);
@@ -275,62 +362,6 @@
       border-bottom-color: var(--accent-emerald);
     }
 
-    /* Estilos del Formulario Nutricional y Biométrico */
-    .form-grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .section-title-divider {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 10px 0 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--accent-cyan);
-    }
-
-    .section-title-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border-subtle);
-    }
-
-    .checkbox-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-primary);
-      cursor: pointer;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 6px 10px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-subtle);
-      transition: var(--transition-fast);
-      user-select: none;
-    }
-
-    .checkbox-pill:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .checkbox-pill input[type="checkbox"] {
-      accent-color: var(--accent-emerald);
-      cursor: pointer;
-    }
-
-    select.input-custom option {
-      background-color: #131823;
-      color: #fff;
-    }
-
     .modal-sheet::-webkit-scrollbar {
       width: 6px;
     }
@@ -341,43 +372,102 @@
       background: rgba(255, 255, 255, 0.15);
       border-radius: 4px;
     }
-    .modal-sheet::-webkit-scrollbar-thumb:hover {
-      background: var(--accent-cyan);
-    }
-
-    @media (max-width: 520px) {
-      .form-grid-2 {
-        grid-template-columns: 1fr;
-      }
-    }
 
     /* Footer */
     .landing-footer {
       border-top: 1px solid var(--border-subtle);
-      padding: 32px 24px;
-      text-align: center;
+      background: #080a10;
+      padding: 60px 24px 36px;
       margin-top: auto;
+    }
+
+    .footer-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-col h4 {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-col a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s ease;
+    }
+
+    .footer-col a:hover {
+      color: var(--accent-emerald);
+    }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
       font-size: 13px;
       color: var(--text-muted);
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 860px) {
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
       .landing-nav {
         display: none;
       }
       .hero-section {
-        padding: 50px 16px 40px;
+        padding: 60px 16px 40px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+      .btn-landing-cta, .btn-landing-login {
+        width: 100%;
+        justify-content: center;
       }
     }
   </style>
 </head>
 <body class="landing-body">
 
-  <!-- Contenedor de Notificaciones Toast -->
+  <!-- Contenedor Global de Notificaciones Toast -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <!-- ====================================================================
-       ENCABEZADO DE NAVEGACIÓN PRINCIPAL
+       1. ENCABEZADO DE NAVEGACIÓN PRINCIPAL
        ==================================================================== -->
   <header class="landing-header">
     <div class="brand" style="border: none; padding: 0;">
@@ -386,129 +476,405 @@
     </div>
 
     <nav class="landing-nav">
-      <a href="#caracteristicas">Características</a>
-      <a href="#modulos">Módulos</a>
+      <a href="#plataforma">Módulos IA</a>
+      <a href="#demostracion">Demostración en Vivo</a>
+      <a href="#diferenciadores">Por qué Kynap</a>
       <a href="app.html" onclick="navigateToDashboard(event)" id="navDashboardLink">Panel de Control</a>
     </nav>
 
     <div class="landing-actions">
-      <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema" style="margin-right: 2px;">🌙</button>
-      <button type="button" class="btn-landing-login" id="headerLoginBtn" onclick="openAuthModal('login', event)">Iniciar Sesión</button>
-      <button type="button" class="btn-landing-cta" id="headerRegisterBtn" onclick="openAuthModal('register', event)">Registrarse</button>
+      <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema" style="margin-right: 4px;">🌙</button>
+      <a href="login.html" class="btn-landing-login" onclick="openAuthModal('login', event)">Iniciar Sesión</a>
+      <a href="registro.html" class="btn-landing-cta" onclick="openAuthModal('register', event)">Crear Cuenta</a>
     </div>
   </header>
 
   <!-- ====================================================================
        BANNER DE REDIRECCIÓN INTELIGENTE (SI YA HAY SESIÓN)
        ==================================================================== -->
-  <div class="hero-section" style="padding-bottom: 0;">
+  <div class="hero-section" style="padding-bottom: 0; padding-top: 30px;">
     <div id="smartSessionBanner" class="session-banner">
-      <span>⚡</span>
+      <span style="font-size: 18px;">⚡</span>
       <span id="sessionUserGreeting">Tienes una sesión iniciada.</span>
       <a href="app.html" onclick="navigateToDashboard(event)" id="bannerDashboardLink">Ir a mi Panel de Control ➔</a>
     </div>
   </div>
 
   <!-- ====================================================================
-       SECCIÓN HERO
+       2. SECCIÓN HERO (ALTO IMPACTO SAAS)
        ==================================================================== -->
   <section class="hero-section">
     <div class="hero-badge">
-      <span>✨</span> Plataforma Integral Fitness & Inteligencia Artificial
+      <span>✨</span> Periodización Científica & Inteligencia Artificial Llama 3.3
     </div>
 
     <h1 class="hero-title">
-      Entrena con Precisión.<br>
-      <span>Evoluciona tu Físico.</span>
+      Entrena con Inteligencia.<br>
+      <span>Evoluciona tu Físico al Máximo.</span>
     </h1>
 
     <p class="hero-subtitle">
-      Kynap integra seguimiento de fuerza en vivo, cálculo automático de 1RM (Epley), balance calórico con macronutrientes Atwater, hidratación y coaching inteligente en una experiencia SaaS de vanguardia.
+      Kynap es la plataforma integral de rendimiento físico que unifica periodización algorítmica, registro de series y 1RM en vivo, nutrición personalizada en 5 bloques horarios y control fisiológico continuo.
     </p>
 
     <div class="hero-buttons">
-      <button type="button" class="btn-landing-cta" style="padding: 13px 28px; font-size: 16px; border: none;" onclick="openAuthModal('register', event)">
-        Comenzar Ahora Gratis
-      </button>
-      <button type="button" class="btn-landing-login" style="padding: 13px 24px; font-size: 16px;" onclick="openAuthModal('login', event)">
-        Acceder a mi Cuenta
-      </button>
+      <a href="registro.html" class="btn-landing-cta" style="padding: 14px 32px; font-size: 16px;" onclick="openAuthModal('register', event)">
+        ⚡ Iniciar Prueba / Crear Cuenta
+      </a>
+      <a href="login.html" class="btn-landing-login" style="padding: 14px 28px; font-size: 16px;" onclick="openAuthModal('login', event)">
+        🔑 Iniciar Sesión
+      </a>
+    </div>
+
+    <div style="display: flex; gap: 24px; align-items: center; justify-content: center; margin-top: 20px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
+      <span>✓ Sin tarjeta requerida</span>
+      <span>✓ IA Adaptativa 24/7</span>
+      <span>✓ Cálculo Automático de 1RM & Macros</span>
     </div>
   </section>
 
   <!-- ====================================================================
-       CARACTERÍSTICAS Y MÓDULOS DE ALTO RENDIMIENTO
+       3. PRESENTACIÓN DE LA PLATAFORMA (5 MÓDULOS ESENCIALES)
        ==================================================================== -->
-  <section class="features-section" id="caracteristicas">
+  <section class="features-section" id="plataforma">
     <div class="section-header">
-      <h2>Diseñado para Resultados Reales</h2>
-      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 15px;">
-        Una suite completa que unifica tu entrenamiento, nutrición y recuperación con sincronización en tiempo real.
+      <span class="section-tag">Arquitectura de Vanguardia</span>
+      <h2>Todo lo que tu Físico Necesita para Progresar</h2>
+      <p style="color: var(--text-secondary); max-width: 680px; margin: 0 auto; font-size: 15px; line-height: 1.6;">
+        Diseñado bajo estrictos principios de ciencia del ejercicio, biomecánica y nutrición clínica para eliminar las suposiciones de tu preparación.
       </p>
     </div>
 
-    <div class="features-grid" id="modulos">
-      <!-- Módulo 1 -->
-      <div class="feature-card">
-        <div class="feature-icon" style="color: var(--accent-emerald);">📅</div>
-        <h3 class="feature-title">Rutinas & Adherencia</h3>
+    <div class="features-grid">
+      <!-- 1. Periodización de Rutinas con IA Llama 3.3 -->
+      <div class="feature-card" style="--card-accent: var(--accent-emerald);">
+        <div class="feature-icon-wrapper" style="color: var(--accent-emerald);">🤖</div>
+        <h3 class="feature-title">Periodización con IA Llama 3.3</h3>
         <p class="feature-desc">
-          Planificación semanal estructurada con tachado táctil de entrenamientos, cálculo automático de porcentaje de cumplimiento y seguimiento de racha activa.
+          Planificación algorítmica de mesociclos y microciclos con sobrecarga progresiva autoregulada. Adaptada a tus días disponibles, nivel biomecánico y fatiga acumulada, con tachado táctil y bloqueo diario de rutinas.
         </p>
+        <div class="feature-highlight-badge">
+          <span>⚡ Algoritmo adaptativo en tiempo real</span>
+        </div>
       </div>
 
-      <!-- Módulo 2 -->
-      <div class="feature-card">
-        <div class="feature-icon" style="color: var(--accent-cyan);">⚡</div>
-        <h3 class="feature-title">Workout Logger en Vivo</h3>
+      <!-- 2. Seguimiento Nutricional & 5 Bloques Horarios -->
+      <div class="feature-card" style="--card-accent: var(--accent-amber);">
+        <div class="feature-icon-wrapper" style="color: var(--accent-amber);">🥗</div>
+        <h3 class="feature-title">Nutrición & 5 Bloques Horarios</h3>
         <p class="feature-desc">
-          Registro instantáneo de series, peso (kg), repeticiones y RPE. Estimación en vivo de tu 1RM por la fórmula de Epley y cálculo acumulativo de tonelaje total.
+          Crononutrición precisa organizada en 5 tiempos clave (Desayuno, Media Mañana, Almuerzo, Merienda, Cena) con reinicio automático a medianoche, cálculo de macronutrientes Atwater y control de hidratación por vasos.
         </p>
+        <div class="feature-highlight-badge" style="color: var(--accent-amber);">
+          <span>⏱ Filtro inteligente por día de la semana</span>
+        </div>
       </div>
 
-      <!-- Módulo 3 -->
-      <div class="feature-card">
-        <div class="feature-icon" style="color: var(--accent-amber);">🥗</div>
-        <h3 class="feature-title">Nutrición & Macronutrientes</h3>
+      <!-- 3. Control Fisiológico Semanal & 24h Biometrics -->
+      <div class="feature-card" style="--card-accent: var(--accent-cyan);">
+        <div class="feature-icon-wrapper" style="color: var(--accent-cyan);">📊</div>
+        <h3 class="feature-title">Control Fisiológico Semanal</h3>
         <p class="feature-desc">
-          Metas energéticas calculadas científicamente (Mifflin-St Jeor). Control de proteínas, carbohidratos, grasas y registro de hidratación con ajuste rápido.
+          Monitoreo antropométrico riguroso (peso corporal, porcentaje graso, perímetros de cintura, pecho y bíceps). Registro de condición física con alertas automáticas ante estancamientos o sobreentrenamiento.
         </p>
+        <div class="feature-highlight-badge" style="color: var(--accent-cyan);">
+          <span>📈 Análisis de tendencias 7 días / 24 horas</span>
+        </div>
       </div>
 
-      <!-- Módulo 4 -->
-      <div class="feature-card">
-        <div class="feature-icon" style="color: var(--accent-rose);">📚</div>
-        <h3 class="feature-title">Catálogo con GIFs Reales</h3>
+      <!-- 4. Sistema de Rachas Motivacional -->
+      <div class="feature-card" style="--card-accent: var(--accent-rose);">
+        <div class="feature-icon-wrapper" style="color: var(--accent-rose);">🔥</div>
+        <h3 class="feature-title">Sistema de Rachas Motivacional</h3>
         <p class="feature-desc">
-          Librería de ejercicios categorizada por grupo muscular y equipamiento con demostraciones animadas e instrucciones técnicas paso a paso.
+          Gamificación psicológica de alta adherencia: contador de días consecutivos, medallas escalonadas (Semana de Fuego, Mes de Hierro, Centurión, Año Legendario) y protección de racha en días de descanso planificados.
         </p>
+        <div class="feature-highlight-badge" style="color: var(--accent-rose);">
+          <span>🏆 +94% de adherencia demostrada</span>
+        </div>
       </div>
 
-      <!-- Módulo 5 -->
-      <div class="feature-card">
-        <div class="feature-icon" style="color: var(--accent-purple);">🤖</div>
-        <h3 class="feature-title">Kynap Coach AI</h3>
+      <!-- 5. Mente Sana & Respiración Guiada -->
+      <div class="feature-card" style="--card-accent: #a855f7;">
+        <div class="feature-icon-wrapper" style="color: #a855f7;">🧘</div>
+        <h3 class="feature-title">Mente Sana & Respiración Guiada</h3>
         <p class="feature-desc">
-          Asistente inteligente disponible 24/7 para resolver dudas sobre periodización, ajuste de calorías, suplementación y prevención del sobreentrenamiento.
+          Esfera interactiva de respiración cardiovascular con protocolos clínicos (Box 4-4-4, 4-7-8 sedante y 2-2 equilibrante) para regular el sistema simpático, reducir el cortisol y potenciar la recuperación muscular post-entreno.
         </p>
+        <div class="feature-highlight-badge" style="color: #a855f7;">
+          <span>🧠 Modulación parasimpática post-esfuerzo</span>
+        </div>
       </div>
 
-      <!-- Módulo 6 -->
-      <div class="feature-card">
-        <div class="feature-icon" style="color: var(--accent-cyan);">🧘</div>
-        <h3 class="feature-title">Mente Sana & Respiración</h3>
+      <!-- 6. Workout Logger en Vivo & 1RM Epley -->
+      <div class="feature-card" style="--card-accent: var(--accent-cyan);">
+        <div class="feature-icon-wrapper" style="color: var(--accent-cyan);">⚡</div>
+        <h3 class="feature-title">Workout Logger en Vivo & 1RM</h3>
         <p class="feature-desc">
-          Esfera de respiración guiada interactiva con patrones Box 4-4-4, 4-7-8 y 2-2 para regular tu sistema nervioso y maximizar la recuperación.
+          Registro dinámico de series, repeticiones efectivas y RPE durante tu sesión en el gimnasio. Cálculo instantáneo de tu 1RM estimado mediante la fórmula de Epley y cálculo de volumen/tonelaje acumulativo por sesión.
         </p>
+        <div class="feature-highlight-badge" style="color: var(--accent-cyan);">
+          <span>🏋️ Epley: Peso × (1 + Reps/30)</span>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ====================================================================
-       MODAL DE AUTENTICACIÓN INTEGRADO (LOGIN Y REGISTRO SIN DESCARGA)
+       4. DEMOSTRACIÓN INTERACTIVA / VISTA PREVIA PASO A PASO
+       ==================================================================== -->
+  <section class="preview-section" id="demostracion">
+    <div class="section-header">
+      <span class="section-tag">Experiencia de Usuario en Vivo</span>
+      <h2>Descubre cómo Kynap Transforma tu Rutina</h2>
+      <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto; font-size: 15px;">
+        Explora los módulos operativos de la plataforma con la misma fluidez e interactividad que tendrás como atleta.
+      </p>
+    </div>
+
+    <div class="interactive-preview-container">
+      <!-- Pestañas de la Demo -->
+      <div class="preview-tab-controls" role="tablist">
+        <button type="button" class="preview-tab-btn active" onclick="switchPreviewTab('tab-workout', this)">🏋️ 1. Rutinas & Bloqueo Diario</button>
+        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-epley', this)">⚡ 2. 1RM Epley en Vivo</button>
+        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-nutrition', this)">🥗 3. Crononutrición (5 Bloques)</button>
+        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-biometrics', this)">📊 4. Antropometría & Rachas</button>
+      </div>
+
+      <!-- Pestaña 1: Rutinas -->
+      <div id="tab-workout" class="preview-tab-content active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Sesión Activa: Empuje & Pectoral (Fuerza / Hipertrofia)</h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Periodización IA Llama 3.3 • Semana 3 • Bloque de Sobrecarga</span>
+          </div>
+          <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald); border: 1px solid var(--accent-emerald);">
+            Adherencia: 100% al Día
+          </span>
+        </div>
+
+        <div class="preview-card-mockup">
+          <div class="preview-row">
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">1. Press de Banca Plano con Barra</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">4 Series × 6-8 Reps @ RPE 8.5 • Descanso: 120s</div>
+            </div>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-emerald);">✓ 85 kg × 8 reps</span>
+          </div>
+
+          <div class="preview-row">
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">2. Press Inclinado con Mancuernas</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">3 Series × 10-12 Reps @ RPE 8 • Descanso: 90s</div>
+            </div>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-emerald);">✓ 30 kg × 10 reps</span>
+          </div>
+
+          <div class="preview-row">
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">3. Fondos en Paralelas Lastrados</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">3 Series × 8-10 Reps • Énfasis Tríceps & Pectoral Inferior</div>
+            </div>
+            <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);">⚡ En Curso</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 2: 1RM Epley -->
+      <div id="tab-epley" class="preview-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Calculadora de 1RM en Tiempo Real</h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Fórmula de Epley validada científicamente para cuantificación de fuerza</span>
+          </div>
+          <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">
+            Algoritmo Activo
+          </span>
+        </div>
+
+        <div class="preview-card-mockup" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+          <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: var(--radius-sm);">
+            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Peso Levantado (kg)</label>
+            <input type="number" id="previewWeight" value="100" class="input-custom" style="padding: 8px 12px;" oninput="updateLiveEpley()">
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: var(--radius-sm);">
+            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Repeticiones Logradas</label>
+            <input type="number" id="previewReps" value="6" min="1" max="30" class="input-custom" style="padding: 8px 12px;" oninput="updateLiveEpley()">
+          </div>
+          <div style="background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.25); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+            <div style="font-size: 12px; color: var(--accent-emerald); font-weight: 700;">1RM Estimado</div>
+            <div id="preview1RMDisplay" style="font-family: var(--font-heading); font-size: 32px; font-weight: 900; color: #fff;">120.0 kg</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Cálculo: 100 × (1 + 6/30)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 3: Crononutrición -->
+      <div id="tab-nutrition" class="preview-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Plan Alimenticio de Hoy (Lunes) • 5 Bloques</h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Meta Diaria: 2,850 kcal • P: 180g | C: 320g | G: 75g • Hidratación: 3.5L</span>
+          </div>
+          <span class="preview-pill" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid var(--accent-amber);">
+            Reinicio Automático a Medianoche
+          </span>
+        </div>
+
+        <div class="preview-card-mockup">
+          <div class="preview-row">
+            <div>
+              <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">08:00 AM • DESAYUNO</span>
+              <div style="font-weight: 600; font-size: 13.5px;">Avena proteica con plátano, mantequilla de maní y 3 huevos revueltos</div>
+            </div>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">✓ 650 kcal</span>
+          </div>
+          <div class="preview-row">
+            <div>
+              <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">11:00 AM • MEDIA MAÑANA</span>
+              <div style="font-weight: 600; font-size: 13.5px;">Batido de proteína aislado, almendras tostadas y manzana verde</div>
+            </div>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">✓ 380 kcal</span>
+          </div>
+          <div class="preview-row">
+            <div>
+              <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">02:00 PM • ALMUERZO</span>
+              <div style="font-weight: 600; font-size: 13.5px;">Pechuga a la plancha (200g), arroz integral (200g) y aguacate</div>
+            </div>
+            <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);">⚡ Próximo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 4: Antropometría -->
+      <div id="tab-biometrics" class="preview-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Evolución Antropométrica & Racha Activa</h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Monitoreo de recomposición corporal con alertas fisiológicas</span>
+          </div>
+          <span class="preview-pill" style="background: rgba(255, 71, 87, 0.15); color: var(--accent-rose); border: 1px solid var(--accent-rose);">
+            🔥 Racha: 21 Días Consecutivos
+          </span>
+        </div>
+
+        <div class="preview-card-mockup" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+            <span style="font-size: 12px; color: var(--text-secondary);">Peso Inicial ➔ Actual</span>
+            <div style="font-size: 22px; font-weight: 800; color: #fff; margin: 4px 0;">78.5 ➔ 75.0 kg</div>
+            <span style="font-size: 11px; color: var(--accent-emerald); font-weight: 700;">-3.5 kg Grasa Pura</span>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+            <span style="font-size: 12px; color: var(--text-secondary);">% Grasa Estimado</span>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-cyan); margin: 4px 0;">13.8%</div>
+            <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 700;">Rango Atlético</span>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+            <span style="font-size: 12px; color: var(--text-secondary);">Medalla Desbloqueada</span>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-amber); margin: 4px 0;">Mes de Hierro 🛡️</div>
+            <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">Adherencia > 90%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       5. BENEFICIOS & DIFERENCIADORES (TABLA COMPARATIVA & MÉTRICAS)
+       ==================================================================== -->
+  <section class="features-section" id="diferenciadores" style="padding-top: 20px;">
+    <div class="section-header">
+      <span class="section-tag">Ventajas Competitivas</span>
+      <h2>Por Qué Kynap Supera a las Alternativas</h2>
+      <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto; font-size: 15px;">
+        Descubre cómo la combinación de IA avanzada, diseño premium y rigor científico deja atrás las hojas de cálculo y las aplicaciones genéricas.
+      </p>
+    </div>
+
+    <!-- Grid de Métricas de Rendimiento -->
+    <div class="kpi-metrics-grid">
+      <div class="kpi-metric-box">
+        <div class="kpi-metric-number">+94%</div>
+        <div class="kpi-metric-label">Adherencia Semanal a la Rutina</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="kpi-metric-number">3.8x</div>
+        <div class="kpi-metric-label">Mayor Ganancia de Fuerza Relativa</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="kpi-metric-number">24/7</div>
+        <div class="kpi-metric-label">Asistencia de Coaching con IA</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="kpi-metric-number">0 seg</div>
+        <div class="kpi-metric-label">Pérdida de Tiempo en Hojas de Cálculo</div>
+      </div>
+    </div>
+
+    <!-- Tabla Comparativa -->
+    <div class="comparison-table-wrapper">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Capacidad / Característica</th>
+            <th style="color: var(--accent-emerald);">Kynap AI Platform</th>
+            <th>Hojas de Cálculo (Excel)</th>
+            <th>Otras Apps de Fitness</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Periodización Inteligente con Llama 3.3</strong></td>
+            <td><span class="check-green">✓ Nativo & Autoregulado</span></td>
+            <td><span class="cross-red">✕ Requiere programación manual</span></td>
+            <td><span class="cross-red">✕ Rutinas genéricas y estáticas</span></td>
+          </tr>
+          <tr>
+            <td><strong>Workout Logger con 1RM Epley en Vivo</strong></td>
+            <td><span class="check-green">✓ Instantáneo con RPE</span></td>
+            <td><span class="cross-red">✕ Tedioso en el móvil</span></td>
+            <td><span class="cross-red">✕ Solo conteo simple de series</span></td>
+          </tr>
+          <tr>
+            <td><strong>Crononutrición en 5 Bloques + Reinicio 00:00</strong></td>
+            <td><span class="check-green">✓ Sincronizado por Día</span></td>
+            <td><span class="cross-red">✕ Sin alertas horarias</span></td>
+            <td><span class="cross-red">✕ Complejo y de pago mensual</span></td>
+          </tr>
+          <tr>
+            <td><strong>Control Fisiológico Semanal 7d/24h</strong></td>
+            <td><span class="check-green">✓ Alertas de estancamiento</span></td>
+            <td><span class="cross-red">✕ Gráficos estáticos manuales</span></td>
+            <td><span class="cross-red">✕ Solo peso sin perímetros</span></td>
+          </tr>
+          <tr>
+            <td><strong>Esfera de Respiración y Modulación Parasimpática</strong></td>
+            <td><span class="check-green">✓ 3 Protocolos Clínicos</span></td>
+            <td><span class="cross-red">✕ No disponible</span></td>
+            <td><span class="cross-red">✕ Requiere app externa separada</span></td>
+          </tr>
+          <tr>
+            <td><strong>Privacidad & Base de Datos Propia</strong></td>
+            <td><span class="check-green">✓ Cifrado BCRYPT & Tokens HMAC</span></td>
+            <td><span class="check-green">✓ Local</span></td>
+            <td><span class="cross-red">✕ Venta de datos a terceros</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 48px;">
+      <a href="registro.html" class="btn-landing-cta" style="padding: 14px 36px; font-size: 16px;" onclick="openAuthModal('register', event)">
+        Comenzar tu Evolución Ahora Gratis ➔
+      </a>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       MODAL DE AUTENTICACIÓN INTEGRADO CON WIZARD MULTIPASO Y DOBLE FEEDBACK
        ==================================================================== -->
   <div class="modal-backdrop" id="authModal" onclick="if(event.target === this) closeAuthModal(event)">
-    <div class="modal-sheet" style="padding: 30px 26px; max-width: 560px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-sheet" id="modalSheetCard" style="padding: 30px 26px; max-width: 580px; max-height: 90vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <div class="brand" style="border: none; padding: 0;">
           <div class="brand-logo" style="width: 32px; height: 32px; font-size: 18px;">K</div>
@@ -523,176 +889,335 @@
         <button class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register', event)">Crear Cuenta</button>
       </div>
 
-      <div id="authAlertBox" style="display: none; background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.35); color: var(--accent-rose); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 16px; line-height: 1.4;"></div>
+      <!-- Banner de Feedback Contextual de Error -->
+      <div id="authAlertBox" class="auth-alert-banner" style="display: none; margin-bottom: 16px;" role="alert"></div>
 
-      <!-- Formulario 1: Iniciar Sesión -->
+      <!-- Formulario 1: Iniciar Sesión con Doble Indicador -->
       <form id="authLoginForm" action="#" method="POST" onsubmit="handleAuthLogin(event)" style="display: flex; flex-direction: column; gap: 14px;">
         <div class="form-group" style="margin: 0;">
           <label for="modalLoginEmail">Correo Electrónico</label>
-          <input type="email" id="modalLoginEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email">
+          <input type="email" id="modalLoginEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email" oninput="clearModalFieldError(this)">
+          <div id="modalLoginEmailErr" class="field-error-msg" style="display: none;"></div>
         </div>
 
         <div class="form-group" style="margin: 0;">
           <label for="modalLoginPassword">Contraseña</label>
-          <input type="password" id="modalLoginPassword" class="input-custom" placeholder="••••••••" required autocomplete="current-password">
+          <input type="password" id="modalLoginPassword" class="input-custom" placeholder="••••••••" required autocomplete="current-password" oninput="clearModalFieldError(this)">
+          <div id="modalLoginPassErr" class="field-error-msg" style="display: none;"></div>
         </div>
 
-        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
+        <button type="submit" id="modalLoginSubmitBtn" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
           Ingresar al Panel ➔
         </button>
       </form>
 
-      <!-- Formulario 2: Crear Cuenta con Formulario Nutricional y Biométrico Completo -->
-      <form id="authRegisterForm" action="#" method="POST" onsubmit="handleAuthRegister(event)" style="display: none; flex-direction: column; gap: 12px;">
+      <!-- Formulario 2: Crear Cuenta Onboarding Multipaso -->
+      <div id="authRegisterContainer" style="display: none; flex-direction: column; gap: 14px;">
         
-        <!-- SECCIÓN 1: DATOS DE ACCESO -->
-        <div class="section-title-divider">
-          <span>1. Credenciales de Acceso</span>
-        </div>
-
-        <div class="form-group" style="margin: 0;">
-          <label for="modalRegName">Nombre Completo *</label>
-          <input type="text" id="modalRegName" class="input-custom" placeholder="Ej: Savier Casiani" required autocomplete="name">
-        </div>
-
-        <div class="form-group" style="margin: 0;">
-          <label for="modalRegEmail">Correo Electrónico *</label>
-          <input type="email" id="modalRegEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email">
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegPassword">Contraseña *</label>
-            <input type="password" id="modalRegPassword" class="input-custom" placeholder="Mín. 6 caracteres" required autocomplete="new-password" oninput="checkModalPasswordMatch()">
+        <!-- Indicador de Pasos del Wizard -->
+        <div class="multistep-bar" style="margin-bottom: 8px;">
+          <div class="step-node active" id="modalStepNode1">
+            <div class="step-bubble">1</div>
+            <div class="step-label">Cuenta</div>
           </div>
-
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegConfirm">Confirmar *</label>
-            <input type="password" id="modalRegConfirm" class="input-custom" placeholder="Repite contraseña" required autocomplete="new-password" oninput="checkModalPasswordMatch()">
+          <div class="step-connector" id="modalConnector1"></div>
+          <div class="step-node" id="modalStepNode2">
+            <div class="step-bubble">2</div>
+            <div class="step-label">Biometría</div>
           </div>
-        </div>
-        <div id="modalMatchIndicator" style="display: none; font-size: 11px; margin-top: -6px;"></div>
-
-        <!-- SECCIÓN 2: PERFIL BIOMÉTRICO (formNutricion.php) -->
-        <div class="section-title-divider" style="margin-top: 6px;">
-          <span>2. Perfil Biométrico & Nutrición</span>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegEdad">Edad (Años) *</label>
-            <input type="number" id="modalRegEdad" name="edad" class="input-custom" value="25" min="12" max="100" required>
-          </div>
-
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegSexo">Sexo Biológico *</label>
-            <select id="modalRegSexo" name="sexo" class="input-custom" required>
-              <option value="masculino" selected>Masculino</option>
-              <option value="femenino">Femenino</option>
-              <option value="otro">Otro</option>
-            </select>
+          <div class="step-connector" id="modalConnector2"></div>
+          <div class="step-node" id="modalStepNode3">
+            <div class="step-bubble">3</div>
+            <div class="step-label">Metas</div>
           </div>
         </div>
 
-        <div class="form-grid-2">
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegPeso">Peso Actual (kg) *</label>
-            <input type="number" id="modalRegPeso" name="peso" class="input-custom" value="75" step="0.5" min="30" max="300" required>
+        <form id="authRegisterForm" action="#" method="POST" onsubmit="handleAuthRegister(event)">
+          <!-- PASO 1: CUENTA -->
+          <div class="wizard-step-pane active" id="modalPane1">
+            <div style="font-size: 13px; color: var(--accent-emerald); font-weight: 700; margin-bottom: 12px;">Paso 1: Credenciales de Acceso</div>
+            
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="modalRegName">Nombre Completo *</label>
+              <input type="text" id="modalRegName" class="input-custom" placeholder="Ej: Savier Casiani" required autocomplete="name" oninput="clearModalFieldError(this)">
+              <div id="modalRegNameErr" class="field-error-msg" style="display: none;"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="modalRegEmail">Correo Electrónico *</label>
+              <input type="email" id="modalRegEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email" oninput="clearModalFieldError(this)">
+              <div id="modalRegEmailErr" class="field-error-msg" style="display: none;"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegPassword">Contraseña *</label>
+                <input type="password" id="modalRegPassword" class="input-custom" placeholder="Mín. 6 caracteres" required autocomplete="new-password" oninput="checkModalPasswordMatch(); clearModalFieldError(this);">
+                <div id="modalRegPasswordErr" class="field-error-msg" style="display: none;"></div>
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegConfirm">Confirmar *</label>
+                <input type="password" id="modalRegConfirm" class="input-custom" placeholder="Repite contraseña" required autocomplete="new-password" oninput="checkModalPasswordMatch(); clearModalFieldError(this);">
+                <div id="modalRegConfirmErr" class="field-error-msg" style="display: none;"></div>
+              </div>
+            </div>
+            <div id="modalMatchIndicator" style="display: none; font-size: 11px; margin-top: -6px; margin-bottom: 12px;"></div>
+
+            <button type="button" class="btn-landing-cta" style="width: 100%; justify-content: center; padding: 12px;" onclick="goToModalStep(2)">
+              Siguiente: Datos Biométricos ➔
+            </button>
           </div>
 
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegAltura">Altura (cm) *</label>
-            <input type="number" id="modalRegAltura" name="altura" class="input-custom" value="175" step="0.5" min="100" max="250" required>
-          </div>
-        </div>
+          <!-- PASO 2: BIOMETRÍA CON IMC EN VIVO -->
+          <div class="wizard-step-pane" id="modalPane2">
+            <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; margin-bottom: 12px;">Paso 2: Perfil Biométrico Inicial</div>
 
-        <div class="form-group" style="margin: 0;">
-          <label for="modalRegObjetivo">Objetivo Principal *</label>
-          <select id="modalRegObjetivo" name="objetivo" class="input-custom" required>
-            <option value="ganar_musculo" selected>Ganar masa muscular (Hipertrofia)</option>
-            <option value="bajar_peso">Perder grasa corporal (Definición)</option>
-            <option value="mantener_peso">Mantener peso y recomposición</option>
-          </select>
-        </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegEdad">Edad (Años) *</label>
+                <input type="number" id="modalRegEdad" class="input-custom" value="25" min="12" max="100" required>
+              </div>
 
-        <div class="form-group" style="margin: 0;">
-          <label for="modalRegActividad">Nivel de Actividad Física *</label>
-          <select id="modalRegActividad" name="nivel_actividad" class="input-custom" required>
-            <option value="sedentario">Sedentario (Poco o ningún ejercicio)</option>
-            <option value="ligero">Ligero (1-3 días de entrenamiento / semana)</option>
-            <option value="moderado" selected>Moderado (3-5 días de entrenamiento / semana)</option>
-            <option value="activo">Activo (6-7 días de entrenamiento intenso)</option>
-          </select>
-        </div>
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegSexo">Sexo Biológico *</label>
+                <select id="modalRegSexo" class="input-custom" required>
+                  <option value="masculino" selected>Masculino</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+            </div>
 
-        <div class="form-grid-2">
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegAgua">Consumo de Agua (Litros/día) *</label>
-            <input type="number" id="modalRegAgua" name="agua" class="input-custom" value="3" min="1" max="15" step="0.5" required>
-          </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegPeso">Peso Actual (kg) *</label>
+                <input type="number" id="modalRegPeso" class="input-custom" value="75" step="0.5" min="30" max="300" required oninput="calcModalBMI()">
+              </div>
 
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegPreferencia">Preferencia Alimentaria</label>
-            <select id="modalRegPreferencia" name="preferencia" class="input-custom">
-              <option value="cualquierCosa" selected>Cualquier Cosa</option>
-              <option value="vegetariano">Vegetariano</option>
-              <option value="vegano">Vegano</option>
-            </select>
-          </div>
-        </div>
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegAltura">Altura (cm) *</label>
+                <input type="number" id="modalRegAltura" class="input-custom" value="175" step="0.5" min="100" max="250" required oninput="calcModalBMI()">
+              </div>
+            </div>
 
-        <!-- SECCIÓN 3: PREFERENCIAS DE SALUD (formNutricion.php) -->
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">🩺 Condiciones & Alergias (Opcional)</span>
-            <span style="font-size: 10px; color: var(--accent-cyan);">Nutrición Personalizada</span>
-          </div>
+            <!-- Preview IMC en Vivo -->
+            <div class="bmi-live-preview" style="margin-bottom: 16px;">
+              <div>
+                <span style="font-size: 11px; color: var(--text-secondary);">Índice de Masa Corporal (IMC)</span>
+                <div class="bmi-value-display" id="modalBmiVal">24.5 kg/m²</div>
+              </div>
+              <span class="preview-pill" id="modalBmiBadge" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">
+                Peso Normal
+              </span>
+            </div>
 
-          <div class="form-group" style="margin: 0;">
-            <label for="modalRegAlergias" style="font-size: 11px;">Alergias Alimentarias</label>
-            <input type="text" id="modalRegAlergias" name="alergias" class="input-custom" placeholder="Ej: Maní, Mariscos, Lácteos, Gluten...">
-          </div>
-
-          <div class="form-group" style="margin: 0;">
-            <label style="font-size: 11px; margin-bottom: 4px;">Condiciones Médicas</label>
-            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-              <label class="checkbox-pill">
-                <input type="checkbox" name="modalRegCondiciones" value="diabetes">
-                <span>Diabetes</span>
-              </label>
-              <label class="checkbox-pill">
-                <input type="checkbox" name="modalRegCondiciones" value="hipertension">
-                <span>Hipertensión</span>
-              </label>
-              <label class="checkbox-pill">
-                <input type="checkbox" name="modalRegCondiciones" value="colesterol">
-                <span>Colesterol alto</span>
-              </label>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn-landing-login" style="flex: 1; justify-content: center;" onclick="goToModalStep(1)">
+                ← Volver
+              </button>
+              <button type="button" class="btn-landing-cta" style="flex: 2; justify-content: center;" onclick="goToModalStep(3)">
+                Siguiente: Metas ➔
+              </button>
             </div>
           </div>
-        </div>
 
-        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 13px; font-size: 15px; margin-top: 8px;">
-          Crear Cuenta y Entrar al Panel ➔
-        </button>
-      </form>
+          <!-- PASO 3: METAS & ESTILO DE VIDA -->
+          <div class="wizard-step-pane" id="modalPane3">
+            <div style="font-size: 13px; color: var(--accent-emerald); font-weight: 700; margin-bottom: 12px;">Paso 3: Objetivos & Estilo de Vida</div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="modalRegObjetivo">Objetivo Principal *</label>
+              <select id="modalRegObjetivo" class="input-custom" required>
+                <option value="ganar_musculo" selected>Ganar Músculo (Hipertrofia)</option>
+                <option value="bajar_peso">Perder Grasa (Definición)</option>
+                <option value="recomposicion">Recomposición Corporal</option>
+                <option value="mantener_peso">Mantenimiento y Salud</option>
+              </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegActividad">Actividad Física *</label>
+                <select id="modalRegActividad" class="input-custom" required>
+                  <option value="sedentario">Sedentario</option>
+                  <option value="ligero">Ligero</option>
+                  <option value="moderado" selected>Moderado</option>
+                  <option value="activo">Muy Activo</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label for="modalRegDias">Días Disponibles *</label>
+                <select id="modalRegDias" class="input-custom" required>
+                  <option value="3">3 Días / Sem</option>
+                  <option value="4" selected>4 Días / Sem</option>
+                  <option value="5">5 Días / Sem</option>
+                  <option value="6">6 Días / Sem</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="modalRegAgua">Consumo Diario de Agua (Litros)</label>
+              <input type="number" id="modalRegAgua" class="input-custom" value="3.0" step="0.5" min="1" max="15">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn-landing-login" style="flex: 1; justify-content: center;" onclick="goToModalStep(2)">
+                ← Volver
+              </button>
+              <button type="submit" id="modalRegSubmitBtn" class="btn-checkin" style="flex: 2; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 14px;">
+                Crear Cuenta y Entrar ➔
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div style="text-align: center; margin-top: 10px; font-size: 12px; color: var(--text-muted);">
+          ¿Prefieres el formulario completo en pantalla completa? <a href="registro.html" style="color: var(--accent-emerald); font-weight: 600;">Abrir Onboarding Dedicado</a>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- ====================================================================
-       PIE DE PÁGINA
+       6. PIE DE PÁGINA (FOOTER COMPLETO SAAS)
        ==================================================================== -->
   <footer class="landing-footer">
-    <p>© 2026 Kynap Fitness AI. Todos los derechos reservados.</p>
-    <div style="margin-top: 8px; display: flex; gap: 16px; justify-content: center;">
-      <a href="login.html" onclick="openAuthModal('login', event)" style="color: var(--text-muted); cursor: pointer;">Iniciar Sesión</a>
-      <a href="registro.html" onclick="openAuthModal('register', event)" style="color: var(--text-muted); cursor: pointer;">Crear Cuenta</a>
-      <a href="app.html" onclick="navigateToDashboard(event)" style="color: var(--text-muted); cursor: pointer;">Panel de Control</a>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="brand" style="border: none; padding: 0; margin-bottom: 16px;">
+          <div class="brand-logo">K</div>
+          <div class="brand-name">Kynap <span>AI</span></div>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 13.5px; line-height: 1.6; max-width: 320px;">
+          Plataforma de ingeniería de entrenamiento y nutrición de precisión respaldada por algoritmos de inteligencia artificial para atletas que exigen resultados.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="#plataforma">Periodización IA Llama 3.3</a></li>
+          <li><a href="#plataforma">1RM Epley en Vivo</a></li>
+          <li><a href="#plataforma">Crononutrición (5 Bloques)</a></li>
+          <li><a href="#plataforma">Control Fisiológico Semanal</a></li>
+          <li><a href="#plataforma">Esfera de Respiración Guiada</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Acceso & Cuenta</h4>
+        <ul>
+          <li><a href="login.html" onclick="openAuthModal('login', event)">Iniciar Sesión</a></li>
+          <li><a href="registro.html" onclick="openAuthModal('register', event)">Crear Cuenta Gratuita</a></li>
+          <li><a href="app.html" onclick="navigateToDashboard(event)">Panel de Atleta</a></li>
+          <li><a href="login.php">Acceso PHP Clásico</a></li>
+          <li><a href="registro.php">Registro PHP Servidor</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Legal & Seguridad</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showToast('info', 'Términos', 'Términos de servicio Kynap v2.6 disponibles en tu perfil.')">Términos de Servicio</a></li>
+          <li><a href="javascript:void(0)" onclick="showToast('info', 'Privacidad', 'Tus datos biométricos están protegidos bajo cifrado.')">Política de Privacidad</a></li>
+          <li><a href="javascript:void(0)" onclick="showToast('success', 'Seguridad', 'Sistema validado con BCRYPT y Tokens HMAC.')">Seguridad del Sistema</a></li>
+          <li><a href="javascript:void(0)" onclick="showToast('info', 'Soporte', 'Soporte 24/7 disponible en soporte@kynap.com')">Soporte y Contacto</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© 2026 Kynap Fitness AI. Todos los derechos reservados. Desarrollado con tecnología de vanguardia.</div>
+      <div style="display: flex; gap: 16px;">
+        <span style="color: var(--accent-emerald);">● Servidor Activo</span>
+        <span>Versión 2.6.0 Pro</span>
+      </div>
     </div>
   </footer>
 
-  <!-- LÓGICA DE CONTROLADORES & NAVEGACIÓN RESILIENTE -->
+  <!-- ====================================================================
+       SCRIPTS: LÓGICA DE CONTROL, WIZARD & FEEDBACK DUAL CON TOASTS
+       ==================================================================== -->
   <script>
+    // Sistema Flotante de Toasts
+    function showToast(type = 'success', title = '', desc = '', duration = 3500) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      
+      const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+      };
+
+      toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || '•'}</div>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          ${desc ? `<div class="toast-desc">${desc}</div>` : ''}
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+        <div class="toast-progress"></div>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.style.animation = 'toastSlideIn 0.3s ease reverse forwards';
+          setTimeout(() => toast.remove(), 300);
+        }
+      }, duration);
+    }
+
+    // Efecto de sacudida visual ante error
+    function triggerModalShake() {
+      const card = document.getElementById('modalSheetCard');
+      if (card) {
+        card.classList.remove('shake-error');
+        void card.offsetWidth;
+        card.classList.add('shake-error');
+      }
+    }
+
+    function clearModalFieldError(inputEl) {
+      if (!inputEl) return;
+      inputEl.classList.remove('input-error', 'is-invalid');
+      const errMap = {
+        'modalLoginEmail': 'modalLoginEmailErr',
+        'modalLoginPassword': 'modalLoginPassErr',
+        'modalRegName': 'modalRegNameErr',
+        'modalRegEmail': 'modalRegEmailErr',
+        'modalRegPassword': 'modalRegPasswordErr',
+        'modalRegConfirm': 'modalRegConfirmErr'
+      };
+      const errId = errMap[inputEl.id];
+      if (errId) {
+        const errEl = document.getElementById(errId);
+        if (errEl) {
+          errEl.style.display = 'none';
+          errEl.textContent = '';
+        }
+      }
+    }
+
+    function setModalFieldError(inputId, errorId, msg) {
+      const input = document.getElementById(inputId);
+      const err = document.getElementById(errorId);
+      if (input) input.classList.add('input-error', 'is-invalid');
+      if (err) {
+        err.textContent = msg;
+        err.style.display = 'block';
+      }
+    }
+
     function getDashboardUrl() {
       return 'app.html';
     }
@@ -703,6 +1228,7 @@
       if (!token || token === 'local_demo_token') {
         openAuthModal('login');
         showAuthAlert('Debes iniciar sesión con una cuenta válida para ingresar al panel.');
+        showToast('warning', 'Acceso Restringido', 'Inicia sesión para continuar.');
         return;
       }
       window.location.href = getDashboardUrl();
@@ -729,7 +1255,7 @@
       const btnLog = document.getElementById('tabBtnLogin');
       const btnReg = document.getElementById('tabBtnRegister');
       const formLog = document.getElementById('authLoginForm');
-      const formReg = document.getElementById('authRegisterForm');
+      const regContainer = document.getElementById('authRegisterContainer');
 
       hideAuthAlert();
 
@@ -737,28 +1263,96 @@
         btnLog.classList.add('active');
         btnReg.classList.remove('active');
         formLog.style.display = 'flex';
-        formReg.style.display = 'none';
+        regContainer.style.display = 'none';
       } else {
         btnReg.classList.add('active');
         btnLog.classList.remove('active');
-        formReg.style.display = 'flex';
         formLog.style.display = 'none';
+        regContainer.style.display = 'flex';
+        goToModalStep(1);
       }
     }
 
-    function showAuthAlert(msg, actionHtml = '') {
-      const box = document.getElementById('authAlertBox');
-      if (box) {
-        box.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start;"><span>⚠</span><div>${msg}</div></div>${actionHtml}`;
-        box.style.display = 'block';
+    // Navegación multipaso en el modal
+    let currentModalStep = 1;
+    function goToModalStep(step) {
+      if (step === 2) {
+        const name = document.getElementById('modalRegName').value.trim();
+        const email = document.getElementById('modalRegEmail').value.trim();
+        const pass = document.getElementById('modalRegPassword').value;
+        const conf = document.getElementById('modalRegConfirm').value;
+
+        let hasErr = false;
+        if (!name) {
+          setModalFieldError('modalRegName', 'modalRegNameErr', 'Ingresa tu nombre completo.');
+          hasErr = true;
+        }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setModalFieldError('modalRegEmail', 'modalRegEmailErr', 'Ingresa un correo electrónico válido.');
+          hasErr = true;
+        }
+        if (!pass || pass.length < 6) {
+          setModalFieldError('modalRegPassword', 'modalRegPasswordErr', 'Mínimo 6 caracteres.');
+          hasErr = true;
+        }
+        if (pass !== conf) {
+          setModalFieldError('modalRegConfirm', 'modalRegConfirmErr', 'Las contraseñas no coinciden.');
+          hasErr = true;
+        }
+
+        if (hasErr) {
+          triggerModalShake();
+          showAuthAlert('Por favor completa las credenciales de acceso correctamente.');
+          showToast('error', 'Paso 1 Incompleto', 'Revisa los campos destacados en rojo.');
+          return;
+        }
+        calcModalBMI();
       }
+
+      currentModalStep = step;
+      hideAuthAlert();
+
+      [1, 2, 3].forEach(s => {
+        const pane = document.getElementById(`modalPane${s}`);
+        const node = document.getElementById(`modalStepNode${s}`);
+        if (pane) pane.classList.toggle('active', s === step);
+        if (node) {
+          node.classList.toggle('active', s === step);
+          node.classList.toggle('completed', s < step);
+        }
+      });
+
+      const c1 = document.getElementById('modalConnector1');
+      const c2 = document.getElementById('modalConnector2');
+      if (c1) c1.classList.toggle('completed', step > 1);
+      if (c2) c2.classList.toggle('completed', step > 2);
     }
 
-    function hideAuthAlert() {
-      const box = document.getElementById('authAlertBox');
-      if (box) {
-        box.style.display = 'none';
-        box.innerHTML = '';
+    function calcModalBMI() {
+      const p = parseFloat(document.getElementById('modalRegPeso').value) || 0;
+      const a = parseFloat(document.getElementById('modalRegAltura').value) || 0;
+      const disp = document.getElementById('modalBmiVal');
+      const badge = document.getElementById('modalBmiBadge');
+
+      if (p > 0 && a > 0) {
+        const m = a / 100;
+        const bmi = (p / (m * m)).toFixed(1);
+        if (disp) disp.textContent = `${bmi} kg/m²`;
+        if (badge) {
+          if (bmi < 18.5) {
+            badge.textContent = 'Bajo Peso';
+            badge.style.color = 'var(--accent-cyan)';
+          } else if (bmi < 25) {
+            badge.textContent = 'Peso Normal';
+            badge.style.color = 'var(--accent-emerald)';
+          } else if (bmi < 30) {
+            badge.textContent = 'Sobrepeso';
+            badge.style.color = 'var(--accent-amber)';
+          } else {
+            badge.textContent = 'Obesidad';
+            badge.style.color = 'var(--accent-rose)';
+          }
+        }
       }
     }
 
@@ -780,20 +1374,75 @@
       }
     }
 
-    /**
-     * Procesamiento de Login con validación estricta de base de datos
-     */
+    function showAuthAlert(msg, actionHtml = '') {
+      const box = document.getElementById('authAlertBox');
+      if (box) {
+        box.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start;"><span>⚠</span><div>${msg}</div></div>${actionHtml}`;
+        box.style.display = 'flex';
+      }
+    }
+
+    function hideAuthAlert() {
+      const box = document.getElementById('authAlertBox');
+      if (box) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+      }
+    }
+
+    // Demo Interactiva Tab Switcher
+    function switchPreviewTab(tabId, btn) {
+      document.querySelectorAll('.preview-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.preview-tab-content').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+    }
+
+    function updateLiveEpley() {
+      const w = parseFloat(document.getElementById('previewWeight').value) || 0;
+      const r = parseFloat(document.getElementById('previewReps').value) || 0;
+      const disp = document.getElementById('preview1RMDisplay');
+      if (w > 0 && r > 0) {
+        const epley = (w * (1 + (r / 30))).toFixed(1);
+        if (disp) disp.textContent = `${epley} kg`;
+      }
+    }
+
+    // Procesamiento de Login
     async function handleAuthLogin(e) {
       if (e) e.preventDefault();
       hideAuthAlert();
 
-      const email = document.getElementById('modalLoginEmail').value.trim();
-      const password = document.getElementById('modalLoginPassword').value;
+      const emailEl = document.getElementById('modalLoginEmail');
+      const passEl = document.getElementById('modalLoginPassword');
+      clearModalFieldError(emailEl);
+      clearModalFieldError(passEl);
 
-      if (!email || !password) {
+      const email = emailEl.value.trim();
+      const password = passEl.value;
+
+      let hasErr = false;
+      if (!email) {
+        setModalFieldError('modalLoginEmail', 'modalLoginEmailErr', 'Por favor ingresa tu correo.');
+        hasErr = true;
+      }
+      if (!password) {
+        setModalFieldError('modalLoginPassword', 'modalLoginPassErr', 'Por favor ingresa tu contraseña.');
+        hasErr = true;
+      }
+
+      if (hasErr) {
+        triggerModalShake();
         showAuthAlert('Por favor completa todos los campos.');
+        showToast('error', 'Campos Incompletos', 'Completa tu correo y contraseña.');
         return;
       }
+
+      const submitBtn = document.getElementById('modalLoginSubmitBtn');
+      const origText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⚡ Autenticando...';
 
       try {
         const res = await fetch('controllers/api_auth.php?action=login', {
@@ -805,25 +1454,37 @@
         const data = await res.json();
         if (data.success && data.data?.token) {
           localStorage.setItem('kynap_auth_token', data.data.token);
-          window.location.href = getDashboardUrl();
+          showToast('success', '¡Bienvenido!', 'Sesión iniciada correctamente.');
+          setTimeout(() => {
+            window.location.href = getDashboardUrl();
+          }, 600);
           return;
         } else {
-          // Bloqueo estricto si no existe o clave errónea
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
+          triggerModalShake();
+          setModalFieldError('modalLoginEmail', 'modalLoginEmailErr', 'Verifica este campo.');
+          setModalFieldError('modalLoginPassword', 'modalLoginPassErr', 'Verifica este campo.');
+
           let promptBtn = '';
-          if (data.data?.suggest_register || res.status === 404) {
+          if (data.data?.suggest_register || res.status === 401 || res.status === 404) {
             promptBtn = `<button type="button" class="btn-checkin" style="background:var(--accent-emerald);color:#000;font-weight:700;margin-top:10px;padding:8px 12px;font-size:13px;" onclick="switchAuthTab('register'); document.getElementById('modalRegEmail').value = '${email}';">Crear Cuenta Ahora ➔</button>`;
           }
-          showAuthAlert(data.message || 'Credenciales incorrectas o usuario no registrado.', promptBtn);
+          const msg = data.message || 'Credenciales incorrectas o cuenta no registrada.';
+          showAuthAlert(msg, promptBtn);
+          showToast('error', 'Error al Iniciar Sesión', msg);
         }
       } catch (err) {
-        showAuthAlert('Error al conectar con el servidor de autenticación. Verifica tu conexión.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origText;
+        triggerModalShake();
+        const netMsg = 'Error al conectar con el servidor. Verifica que Apache y MySQL estén activos.';
+        showAuthAlert(netMsg);
+        showToast('error', 'Error de Conexión', netMsg);
       }
     }
 
-    /**
-     * Procesamiento de Registro con biometría completa y cálculo de macros
-     * Integrado con el formulario nutricional (formNutricion.php)
-     */
+    // Procesamiento de Registro con Onboarding
     async function handleAuthRegister(e) {
       if (e) e.preventDefault();
       hideAuthAlert();
@@ -832,57 +1493,26 @@
       const email = document.getElementById('modalRegEmail').value.trim();
       const password = document.getElementById('modalRegPassword').value;
       const confirm = document.getElementById('modalRegConfirm').value;
-
       const edad = parseInt(document.getElementById('modalRegEdad').value, 10);
       const sexo = document.getElementById('modalRegSexo').value;
       const peso = parseFloat(document.getElementById('modalRegPeso').value);
       const altura = parseFloat(document.getElementById('modalRegAltura').value);
       const objetivo = document.getElementById('modalRegObjetivo').value;
       const nivel_actividad = document.getElementById('modalRegActividad').value;
-      const agua = parseFloat(document.getElementById('modalRegAgua').value) || 3;
-      const preferencia = document.getElementById('modalRegPreferencia') ? document.getElementById('modalRegPreferencia').value : 'cualquierCosa';
-      const alergias = document.getElementById('modalRegAlergias') ? document.getElementById('modalRegAlergias').value.trim() : '';
-
-      // Checkboxes de condiciones médicas
-      const condCheckboxes = document.querySelectorAll('input[name="modalRegCondiciones"]:checked');
-      const condiciones = Array.from(condCheckboxes).map(cb => cb.value).join(', ');
+      const dias_entrenamiento = parseInt(document.getElementById('modalRegDias').value, 10) || 4;
+      const agua = parseFloat(document.getElementById('modalRegAgua').value) || 3.0;
 
       if (!nombre || !email || !password) {
-        showAuthAlert('Por favor completa todos los campos requeridos.');
+        goToModalStep(1);
+        showAuthAlert('Por favor completa todos los campos de acceso requeridos.');
+        showToast('error', 'Datos Faltantes', 'Revisa tus datos en el paso 1.');
         return;
       }
 
-      if (password.length < 6) {
-        showAuthAlert('La contraseña debe tener al menos 6 caracteres.');
-        return;
-      }
-
-      if (password !== confirm) {
-        showAuthAlert('Las contraseñas no coinciden. Por favor verifícalas.');
-        return;
-      }
-
-      if (isNaN(edad) || edad < 12 || edad > 100) {
-        showAuthAlert('Por favor ingresa una edad válida (entre 12 y 100 años).');
-        return;
-      }
-
-      if (isNaN(peso) || peso < 30 || peso > 300) {
-        showAuthAlert('Por favor ingresa un peso válido (entre 30 y 300 kg).');
-        return;
-      }
-
-      if (isNaN(altura) || altura < 100 || altura > 250) {
-        showAuthAlert('Por favor ingresa una altura válida (entre 100 y 250 cm).');
-        return;
-      }
-
-      const submitBtn = document.querySelector('#authRegisterForm button[type="submit"]');
-      const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '⚡ Creando tu cuenta...';
-      }
+      const submitBtn = document.getElementById('modalRegSubmitBtn');
+      const origText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⚡ Creando tu cuenta...';
 
       try {
         const res = await fetch('controllers/api_auth.php?action=register', {
@@ -899,55 +1529,59 @@
             sexo,
             objetivo,
             nivel_actividad,
-            agua,
-            preferencia,
-            alergias,
-            condiciones
+            dias_entrenamiento,
+            agua
           })
         });
 
         const data = await res.json();
         if (data.success && data.data?.token) {
           localStorage.setItem('kynap_auth_token', data.data.token);
-          window.location.href = getDashboardUrl();
+          showToast('success', '¡Cuenta Creada!', 'Bienvenido a la plataforma Kynap AI.');
+          setTimeout(() => {
+            window.location.href = getDashboardUrl();
+          }, 600);
           return;
         } else {
-          showAuthAlert(data.message || 'Error al registrar la cuenta.');
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
-          }
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
+          triggerModalShake();
+          const err = data.message || 'Error al registrar la cuenta.';
+          showAuthAlert(err);
+          showToast('error', 'Error en Registro', err);
         }
       } catch (err) {
-        showAuthAlert('Error al conectar con el servidor para registrar la cuenta.');
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalBtnText;
-        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origText;
+        triggerModalShake();
+        const errNet = 'Error de conexión con el servidor de base de datos.';
+        showAuthAlert(errNet);
+        showToast('error', 'Error de Red', errNet);
       }
     }
 
-    // Comprobación de sesión o redirecciones protegidas
+    // Inicialización y verificación de sesión en background
     document.addEventListener('DOMContentLoaded', () => {
       const banner = document.getElementById('smartSessionBanner');
       const token = localStorage.getItem('kynap_auth_token');
 
-      // 1. Mensaje de protección si venimos expulsados de app.html
-      const authError = sessionStorage.getItem('kynap_auth_message');
-      if (authError) {
-        sessionStorage.removeItem('kynap_auth_message');
-        openAuthModal('login');
-        showAuthAlert(authError);
-      } else {
-        // 2. Comprobar parámetros de URL ?auth=login o ?auth=register
-        const urlParams = new URLSearchParams(window.location.search);
-        const authAction = urlParams.get('auth');
-        if (authAction === 'login' || authAction === 'register') {
-          openAuthModal(authAction);
-        }
+      // Parámetros URL directos ?auth=login o ?auth=register
+      const urlParams = new URLSearchParams(window.location.search);
+      const authAction = urlParams.get('auth');
+      if (authAction === 'login' || authAction === 'register') {
+        openAuthModal(authAction);
       }
 
-      // 3. Verificación de sesión legítima en background
+      // Mensaje de redirección si fue expulsado por falta de autenticación
+      const authMsg = sessionStorage.getItem('kynap_auth_message');
+      if (authMsg) {
+        sessionStorage.removeItem('kynap_auth_message');
+        openAuthModal('login');
+        showAuthAlert(authMsg);
+        showToast('warning', 'Sesión Requerida', authMsg);
+      }
+
+      // Verificación de token legítimo
       if (token && token !== 'local_demo_token') {
         fetch('controllers/api_auth.php?action=verify', {
           headers: { 'Authorization': `Bearer ${token}` }

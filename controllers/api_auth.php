@@ -1,50 +1,60 @@
 <?php
 /**
  * ==============================================================================
- * KYNAP FITNESS PLATFORM - API DE AUTENTICACIÓN Y SESIÓN UNIFICADA
+ * KYNAP FITNESS PLATFORM - SECURE AUTHENTICATION API
  * ==============================================================================
- * Proporciona autenticación híbrida sin estado (Stateless Bearer Token) para la
- * aplicación móvil (Flutter/React Native) y con estado (PHP Session) para la
- * aplicación web.
+ * Proporciona endpoints de autenticación y gestión de sesiones bajo estrictos
+ * estándares de ciberseguridad (OWASP):
+ * - Sanitización exhaustiva y validación estricta de tipos.
+ * - Hashing seguro de contraseñas con BCRYPT (cost 12).
+ * - Protección contra fijación de sesión (session_regenerate_id).
+ * - Manejo seguro de tokens HMAC con expiración.
+ * - Mensajes de error genéricos que previenen la enumeración y la divulgación
+ *   de detalles del servidor o de la base de datos.
  *
- * Endpoints soportados:
- * - POST /controllers/api_auth.php?action=login     -> Inicia sesión y retorna Bearer Token
- * - POST /controllers/api_auth.php?action=register  -> Registra nueva cuenta
- * - GET  /controllers/api_auth.php?action=verify    -> Valida token o sesión activa
- * - POST /controllers/api_auth.php?action=logout    -> Cierra sesión
+ * Endpoints:
+ * - POST /controllers/api_auth.php?action=login
+ * - POST /controllers/api_auth.php?action=register
+ * - GET  /controllers/api_auth.php?action=verify
+ * - POST /controllers/api_auth.php?action=logout
  *
- * @author Senior Full-Stack Engineer & UI/UX Architect
+ * @version 3.0.0
  * ==============================================================================
  */
 
 require_once __DIR__ . '/api_bootstrap.php';
 
 $input = getJsonInput();
-$action = $_GET['action'] ?? $input['action'] ?? 'verify';
+$action = sanitizeString($_GET['action'] ?? $input['action'] ?? 'verify');
 
 // ==============================================================================
-// 1. ENDPOINT: VERIFY (Comprueba validez del token o de la sesión web)
+// 1. ENDPOINT: VERIFY
 // ==============================================================================
 if ($action === 'verify' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $user = resolveAuthUser($conn);
-    
-    // Estricta verificación: sólo si no es invitado y proviene de token o sesión legítima
     $isAuthenticated = (!$user['isGuest'] && $user['id'] > 0 && in_array($user['authSource'], ['bearer_token', 'php_session', 'custom_header']));
 
     if ($isAuthenticated) {
-        // Consultar biometría asociada directamente desde la tabla maestra
         $biometrics = null;
         if ($dbAvailable) {
-            $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM usuarios WHERE user_id = ? LIMIT 1");
+            $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
             if (!$stmt) {
-                $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
+                $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM usuarios WHERE user_id = ? LIMIT 1");
             }
             if ($stmt) {
                 $stmt->bind_param("i", $user['id']);
                 $stmt->execute();
                 $bRes = $stmt->get_result();
                 if ($bRow = $bRes->fetch_assoc()) {
-                    $biometrics = $bRow;
+                    $biometrics = [
+                        'peso'            => (float)$bRow['peso'],
+                        'altura'          => (float)$bRow['altura'],
+                        'objetivo'        => htmlspecialchars($bRow['objetivo'], ENT_QUOTES, 'UTF-8'),
+                        'nivel_actividad' => htmlspecialchars($bRow['nivel_actividad'], ENT_QUOTES, 'UTF-8'),
+                        'agua'            => (float)$bRow['agua'],
+                        'edad'            => (int)$bRow['edad'],
+                        'sexo'            => htmlspecialchars($bRow['sexo'], ENT_QUOTES, 'UTF-8')
+                    ];
                 }
                 $stmt->close();
             }
@@ -52,42 +62,49 @@ if ($action === 'verify' && $_SERVER['REQUEST_METHOD'] === 'GET') {
 
         apiSuccess([
             'authenticated' => true,
-            'user' => $user,
-            'biometrics' => $biometrics,
-            'token' => generateAuthToken($user['id'], $user['email']),
-            'dbConnected' => $dbAvailable
-        ], 'Sesión activa y válida');
+            'user'          => $user,
+            'biometrics'    => $biometrics,
+            'token'         => generateAuthToken($user['id'], $user['email']),
+            'dbConnected'   => $dbAvailable
+        ], 'Sesión activa y verificada');
     }
 
     apiSuccess([
         'authenticated' => false,
-        'user' => null,
-        'message' => 'No autenticado. Por favor inicia sesión o crea una cuenta.'
+        'user'          => null,
+        'message'       => 'No autenticado. Por favor inicia sesión.'
     ]);
 }
 
 // ==============================================================================
-// 2. ENDPOINT: LOGIN (Validación estricta de base de datos)
+// 2. ENDPOINT: LOGIN
 // ==============================================================================
 if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+    // Sanitización y validación estricta de entradas
+    $rawEmail = trim($input['email'] ?? '');
+    $email = filter_var($rawEmail, FILTER_VALIDATE_EMAIL);
     $password = (string)($input['password'] ?? '');
 
     if (!$email || empty($password)) {
         apiError('Debe proporcionar un correo electrónico válido y una contraseña.', 422);
     }
 
-    if (!$dbAvailable) {
-        apiError('El servidor de base de datos no está disponible. Intente más tarde.', 503);
+    // Mitigación de DoS en BCRYPT (limitar longitud máxima de contraseña a 128 caracteres)
+    if (strlen($password) > 128) {
+        apiError('Credenciales incorrectas o usuario no registrado.', 401);
     }
 
-    // Consulta estricta a la tabla accounts (con fallback a users)
-    $stmt = $conn->prepare("SELECT id, nombre, email, password, imagen_user, chat_activado FROM accounts WHERE email = ? LIMIT 1");
+    if (!$dbAvailable) {
+        apiError('El servidor de base de datos no está disponible. Por favor intenta más tarde.', 503);
+    }
+
+    // Consulta con sentencia preparada a la tabla users
+    $stmt = $conn->prepare("SELECT id, nombre, email, password, imagen_user, chat_activado FROM users WHERE email = ? LIMIT 1");
     if (!$stmt) {
-        $stmt = $conn->prepare("SELECT id, nombre, email, password, imagen_user, chat_activado FROM users WHERE email = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, nombre, email, password, imagen_user, chat_activado FROM accounts WHERE email = ? LIMIT 1");
     }
     if (!$stmt) {
-        apiError('Error interno en la consulta de autenticación: ' . $conn->error, 500);
+        apiServerError('Error al preparar consulta de login: ' . $conn->error, 'Error interno del servidor. Por favor intenta de nuevo.');
     }
 
     $stmt->bind_param("s", $email);
@@ -95,77 +112,92 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $stmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
-        // Si el usuario existe, validar hash criptográfico
         if (password_verify($password, $row['password'])) {
             $userId = (int)$row['id'];
-            
-            // Establecer sesión PHP para navegación web coherente
+
+            // Regeneración segura de ID de sesión contra Session Fixation
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+
+            // Establecer sesión segura
             $_SESSION['user_id'] = $userId;
             $_SESSION['nombre'] = $row['nombre'];
             $_SESSION['email'] = $row['email'];
             $_SESSION['imagen_user'] = $row['imagen_user'] ?? 'iconos/profile.svg';
-            
-            // Generar Bearer Token HMAC firmado para clientes móviles y PWA
+
             $token = generateAuthToken($userId, $row['email']);
 
-            // Obtener biometría del atleta (desde usuarios o user_biometrics)
+            // Recuperar datos biométricos
             $biometrics = null;
-            $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM usuarios WHERE user_id = ? LIMIT 1");
-            if (!$bioStmt) {
-                $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
-            }
+            $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
             if ($bioStmt) {
                 $bioStmt->bind_param("i", $userId);
                 $bioStmt->execute();
                 $bRes = $bioStmt->get_result();
                 if ($bRow = $bRes->fetch_assoc()) {
-                    $biometrics = $bRow;
+                    $biometrics = [
+                        'peso'            => (float)$bRow['peso'],
+                        'altura'          => (float)$bRow['altura'],
+                        'objetivo'        => htmlspecialchars($bRow['objetivo'], ENT_QUOTES, 'UTF-8'),
+                        'nivel_actividad' => htmlspecialchars($bRow['nivel_actividad'], ENT_QUOTES, 'UTF-8'),
+                        'agua'            => (float)$bRow['agua'],
+                        'edad'            => (int)$bRow['edad'],
+                        'sexo'            => htmlspecialchars($bRow['sexo'], ENT_QUOTES, 'UTF-8')
+                    ];
                 }
                 $bioStmt->close();
             }
 
+            $stmt->close();
+
             apiSuccess([
-                'token' => $token,
-                'user' => [
-                    'id' => $userId,
-                    'nombre' => $row['nombre'],
-                    'email' => $row['email'],
-                    'imagen_user' => $row['imagen_user'] ?? 'iconos/profile.svg',
+                'token'      => $token,
+                'user'       => [
+                    'id'            => $userId,
+                    'nombre'        => htmlspecialchars($row['nombre'], ENT_QUOTES, 'UTF-8'),
+                    'email'         => $row['email'],
+                    'imagen_user'   => $row['imagen_user'] ?? 'iconos/profile.svg',
                     'chat_activado' => (bool)$row['chat_activado']
                 ],
                 'biometrics' => $biometrics
             ], 'Inicio de sesión exitoso');
-        } else {
-            // Contraseña errónea pero correo existente
-            apiError('Contraseña incorrecta. Por favor verifica tus credenciales.', 401, [
-                'code' => 'INVALID_PASSWORD',
-                'user_exists' => true,
-                'suggest_register' => false
-            ]);
         }
-    } else {
-        // Usuario NO EXISTE en la base de datos -> Denegación y obligación de registro
-        apiError('No existe ninguna cuenta registrada con este correo. Debes crear una cuenta antes de acceder.', 404, [
-            'code' => 'USER_NOT_FOUND',
-            'user_exists' => false,
-            'suggest_register' => true
-        ]);
     }
+
     $stmt->close();
+
+    // Mensaje genérico seguro que no expone si el correo existe o no (prevención de enumeración de usuarios)
+    apiError('Credenciales incorrectas o cuenta no registrada.', 401, [
+        'code'             => 'AUTH_FAILED',
+        'suggest_register' => true
+    ]);
 }
 
 // ==============================================================================
-// 3. ENDPOINT: REGISTER (Creación completa con biometría y cálculo de macros)
+// 3. ENDPOINT: REGISTER
 // ==============================================================================
 if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 1. Datos personales y credenciales
-    $nombre = trim($input['nombre'] ?? '');
+    // 1. Sanitización de datos personales
+    $nombre = sanitizeString($input['nombre'] ?? '');
     $email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
     $password = (string)($input['password'] ?? '');
     $confirmPassword = (string)($input['confirm_password'] ?? $password);
 
-    if (empty($nombre) || !$email || strlen($password) < 6) {
-        apiError('Datos inválidos. El nombre es obligatorio y la contraseña debe tener al menos 6 caracteres.', 422);
+    if (empty($nombre) || mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100) {
+        apiError('El nombre debe contener entre 2 y 100 caracteres.', 422);
+    }
+
+    if (!$email || mb_strlen($email) > 120) {
+        apiError('Por favor proporciona un correo electrónico válido.', 422);
+    }
+
+    if (strlen($password) < 6) {
+        apiError('La contraseña debe tener al menos 6 caracteres.', 422);
+    }
+
+    if (strlen($password) > 128) {
+        apiError('La contraseña supera la longitud máxima permitida.', 422);
     }
 
     if ($password !== $confirmPassword) {
@@ -173,55 +205,54 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$dbAvailable) {
-        apiError('Servicio de base de datos no disponible.', 503);
+        apiError('El servidor de base de datos no está disponible. Por favor intenta más tarde.', 503);
     }
 
-    // 2. Parámetros biométricos iniciales (con valores saludables por defecto y compatibilidad formNutricion)
+    // 2. Validación de parámetros biométricos
     $edad = max(12, min(100, (int)($input['edad'] ?? 25)));
     $peso = max(30.0, min(300.0, (float)($input['peso'] ?? 70.0)));
     $altura = max(100.0, min(250.0, (float)($input['altura'] ?? 170.0)));
-    $sexo = in_array($input['sexo'] ?? '', ['masculino', 'femenino', 'otro']) ? $input['sexo'] : 'masculino';
+    
+    $rawSexo = strtolower(trim((string)($input['sexo'] ?? 'masculino')));
+    $sexo = in_array($rawSexo, ['masculino', 'femenino', 'otro']) ? $rawSexo : 'masculino';
 
-    // Normalizar objetivo (admite tanto bajar_peso/perder_grasa como mantener/mantener_peso)
-    $rawObj = trim($input['objetivo'] ?? 'ganar_musculo');
+    // Normalizar objetivo
+    $rawObj = strtolower(trim((string)($input['objetivo'] ?? 'ganar_musculo')));
     if ($rawObj === 'bajar_peso') {
         $objetivo = 'perder_grasa';
     } elseif ($rawObj === 'mantener_peso') {
         $objetivo = 'mantener';
-    } elseif (in_array($rawObj, ['ganar_musculo', 'perder_grasa', 'mantener'])) {
+    } elseif (in_array($rawObj, ['ganar_musculo', 'perder_grasa', 'mantener', 'recomposicion'])) {
         $objetivo = $rawObj;
     } else {
         $objetivo = 'ganar_musculo';
     }
 
-    // Normalizar nivel de actividad (admite sedentario, ligero, moderado, activo, muy_activo)
-    $rawAct = trim($input['nivel_actividad'] ?? 'moderado');
-    if (in_array($rawAct, ['sedentario', 'ligero', 'moderado', 'activo', 'muy_activo'])) {
-        $nivelActividad = $rawAct;
-    } else {
-        $nivelActividad = 'moderado';
-    }
+    // Normalizar nivel de actividad
+    $rawAct = strtolower(trim((string)($input['nivel_actividad'] ?? 'moderado')));
+    $nivelActividad = in_array($rawAct, ['sedentario', 'ligero', 'moderado', 'activo', 'muy_activo']) ? $rawAct : 'moderado';
 
-    // Consumo de agua diario ingresado por el usuario o estimado por peso
+    // Agua
     $rawAgua = isset($input['agua']) ? (float)$input['agua'] : 0;
     if ($rawAgua >= 1.0 && $rawAgua <= 15.0) {
         $aguaLitros = round($rawAgua, 1);
     } else {
-        $aguaLitros = max(2.0, min(6.0, round($peso * 0.035, 1))); // 35 ml por kg de peso
+        $aguaLitros = max(2.0, min(6.0, round($peso * 0.035, 1)));
     }
 
-    $condiciones = isset($input['condiciones']) ? (is_array($input['condiciones']) ? implode(', ', $input['condiciones']) : trim($input['condiciones'])) : '';
-    $alergias = trim($input['alergias'] ?? '');
-    $preferencia = trim($input['preferencia'] ?? 'cualquierCosa');
+    $condiciones = sanitizeString(is_array($input['condiciones'] ?? null) ? implode(', ', $input['condiciones']) : ($input['condiciones'] ?? ''));
+    $alergias = sanitizeString($input['alergias'] ?? '');
+    $preferencia = sanitizeString($input['preferencia'] ?? 'cualquierCosa');
 
-    // 3. Verificar si el correo electrónico ya existe en la tabla accounts o users
-    $checkStmt = $conn->prepare("SELECT id FROM accounts WHERE email = ? LIMIT 1");
+    // 3. Verificar si el correo ya existe
+    $checkStmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
     if (!$checkStmt) {
-        $checkStmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $checkStmt = $conn->prepare("SELECT id FROM accounts WHERE email = ? LIMIT 1");
     }
     if (!$checkStmt) {
-        apiError('Error de base de datos al validar usuario: ' . $conn->error, 500);
+        apiServerError('Error al preparar verificación de correo duplicado: ' . $conn->error, 'Error de servidor al validar la cuenta.');
     }
+
     $checkStmt->bind_param("s", $email);
     $checkStmt->execute();
     $checkStmt->store_result();
@@ -229,24 +260,21 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($checkStmt->num_rows > 0) {
         $checkStmt->close();
         apiError('Este correo electrónico ya se encuentra registrado. Por favor inicia sesión.', 409, [
-            'code' => 'EMAIL_EXISTS',
+            'code'          => 'EMAIL_EXISTS',
             'suggest_login' => true
         ]);
     }
     $checkStmt->close();
 
-    // 4. Hashear contraseña con BCRYPT (cost 12 para máxima seguridad)
+    // 4. Hashear contraseña con BCRYPT (cost 12)
     $hashedPassword = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
     $defaultAvatar = 'iconos/profile.svg';
     $defaultChat = 1;
 
-    // 5. Inserción en la tabla accounts (con fallback a users)
-    $insertStmt = $conn->prepare("INSERT INTO accounts (nombre, email, password, imagen_user, chat_activado) VALUES (?, ?, ?, ?, ?)");
+    // 5. Inserción en tabla users
+    $insertStmt = $conn->prepare("INSERT INTO users (nombre, email, password, imagen_user, chat_activado) VALUES (?, ?, ?, ?, ?)");
     if (!$insertStmt) {
-        $insertStmt = $conn->prepare("INSERT INTO users (nombre, email, password, imagen_user, chat_activado) VALUES (?, ?, ?, ?, ?)");
-    }
-    if (!$insertStmt) {
-        apiError('Error al preparar inserción en base de datos: ' . $conn->error, 500);
+        apiServerError('Error al preparar inserción en tabla users: ' . $conn->error, 'Error interno del servidor al crear la cuenta.');
     }
 
     $insertStmt->bind_param("ssssi", $nombre, $email, $hashedPassword, $defaultAvatar, $defaultChat);
@@ -255,46 +283,32 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $newUserId = (int)$insertStmt->insert_id;
         $insertStmt->close();
 
-        // 6. Inserción de biometría completa en user_biometrics y sincronización con tabla usuarios
+        // 6. Inserción de perfil biométrico en user_biometrics
         $bioStmt = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
         if ($bioStmt) {
             $bioStmt->bind_param("iddiissdsss", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros, $condiciones, $alergias, $preferencia);
             $bioStmt->execute();
             $bioStmt->close();
-        } else {
-            // Fallback si la estructura aún no tiene columnas adicionales
-            $bioStmtFallback = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
-            if ($bioStmtFallback) {
-                $bioStmtFallback->bind_param("iddiissd", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros);
-                $bioStmtFallback->execute();
-                $bioStmtFallback->close();
-            }
         }
 
-        // Sincronización compatible con tabla legacy usuarios si está presente
-        $uStmt = $conn->prepare("INSERT INTO usuarios (user_id, edad, peso, altura, objetivo, nivel_actividad, sexo, condiciones, alergias, preferencia, agua) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE edad = VALUES(edad), peso = VALUES(peso), altura = VALUES(altura), objetivo = VALUES(objetivo), nivel_actividad = VALUES(nivel_actividad), sexo = VALUES(sexo), condiciones = VALUES(condiciones), alergias = VALUES(alergias), preferencia = VALUES(preferencia), agua = VALUES(agua)");
-        if ($uStmt) {
-            $aguaInt = (int)round($aguaLitros);
-            $uStmt->bind_param("iidsssssssi", $newUserId, $edad, $peso, $altura, $objetivo, $nivelActividad, $sexo, $condiciones, $alergias, $preferencia, $aguaInt);
-            $uStmt->execute();
-            $uStmt->close();
-        }
-
-        // 7. Cálculo personalizado de metas nutricionales según objetivo y biometría
+        // 7. Cálculo y guardado de metas nutricionales
         $targetCalories = 2200;
         $proteinG = 150;
         $fatsG = 65;
-        $carbsG = 230;
 
         if ($objetivo === 'ganar_musculo') {
-            $targetCalories = (int)round($peso * 34); // Superávit moderado
+            $targetCalories = (int)round($peso * 34);
             $proteinG = (int)round($peso * 2.0);
             $fatsG = (int)round($peso * 0.9);
         } elseif ($objetivo === 'perder_grasa') {
-            $targetCalories = (int)round($peso * 25); // Déficit controlado
-            $proteinG = (int)round($peso * 2.2); // Proteger masa magra
+            $targetCalories = (int)round($peso * 25);
+            $proteinG = (int)round($peso * 2.2);
             $fatsG = (int)round($peso * 0.8);
-        } else { // mantener
+        } elseif ($objetivo === 'recomposicion') {
+            $targetCalories = (int)round($peso * 29);
+            $proteinG = (int)round($peso * 2.2);
+            $fatsG = (int)round($peso * 0.85);
+        } else {
             $targetCalories = (int)round($peso * 30);
             $proteinG = (int)round($peso * 1.8);
             $fatsG = (int)round($peso * 0.9);
@@ -309,7 +323,10 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $goalStmt->close();
         }
 
-        // 8. Autenticar inmediatamente (Sesión Web + Token Móvil)
+        // 8. Regenerar sesión e iniciar sesión automáticamente
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         $_SESSION['user_id'] = $newUserId;
         $_SESSION['nombre'] = $nombre;
         $_SESSION['email'] = $email;
@@ -318,40 +335,37 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $token = generateAuthToken($newUserId, $email);
 
         apiSuccess([
-            'token' => $token,
-            'user' => [
-                'id' => $newUserId,
-                'nombre' => $nombre,
-                'email' => $email,
+            'token'      => $token,
+            'user'       => [
+                'id'          => $newUserId,
+                'nombre'      => $nombre,
+                'email'       => $email,
                 'imagen_user' => $defaultAvatar
             ],
             'biometrics' => [
-                'peso' => $peso,
-                'altura' => $altura,
-                'edad' => $edad,
-                'sexo' => $sexo,
-                'objetivo' => $objetivo,
+                'peso'            => $peso,
+                'altura'          => $altura,
+                'edad'            => $edad,
+                'sexo'            => $sexo,
+                'objetivo'        => $objetivo,
                 'nivel_actividad' => $nivelActividad,
-                'agua' => $aguaLitros,
-                'condiciones' => $condiciones,
-                'alergias' => $alergias,
-                'preferencia' => $preferencia
+                'agua'            => $aguaLitros
             ],
-            'goals' => [
+            'goals'      => [
                 'calories' => $targetCalories,
-                'protein' => $proteinG,
-                'carbs' => $carbsG,
-                'fats' => $fatsG,
+                'protein'  => $proteinG,
+                'carbs'    => $carbsG,
+                'fats'     => $fatsG,
                 'water_ml' => $waterMl
             ]
         ], 'Cuenta registrada exitosamente', 201);
     } else {
-        apiError('Error al crear la cuenta en la base de datos: ' . $insertStmt->error, 500);
+        apiServerError('Error al insertar en users: ' . $insertStmt->error, 'No fue posible registrar la cuenta en este momento.');
     }
 }
 
 // ==============================================================================
-// 4. ENDPOINT: LOGOUT (Limpieza de sesión web e invalidación)
+// 4. ENDPOINT: LOGOUT
 // ==============================================================================
 if ($action === 'logout') {
     $_SESSION = [];
@@ -367,4 +381,5 @@ if ($action === 'logout') {
     apiSuccess(null, 'Sesión finalizada con éxito');
 }
 
-apiError('Acción no soportada o método no válido', 405);
+apiError('Acción o método HTTP no permitido', 405);
+?>

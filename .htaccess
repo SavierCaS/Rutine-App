@@ -1,0 +1,34 @@
+# ==============================================================================
+# KYNAP FITNESS PLATFORM - APACHE SECURITY RULES
+# ==============================================================================
+
+# 1. Proteger archivos sensibles del servidor (.env, git, sql, py, logs)
+<FilesMatch "^(\.env|\.git|\.gitignore|.*\.sql|.*\.py|.*\.log|composer\.json)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 2. Encabezados de seguridad HTTP
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# 3. Habilitar paso de cabecera Authorization (Bearer Token) a PHP
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
+# 4. Deshabilitar listado de directorios
+Options -Indexes

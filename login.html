@@ -229,34 +229,106 @@
       return 'app.html';
     }
 
-    // Comprobar si venimos redirigidos por intento de acceso sin autenticación
+    // Comprobar si venimos redirigidos por intento de acceso sin autenticación o protocolo file://
     document.addEventListener('DOMContentLoaded', () => {
       const authMsg = sessionStorage.getItem('kynap_auth_message');
+      const alertBox = document.getElementById('loginAlertBox');
       if (authMsg) {
         sessionStorage.removeItem('kynap_auth_message');
-        const alertBox = document.getElementById('loginAlertBox');
         alertBox.innerHTML = `<span>🔒</span><div>${authMsg}</div>`;
+        alertBox.style.display = 'flex';
+      }
+
+      if (window.location.protocol === 'file:') {
+        alertBox.innerHTML = `<span>💡</span><div><strong>Servidor Local XAMPP Requerido:</strong> Estás visualizando este archivo vía <code>file://</code>. Para conectar con la API y MySQL, abre <a href="http://localhost/Kynap/login.html" style="color:var(--accent-emerald);font-weight:bold;text-decoration:underline;">http://localhost/Kynap/login.html</a>.</div>`;
         alertBox.style.display = 'flex';
       }
     });
 
+    function showToast(type = 'success', title = '', desc = '', duration = 3500) {
+      let container = document.getElementById('toastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const icons = { success: '✔', error: '✕', warning: '⚠', info: 'ℹ' };
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || '✔'}</div>
+        <div class="toast-content">
+          <div class="toast-title">${title}</div>
+          ${desc ? `<div class="toast-desc">${desc}</div>` : ''}
+        </div>
+        <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 260);
+      }, duration);
+    }
+
+    function triggerShake() {
+      const card = document.querySelector('.auth-card');
+      if (card) {
+        card.classList.remove('shake');
+        void card.offsetWidth;
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 450);
+      }
+    }
+
+    function setFieldError(fieldId) {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.classList.add('input-error');
+        field.addEventListener('input', () => field.classList.remove('input-error'), { once: true });
+      }
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+      const alertBox = document.getElementById('loginAlertBox');
+      if (alertBox) {
+        alertBox.style.display = 'none';
+        alertBox.innerHTML = '';
+      }
+    }
+
     async function handleLoginSubmit(e) {
       if (e) e.preventDefault();
+      clearErrors();
       const alertBox = document.getElementById('loginAlertBox');
-      alertBox.style.display = 'none';
-      alertBox.innerHTML = '';
 
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value;
 
       if (!email || !password) {
-        alertBox.innerHTML = '<span>⚠</span><div>Por favor completa todos los campos.</div>';
+        triggerShake();
+        if (!email) setFieldError('emailInput');
+        if (!password) setFieldError('passwordInput');
+        alertBox.innerHTML = '<span>⚠</span><div>Por favor completa todos los campos requeridos.</div>';
         alertBox.style.display = 'flex';
+        showToast('error', 'Campos Requeridos', 'Por favor ingresa tu correo y contraseña.');
         return;
       }
 
+      const submitBtn = document.querySelector('#standaloneLoginForm button[type="submit"]');
+      const origText = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⚡ Verificando credenciales...';
+      }
+
       try {
-        const res = await fetch('controllers/api_auth.php?action=login', {
+        const apiUrl = (window.location.protocol === 'file:') 
+          ? 'http://localhost/Kynap/controllers/api_auth.php?action=login'
+          : 'controllers/api_auth.php?action=login';
+
+        const res = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -265,20 +337,40 @@
         const data = await res.json();
         if (data.success && data.data?.token) {
           localStorage.setItem('kynap_auth_token', data.data.token);
-          window.location.href = getTargetUrl();
+          showToast('success', '¡Acceso Concedido!', 'Bienvenido a Kynap. Redirigiendo al panel...');
+          setTimeout(() => {
+            window.location.href = getTargetUrl();
+          }, 800);
           return;
         } else {
-          // Bloqueo estricto: denegación y requerimiento de registro si el usuario no existe
+          triggerShake();
+          setFieldError('emailInput');
+          setFieldError('passwordInput');
           let promptHtml = '';
-          if (data.data?.suggest_register || res.status === 404) {
+          if (data.errors?.suggest_register || data.data?.suggest_register || res.status === 401 || res.status === 404) {
             promptHtml = `<a href="registro.html?email=${encodeURIComponent(email)}" class="btn-register-cta-banner">Crear Cuenta Ahora ➔</a>`;
           }
-          alertBox.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start;"><span>⚠</span><div>${data.message || 'Credenciales incorrectas o usuario no registrado.'}</div></div>${promptHtml}`;
+          const msg = data.message || 'Credenciales incorrectas o cuenta no registrada.';
+          alertBox.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start;"><span>⚠</span><div>${msg}</div></div>${promptHtml}`;
           alertBox.style.display = 'flex';
+          showToast('error', 'Error de Acceso', msg);
         }
       } catch (err) {
-        alertBox.innerHTML = '<span>⚠</span><div>No se pudo conectar con el servidor de autenticación. Verifica tu conexión.</div>';
+        triggerShake();
+        let msg = 'No se pudo conectar con el servidor de autenticación.';
+        if (window.location.protocol === 'file:') {
+          msg = 'Para iniciar sesión con MySQL y PHP debes acceder desde <a href="http://localhost/Kynap/login.html" style="color:var(--accent-emerald);font-weight:bold;text-decoration:underline;">http://localhost/Kynap/login.html</a>.';
+        } else {
+          msg += ' Verifica que Apache y MySQL estén activos en tu panel XAMPP.';
+        }
+        alertBox.innerHTML = `<span>⚠</span><div>${msg}</div>`;
         alertBox.style.display = 'flex';
+        showToast('error', 'Error de Red', 'No se pudo conectar con el servidor backend.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
+        }
       }
     }
   </script>

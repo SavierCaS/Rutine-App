@@ -43,6 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($row = $result->fetch_assoc()) {
                 if (password_verify($password, $row['password'])) {
+                    // Regeneración de sesión segura contra Session Fixation
+                    if (session_status() === PHP_SESSION_ACTIVE) {
+                        session_regenerate_id(true);
+                    }
                     // Establecer sesión segura
                     $_SESSION['user_id'] = (int)$row['id'];
                     $_SESSION['nombre'] = $row['nombre'];
@@ -61,15 +65,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo "</body></html>";
                     exit();
                 } else {
-                    $errorMessage = 'Contraseña incorrecta. Por favor verifica tus credenciales.';
+                    $errorMessage = 'Credenciales incorrectas o cuenta no registrada.';
                     $showRegisterPrompt = false;
                 }
             } else {
-                $errorMessage = 'No existe ninguna cuenta registrada con este correo electrónico. Debes crear una cuenta antes de acceder.';
+                $errorMessage = 'Credenciales incorrectas o cuenta no registrada.';
                 $showRegisterPrompt = true;
             }
             $stmt->close();
         } else {
+            error_log("[LOGIN PREPARE ERROR]: " . $conn->error);
             $errorMessage = 'Error interno del servidor. Por favor intenta de nuevo.';
         }
     }
@@ -237,12 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </style>
 </head>
 <body class="auth-page">
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <div class="theme-top-bar">
     <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
   </div>
 
-  <main class="auth-card" role="main">
+  <main class="auth-card" id="authCard" role="main">
     <div class="auth-brand">
       <div class="brand-logo">K</div>
       <h1>Kynap <span>AI</span></h1>
@@ -250,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <?php if (!empty($errorMessage)): ?>
-      <div class="auth-alert-error" role="alert">
+      <div class="auth-alert-banner" role="alert" style="margin-bottom: 16px;">
         <div style="display: flex; gap: 8px; align-items: flex-start;">
           <span>⚠</span>
           <div><?php echo htmlspecialchars($errorMessage); ?></div>
@@ -263,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endif; ?>
 
-    <div id="loginClientAlert" class="auth-alert-error" style="display: none;" role="alert"></div>
+    <div id="loginClientAlert" class="auth-alert-banner" style="display: none; margin-bottom: 16px;" role="alert"></div>
 
     <form id="loginForm" onsubmit="handleLogin(event)" method="POST" action="login.php" class="auth-form" novalidate>
       <div class="form-group" style="margin-bottom: 0;">
@@ -277,7 +283,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" 
           required 
           autocomplete="email"
+          oninput="clearFieldError(this)"
         >
+        <div id="emailError" class="field-error-msg" style="display:none;"></div>
       </div>
 
       <div class="form-group" style="margin-bottom: 0;">
@@ -293,14 +301,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             placeholder="••••••••" 
             required 
             autocomplete="current-password"
+            oninput="clearFieldError(this)"
           >
           <button type="button" class="password-toggle" onclick="togglePasswordVisibility()" aria-label="Mostrar u ocultar contraseña">
             👁
           </button>
         </div>
+        <div id="passwordError" class="field-error-msg" style="display:none;"></div>
       </div>
 
-      <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
+      <button type="submit" id="submitBtn" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
         Iniciar Sesión ➔
       </button>
     </form>
@@ -317,20 +327,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       input.type = input.type === 'password' ? 'text' : 'password';
     }
 
+    function clearFieldError(inputEl) {
+      if (!inputEl) return;
+      inputEl.classList.remove('input-error', 'is-invalid');
+      const errEl = document.getElementById(inputEl.id === 'emailInput' ? 'emailError' : 'passwordError');
+      if (errEl) {
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+      }
+    }
+
+    function setFieldError(fieldId, errorId, message) {
+      const field = document.getElementById(fieldId);
+      const err = document.getElementById(errorId);
+      if (field) field.classList.add('input-error', 'is-invalid');
+      if (err) {
+        err.textContent = message;
+        err.style.display = 'block';
+      }
+    }
+
+    function triggerCardShake() {
+      const card = document.getElementById('authCard');
+      if (card) {
+        card.classList.remove('shake-error');
+        void card.offsetWidth; // Force reflow
+        card.classList.add('shake-error');
+      }
+    }
+
+    function showToast(type = 'success', title = '', desc = '', duration = 3500) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      
+      const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+      };
+
+      toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || '•'}</div>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          ${desc ? `<div class="toast-desc">${desc}</div>` : ''}
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+        <div class="toast-progress"></div>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.style.animation = 'toastSlideIn 0.3s ease reverse forwards';
+          setTimeout(() => toast.remove(), 300);
+        }
+      }, duration);
+    }
+
     async function handleLogin(e) {
       if (e) e.preventDefault();
       const alertBox = document.getElementById('loginClientAlert');
       alertBox.style.display = 'none';
       alertBox.innerHTML = '';
 
-      const email = document.getElementById('emailInput').value.trim();
-      const password = document.getElementById('passwordInput').value;
+      const emailEl = document.getElementById('emailInput');
+      const passEl = document.getElementById('passwordInput');
+      clearFieldError(emailEl);
+      clearFieldError(passEl);
 
-      if (!email || !password) {
-        alertBox.innerHTML = '<span>⚠</span><div>Por favor completa todos los campos.</div>';
+      const email = emailEl.value.trim();
+      const password = passEl.value;
+
+      let hasError = false;
+
+      if (!email) {
+        setFieldError('emailInput', 'emailError', 'Por favor ingresa tu correo electrónico.');
+        hasError = true;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setFieldError('emailInput', 'emailError', 'Formato de correo inválido.');
+        hasError = true;
+      }
+
+      if (!password) {
+        setFieldError('passwordInput', 'passwordError', 'Por favor ingresa tu contraseña.');
+        hasError = true;
+      }
+
+      if (hasError) {
+        triggerCardShake();
+        alertBox.innerHTML = '<span>⚠</span><div>Por favor corrige los campos señalados en rojo.</div>';
         alertBox.style.display = 'flex';
+        showToast('error', 'Campos incompletos', 'Verifica los campos destacados en rojo.');
         return;
       }
+
+      const submitBtn = document.getElementById('submitBtn');
+      const origText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⚡ Autenticando...';
 
       try {
         const res = await fetch('controllers/api_auth.php?action=login', {
@@ -342,22 +442,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const data = await res.json();
         if (data.success && data.data?.token) {
           localStorage.setItem('kynap_auth_token', data.data.token);
-          window.location.href = 'dashboard.php';
+          showToast('success', '¡Acceso Concedido!', 'Bienvenido de nuevo a Kynap.');
+          setTimeout(() => {
+            window.location.href = 'dashboard.php';
+          }, 600);
           return;
         } else {
-          // Bloqueo estricto si no existe o clave errónea
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
+          triggerCardShake();
+          setFieldError('emailInput', 'emailError', 'Verifica tu usuario.');
+          setFieldError('passwordInput', 'passwordError', 'Verifica tu contraseña.');
+
           let promptHtml = '';
           if (data.data?.suggest_register || data.status === 404) {
             promptHtml = `<a href="registro.php?email=${encodeURIComponent(email)}" class="btn-register-cta-banner">Crear Cuenta Nueva ➔</a>`;
           }
-          alertBox.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start;"><span>⚠</span><div>${data.message || 'Credenciales incorrectas o usuario no registrado.'}</div></div>${promptHtml}`;
+          const errorMsg = data.message || 'Credenciales incorrectas o usuario no registrado.';
+          alertBox.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start;"><span>⚠</span><div>${errorMsg}</div></div>${promptHtml}`;
           alertBox.style.display = 'flex';
+          
+          // Doble indicador: Toast emergente simultáneo
+          showToast('error', 'Error al Iniciar Sesión', errorMsg);
         }
       } catch (err) {
-        // En caso de fallo de red, enviar formulario tradicional PHP
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origText;
+        showToast('warning', 'Conexión local', 'Enviando petición a través del servidor...');
         document.getElementById('loginForm').submit();
       }
     }
+
+    <?php if (!empty($errorMessage)): ?>
+    document.addEventListener('DOMContentLoaded', () => {
+      showToast('error', 'Acceso denegado', <?php echo json_encode($errorMessage); ?>);
+      triggerCardShake();
+    });
+    <?php endif; ?>
   </script>
 </body>
 </html>
