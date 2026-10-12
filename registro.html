@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0a0d14">
   <title>Crear Cuenta - Kynap AI Fitness</title>
 
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <!-- Hoja de estilos del Design System Kynap -->
   <link rel="stylesheet" href="public/css/app.css">
@@ -136,12 +140,16 @@
       .auth-card {
         padding: 26px 20px;
       }
-      .form-grid-2, .form-grid-3 {
+
+      .form-grid-2,
+      .form-grid-3 {
         grid-template-columns: 1fr;
       }
+
       .step-label {
         font-size: 9px;
       }
+
       .step-bubble {
         width: 30px;
         height: 30px;
@@ -150,6 +158,7 @@
     }
   </style>
 </head>
+
 <body class="auth-page">
 
   <div class="ambient-glow" style="top: -100px; left: 10%; background: var(--accent-emerald);"></div>
@@ -191,75 +200,47 @@
     </div>
 
     <form id="completeRegisterForm" action="#" method="POST" onsubmit="handleRegisterSubmit(event)" novalidate>
-      
+
       <!-- ==================================================================
            PASO 1: CUENTA & CREDENCIALES
            ================================================================== -->
       <div class="wizard-step-pane active" id="wizardPane1">
         <div class="form-group" style="margin: 0;">
           <label for="nombreInput">Nombre Completo *</label>
-          <input 
-            type="text" 
-            id="nombreInput" 
-            name="nombre" 
-            class="input-custom" 
-            placeholder="Ej: Savier Casiani" 
-            required 
-            autocomplete="name"
-          >
+          <input type="text" id="nombreInput" name="nombre" class="input-custom" placeholder="Ej: Savier Casiani"
+            required autocomplete="name">
           <div class="field-error-msg" id="err-nombreInput" style="display: none;"></div>
         </div>
 
         <div class="form-group" style="margin: 0;">
           <label for="emailInput">Correo Electrónico *</label>
-          <input 
-            type="email" 
-            id="emailInput" 
-            name="email" 
-            class="input-custom" 
-            placeholder="tu_correo@ejemplo.com" 
-            required 
-            autocomplete="email"
-          >
+          <input type="email" id="emailInput" name="email" class="input-custom" placeholder="tu_correo@ejemplo.com"
+            required autocomplete="email">
           <div class="field-error-msg" id="err-emailInput" style="display: none;"></div>
         </div>
 
         <div class="form-grid-2">
           <div class="form-group" style="margin: 0;">
             <label for="passwordInput">Contraseña *</label>
-            <input 
-              type="password" 
-              id="passwordInput" 
-              name="password" 
-              class="input-custom" 
-              placeholder="Mín. 6 caracteres" 
-              required 
-              autocomplete="new-password"
-              oninput="checkPasswordMatch()"
-            >
+            <input type="password" id="passwordInput" name="password" class="input-custom"
+              placeholder="Mín. 6 caracteres" required autocomplete="new-password" oninput="checkPasswordMatch()">
             <div class="password-hint">Mínimo 6 caracteres</div>
             <div class="field-error-msg" id="err-passwordInput" style="display: none;"></div>
           </div>
 
           <div class="form-group" style="margin: 0;">
             <label for="confirmPasswordInput">Confirmar Contraseña *</label>
-            <input 
-              type="password" 
-              id="confirmPasswordInput" 
-              name="confirm_password" 
-              class="input-custom" 
-              placeholder="Repite contraseña" 
-              required 
-              autocomplete="new-password"
-              oninput="checkPasswordMatch()"
-            >
+            <input type="password" id="confirmPasswordInput" name="confirm_password" class="input-custom"
+              placeholder="Repite contraseña" required autocomplete="new-password" oninput="checkPasswordMatch()">
             <div id="matchIndicator" class="password-match-indicator"></div>
             <div class="field-error-msg" id="err-confirmPasswordInput" style="display: none;"></div>
           </div>
         </div>
 
         <div class="wizard-actions" style="justify-content: flex-end;">
-          <button type="button" class="btn-checkin" style="width: auto; padding: 12px 28px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700;" onclick="nextStep(1)">
+          <button type="button" class="btn-checkin"
+            style="width: auto; padding: 12px 28px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700;"
+            onclick="nextStep(1)">
             Continuar a Biometría ➔
           </button>
         </div>
@@ -272,16 +253,7 @@
         <div class="form-grid-2">
           <div class="form-group" style="margin: 0;">
             <label for="edadInput">Edad (Años) *</label>
-            <input 
-              type="number" 
-              id="edadInput" 
-              name="edad" 
-              class="input-custom" 
-              value="25" 
-              min="12" 
-              max="100" 
-              required
-            >
+            <input type="number" id="edadInput" name="edad" class="input-custom" value="25" min="12" max="100" required>
             <div class="field-error-msg" id="err-edadInput" style="display: none;"></div>
           </div>
 
@@ -298,34 +270,15 @@
         <div class="form-grid-2">
           <div class="form-group" style="margin: 0;">
             <label for="pesoInput">Peso Actual (kg) *</label>
-            <input 
-              type="number" 
-              id="pesoInput" 
-              name="peso" 
-              class="input-custom" 
-              value="75.0" 
-              step="0.5" 
-              min="30" 
-              max="300" 
-              required
-              oninput="recalcBmiPreview()"
-            >
+            <input type="number" id="pesoInput" name="peso" class="input-custom" value="75.0" step="0.5" min="30"
+              max="300" required oninput="recalcBmiPreview()">
             <div class="field-error-msg" id="err-pesoInput" style="display: none;"></div>
           </div>
 
           <div class="form-group" style="margin: 0;">
             <label for="alturaInput">Altura (cm) *</label>
-            <input 
-              type="number" 
-              id="alturaInput" 
-              name="altura" 
-              class="input-custom" 
-              value="175" 
-              min="100" 
-              max="250" 
-              required
-              oninput="recalcBmiPreview()"
-            >
+            <input type="number" id="alturaInput" name="altura" class="input-custom" value="175" min="100" max="250"
+              required oninput="recalcBmiPreview()">
             <div class="field-error-msg" id="err-alturaInput" style="display: none;"></div>
           </div>
         </div>
@@ -333,17 +286,23 @@
         <!-- WIDGET EN TIEMPO REAL DE IMC -->
         <div class="bmi-live-preview">
           <div>
-            <strong style="color: var(--accent-cyan); font-size: 12px; text-transform: uppercase;">Índice de Masa Corporal (IMC):</strong>
-            <div style="font-size: 14px; margin-top: 2px;"><span id="bmiValPreview">24.5</span> kg/m² • <span id="bmiCatPreview" style="color: var(--accent-emerald); font-weight: 700;">Peso Saludable</span></div>
+            <strong style="color: var(--accent-cyan); font-size: 12px; text-transform: uppercase;">Índice de Masa
+              Corporal (IMC):</strong>
+            <div style="font-size: 14px; margin-top: 2px;"><span id="bmiValPreview">24.5</span> kg/m² • <span
+                id="bmiCatPreview" style="color: var(--accent-emerald); font-weight: 700;">Peso Saludable</span></div>
           </div>
           <span style="font-size: 22px;">⚖️</span>
         </div>
 
         <div class="wizard-actions">
-          <button type="button" class="btn-checkin" style="width: auto; padding: 12px 20px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary);" onclick="prevStep(2)">
+          <button type="button" class="btn-checkin"
+            style="width: auto; padding: 12px 20px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary);"
+            onclick="prevStep(2)">
             ← Volver
           </button>
-          <button type="button" class="btn-checkin" style="width: auto; padding: 12px 28px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700;" onclick="nextStep(2)">
+          <button type="button" class="btn-checkin"
+            style="width: auto; padding: 12px 28px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700;"
+            onclick="nextStep(2)">
             Continuar a Metas ➔
           </button>
         </div>
@@ -384,10 +343,13 @@
         </div>
 
         <div class="wizard-actions">
-          <button type="button" class="btn-checkin" style="width: auto; padding: 12px 20px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary);" onclick="prevStep(3)">
+          <button type="button" class="btn-checkin"
+            style="width: auto; padding: 12px 20px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary);"
+            onclick="prevStep(3)">
             ← Volver
           </button>
-          <button type="submit" id="btnSubmitRegister" class="btn-checkin" style="width: auto; padding: 12px 30px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 800; font-size: 15px; box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);">
+          <button type="submit" id="btnSubmitRegister" class="btn-checkin"
+            style="width: auto; padding: 12px 30px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 800; font-size: 15px; box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);">
             🚀 Completar Registro & Entrar
           </button>
         </div>
@@ -739,4 +701,5 @@
     });
   </script>
 </body>
+
 </html>

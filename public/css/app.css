@@ -5,6 +5,7 @@
 :root {
   --bg-primary: #0a0d14;
   --bg-surface: #121722;
+  --bg-dark: #0a0d14;
   --bg-card: #182030;
   --bg-card-hover: #202a3f;
   --bg-glass: rgba(18, 23, 34, 0.75);
@@ -20,10 +21,36 @@
   --accent-emerald-glow: rgba(0, 255, 136, 0.25);
   --accent-cyan: #00d9ff;
   --accent-cyan-glow: rgba(0, 217, 255, 0.25);
-  --accent-amber: #ffb800;
-  --accent-amber-glow: rgba(255, 184, 0, 0.25);
+  --accent-amber: #ff9f43;
+  --accent-amber-glow: rgba(255, 159, 67, 0.25);
   --accent-rose: #ff4757;
   --accent-purple: #a855f7;
+
+  /* Identidad visual de macronutrientes (Dark Mode Premium) */
+  --macro-cal: #ff9f43;
+  --macro-cal-glow: rgba(255, 159, 67, 0.35);
+  --macro-cal-bg: rgba(255, 159, 67, 0.1);
+  --macro-cal-border: rgba(255, 159, 67, 0.25);
+
+  --macro-prot: #ff5252;
+  --macro-prot-glow: rgba(255, 82, 82, 0.35);
+  --macro-prot-bg: rgba(255, 82, 82, 0.1);
+  --macro-prot-border: rgba(255, 82, 82, 0.25);
+
+  --macro-carb: #00e676;
+  --macro-carb-glow: rgba(0, 230, 118, 0.35);
+  --macro-carb-bg: rgba(0, 230, 118, 0.1);
+  --macro-carb-border: rgba(0, 230, 118, 0.25);
+
+  --macro-fat: #00e5ff;
+  --macro-fat-glow: rgba(0, 229, 255, 0.35);
+  --macro-fat-bg: rgba(0, 229, 255, 0.1);
+  --macro-fat-border: rgba(0, 229, 255, 0.25);
+
+  --macro-water: #29b6f6;
+  --macro-water-glow: rgba(41, 182, 246, 0.4);
+  --macro-water-bg: rgba(41, 182, 246, 0.12);
+  --macro-water-border: rgba(41, 182, 246, 0.28);
 
   --font-heading: 'Outfit', -apple-system, sans-serif;
   --font-body: 'Inter', -apple-system, sans-serif;
@@ -46,6 +73,7 @@
 body.light-theme {
   --bg-primary: #f8fafc;
   --bg-surface: #ffffff;
+  --bg-dark: #f8fafc;
   --bg-card: #ffffff;
   --bg-card-hover: #f1f5f9;
   --bg-glass: rgba(255, 255, 255, 0.88);
@@ -61,10 +89,36 @@ body.light-theme {
   --accent-emerald-glow: rgba(5, 150, 105, 0.2);
   --accent-cyan: #0284c7;
   --accent-cyan-glow: rgba(2, 132, 199, 0.2);
-  --accent-amber: #d97706;
-  --accent-amber-glow: rgba(217, 119, 6, 0.2);
+  --accent-amber: #f97316;
+  --accent-amber-glow: rgba(249, 115, 22, 0.2);
   --accent-rose: #e11d48;
   --accent-purple: #7c3aed;
+
+  /* Identidad visual de macronutrientes (Modo Claro) */
+  --macro-cal: #f97316;
+  --macro-cal-glow: rgba(249, 115, 22, 0.25);
+  --macro-cal-bg: rgba(249, 115, 22, 0.1);
+  --macro-cal-border: rgba(249, 115, 22, 0.25);
+
+  --macro-prot: #e11d48;
+  --macro-prot-glow: rgba(225, 29, 72, 0.25);
+  --macro-prot-bg: rgba(225, 29, 72, 0.08);
+  --macro-prot-border: rgba(225, 29, 72, 0.22);
+
+  --macro-carb: #059669;
+  --macro-carb-glow: rgba(5, 150, 105, 0.25);
+  --macro-carb-bg: rgba(5, 150, 105, 0.08);
+  --macro-carb-border: rgba(5, 150, 105, 0.22);
+
+  --macro-fat: #0284c7;
+  --macro-fat-glow: rgba(2, 132, 199, 0.25);
+  --macro-fat-bg: rgba(2, 132, 199, 0.08);
+  --macro-fat-border: rgba(2, 132, 199, 0.22);
+
+  --macro-water: #0284c7;
+  --macro-water-glow: rgba(2, 132, 199, 0.25);
+  --macro-water-bg: rgba(2, 132, 199, 0.08);
+  --macro-water-border: rgba(2, 132, 199, 0.22);
 
   --shadow-card: 0 6px 24px rgba(15, 23, 42, 0.07);
   --shadow-glow: 0 0 16px rgba(5, 150, 105, 0.15);
@@ -661,80 +715,761 @@ body {
 }
 
 /* ==========================================================================
-   CORE 3: NUTRICIÓN & MACROS
+   MÓDULO MAESTRO EXCLUSIVO: NUTRICIÓN, ALIMENTACIÓN SEMANAL Y MACRONUTRIENTES
+   Kynap Fitness Platform - Dark Mode Premium UI/UX Design System
    ========================================================================== */
 
-.nutrition-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+/* --------------------------------------------------------------------------
+   0. KEYFRAMES Y MICRO-ANIMACIONES DINÁMICAS
+   -------------------------------------------------------------------------- */
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 6px var(--macro-carb, #00e676);
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.75;
+    box-shadow: 0 0 14px var(--macro-carb, #00e676);
+  }
 }
 
-.macro-summary-card {
-  background-color: var(--bg-card);
+@keyframes waterWaveFlow {
+  0% {
+    filter: drop-shadow(0 0 16px rgba(41, 182, 246, 0.45));
+    transform: translateY(0);
+  }
+  50% {
+    filter: drop-shadow(0 0 28px rgba(41, 182, 246, 0.75));
+    transform: translateY(-3px);
+  }
+  100% {
+    filter: drop-shadow(0 0 16px rgba(41, 182, 246, 0.45));
+    transform: translateY(0);
+  }
+}
+
+@keyframes waterAmbientPulse {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 0.75;
+    transform: scale(1.04);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   1. CONTENEDOR GENERAL & SECCIÓN DE HORARIOS
+   -------------------------------------------------------------------------- */
+#view-nutrition {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.meal-schedule-section {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 20px;
+}
+
+/* Banner de reinicio automático diario */
+.meal-schedule-section > div[style*="border"]:first-child {
+  background: rgba(0, 217, 255, 0.07) !important;
+  border: 1px solid rgba(0, 217, 255, 0.22) !important;
+  border-radius: var(--radius-md) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.meal-schedule-section > div[style*="border"]:first-child:hover {
+  border-color: rgba(0, 217, 255, 0.38) !important;
+  box-shadow: 0 4px 20px rgba(0, 217, 255, 0.1);
+}
+
+#mealCompletionCounterBadge {
+  transition: all var(--transition-fast);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* --------------------------------------------------------------------------
+   2. SELECTOR DE DÍAS DE LA SEMANA (#mealDayTabs)
+   Selector tipo "Pills" horizontales con scroll suave y sin scrollbar visible
+   -------------------------------------------------------------------------- */
+.meal-day-tabs-wrapper {
+  background: var(--bg-card);
+  background: rgba(24, 32, 48, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 24px;
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.macro-bars {
+.meal-day-tabs-wrapper:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* Barra horizontal de pastillas con scroll táctil sin scrollbar visible */
+.meal-day-tabs,
+#mealDayTabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge */
+  padding: 4px 2px;
+  scroll-snap-type: x proximity;
+}
+
+.meal-day-tabs::-webkit-scrollbar,
+#mealDayTabs::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Píldora individual de día de la semana */
+.meal-day-pill {
+  flex: 1;
+  min-width: 95px;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 9px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  user-select: none;
+  position: relative;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.22s ease,
+              border-color 0.22s ease,
+              color 0.22s ease,
+              box-shadow 0.22s ease;
+}
+
+.meal-day-pill:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(0, 230, 118, 0.35);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.meal-day-pill:focus-visible {
+  outline: 2px solid var(--macro-carb, #00e676);
+  outline-offset: 2px;
+}
+
+.meal-day-pill:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Estado Activo (.active): Resaltado con gradiente neón/esmeralda y sombra suave */
+.meal-day-pill.active {
+  background: linear-gradient(135deg, rgba(0, 230, 118, 0.22) 0%, rgba(0, 229, 255, 0.15) 100%);
+  border-color: var(--macro-carb, #00e676);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2), inset 0 0 12px rgba(0, 255, 136, 0.1);
+  transform: translateY(-2px);
+}
+
+.meal-day-pill .day-letter {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Indicador 'Hoy': Mini badge con minipunto brillante animado */
+.meal-day-pill .today-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 230, 118, 0.18);
+  color: var(--macro-carb, #00e676);
+  border: 1px solid rgba(0, 230, 118, 0.4);
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.2);
+}
+
+.meal-day-pill .today-indicator::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--macro-carb, #00e676);
+  box-shadow: 0 0 8px var(--macro-carb, #00e676);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   3. TARJETAS ESTRUCTURADAS DE COMIDAS DIARIAS (.meal-block-card)
+   Cristal ahumado, micro-badges de macros y feedback visual de completado
+   -------------------------------------------------------------------------- */
+.meal-blocks-container {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-top: 20px;
+}
+
+.meal-block-card {
+  background: var(--bg-card);
+  background: rgba(24, 32, 48, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease,
+              background 0.3s ease;
+}
+
+.meal-block-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38), 0 0 16px rgba(0, 229, 255, 0.08);
+}
+
+/* Header flexible de comida */
+.meal-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.meal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Tag de hora sugerida (Estética retro-futurista de badge con brillo cyan) */
+.meal-time-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.12) 0%, rgba(0, 180, 255, 0.05) 100%);
+  border: 1px solid rgba(0, 229, 255, 0.32);
+  color: var(--macro-fat, #00e5ff);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+}
+
+.meal-block-title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
+}
+
+.meal-block-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Botón interactivo para marcar consumo diario */
+.btn-meal-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.btn-meal-check:hover {
+  background: rgba(0, 230, 118, 0.15);
+  border-color: var(--macro-carb, #00e676);
+  color: var(--macro-carb, #00e676);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 230, 118, 0.25);
+}
+
+.btn-meal-check:active {
+  transform: scale(0.96);
+}
+
+/* Estado Completado (.completed): Transición a fondo verdoso sutil y borde verde brillante */
+.meal-block-card.completed {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, rgba(24, 32, 48, 0.88) 100%);
+  border-color: rgba(0, 230, 118, 0.45);
+  box-shadow: 0 8px 26px rgba(0, 230, 118, 0.08), inset 0 0 20px rgba(0, 230, 118, 0.03);
+}
+
+.meal-block-card.completed::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--macro-carb, #00e676), var(--macro-fat, #00e5ff));
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+}
+
+.meal-block-card.completed .meal-block-title {
+  color: #e6fffa;
+}
+
+.meal-block-card.completed .meal-block-desc {
+  opacity: 0.82;
+}
+
+.btn-meal-check.completed {
+  background: linear-gradient(135deg, var(--macro-carb, #00e676) 0%, #00c853 100%);
+  border-color: var(--macro-carb, #00e676);
+  color: #031409;
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(0, 230, 118, 0.4);
+}
+
+/* Micro-Badges de Macronutrientes (.macro-chip) */
+.meal-macros-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.macro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.macro-chip:hover {
+  transform: translateY(-1px);
+}
+
+/* Asignación de identidades cromáticas por macro */
+.macro-chip.cal {
+  color: var(--macro-cal, #ff9f43);
+  background: var(--macro-cal-bg, rgba(255, 159, 67, 0.1));
+  border-color: var(--macro-cal-border, rgba(255, 159, 67, 0.25));
+  box-shadow: 0 2px 8px rgba(255, 159, 67, 0.1);
+}
+
+.macro-chip.prot {
+  color: var(--macro-prot, #ff5252);
+  background: var(--macro-prot-bg, rgba(255, 82, 82, 0.1));
+  border-color: var(--macro-prot-border, rgba(255, 82, 82, 0.25));
+  box-shadow: 0 2px 8px rgba(255, 82, 82, 0.1);
+}
+
+.macro-chip.carb {
+  color: var(--macro-carb, #00e676);
+  background: var(--macro-carb-bg, rgba(0, 230, 118, 0.1));
+  border-color: var(--macro-carb-border, rgba(0, 230, 118, 0.25));
+  box-shadow: 0 2px 8px rgba(0, 230, 118, 0.1);
+}
+
+.macro-chip.fat {
+  color: var(--macro-fat, #00e5ff);
+  background: var(--macro-fat-bg, rgba(0, 229, 255, 0.1));
+  border-color: var(--macro-fat-border, rgba(0, 229, 255, 0.25));
+  box-shadow: 0 2px 8px rgba(0, 229, 255, 0.1);
+}
+
+/* --------------------------------------------------------------------------
+   4. TARJETA HERO DE BALANCE CALÓRICO Y BARRAS DE PROGRESO CILÍNDRICAS
+   -------------------------------------------------------------------------- */
+.macro-summary-card {
+  background: var(--bg-card);
+  background: rgba(24, 32, 48, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.macro-summary-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Indicador Hero de Calorías (Gradiente Ámbar Fuego / Esmeralda y brillo) */
+#caloriesConsumed {
+  font-family: var(--font-heading);
+  font-size: 38px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--macro-cal, #ff9f43) 0%, var(--macro-carb, #00e676) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  filter: drop-shadow(0 0 14px rgba(0, 230, 118, 0.35));
+  letter-spacing: -0.5px;
+}
+
+#caloriesTarget {
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* Contenedor de barras de macronutrientes */
+.macro-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 22px;
 }
 
 .macro-bar-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .macro-label-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 13px;
   font-weight: 600;
 }
 
+/* Forzar colores de texto de cada macro en la etiqueta */
+.macro-label-row:has(#valProtein) span:first-child,
+.macro-bar-item:nth-child(1) .macro-label-row span:first-child {
+  color: var(--macro-prot, #ff5252) !important;
+}
+
+.macro-label-row:has(#valCarbs) span:first-child,
+.macro-bar-item:nth-child(2) .macro-label-row span:first-child {
+  color: var(--macro-carb, #00e676) !important;
+}
+
+.macro-label-row:has(#valFats) span:first-child,
+.macro-bar-item:nth-child(3) .macro-label-row span:first-child {
+  color: var(--macro-fat, #00e5ff) !important;
+}
+
+/* Pista cilíndrica de progreso con radio 99px y sombra interna */
 .macro-bar-track {
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-full);
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Barra de relleno con animación fluida cubic-bezier y brillo interno */
+.macro-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
   overflow: hidden;
 }
 
-.macro-bar-fill {
-  height: 100%;
-  border-radius: var(--radius-full);
-  width: 0%;
-  transition: width 0.5s ease;
+.macro-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, transparent 100%);
+  border-radius: 99px;
 }
 
-.fill-protein { background-color: var(--accent-cyan); }
-.fill-carbs { background-color: var(--accent-amber); }
-.fill-fats { background-color: var(--accent-rose); }
+/* Proteínas: Tonalidades Carmesí / Rojo Magro (#FF5252) */
+#barProtein,
+.macro-bar-fill.fill-protein {
+  background: linear-gradient(90deg, var(--macro-prot, #ff5252) 0%, #ff1744 100%);
+  box-shadow: 0 0 14px var(--macro-prot-glow, rgba(255, 82, 82, 0.45)), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+}
 
+/* Carbohidratos: Tonalidades Esmeralda / Verde Energía (#00E676) */
+#barCarbs,
+.macro-bar-fill.fill-carbs {
+  background: linear-gradient(90deg, var(--macro-carb, #00e676) 0%, #00c853 100%);
+  box-shadow: 0 0 14px var(--macro-carb-glow, rgba(0, 230, 118, 0.45)), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+}
+
+/* Grasas: Tonalidades Cyan / Azul Eléctrico (#00E5FF) */
+#barFats,
+.macro-bar-fill.fill-fats {
+  background: linear-gradient(90deg, var(--macro-fat, #00e5ff) 0%, #00b0ff 100%);
+  box-shadow: 0 0 14px var(--macro-fat-glow, rgba(0, 229, 255, 0.45)), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   5. SECCIÓN DE HIDRATACIÓN INTERACTIVA (.water-tracker-card)
+   Diseño de contenedor de consumo en ml con botones flotantes e indicador líquido animado
+   -------------------------------------------------------------------------- */
 .water-tracker-card {
-  background: linear-gradient(135deg, rgba(0, 217, 255, 0.08), var(--bg-card));
-  border: 1px solid rgba(0, 217, 255, 0.2);
+  background: linear-gradient(145deg, rgba(41, 182, 246, 0.12) 0%, rgba(24, 32, 48, 0.88) 55%, rgba(10, 13, 20, 0.95) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(41, 182, 246, 0.28);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 26px 24px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35), 0 0 24px rgba(41, 182, 246, 0.14);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
+.water-tracker-card:hover {
+  border-color: rgba(41, 182, 246, 0.45);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.42), 0 0 30px rgba(41, 182, 246, 0.22);
+}
+
+/* Onda de líquido ambiental pulsante en el fondo */
+.water-tracker-card::before {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -25%;
+  right: -25%;
+  height: 130px;
+  background: radial-gradient(ellipse at center, rgba(41, 182, 246, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+  animation: waterAmbientPulse 4s ease-in-out infinite alternate;
+}
+
+/* Indicador líquido animado con brillo agua azul (#29B6F6) */
+#waterDisplay,
 .water-display {
   font-family: var(--font-heading);
-  font-size: 40px;
-  font-weight: 800;
-  color: var(--accent-cyan);
-  margin: 16px 0;
+  font-size: 42px;
+  font-weight: 900;
+  background: linear-gradient(180deg, #ffffff 0%, var(--macro-water, #29b6f6) 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  filter: drop-shadow(0 0 20px rgba(41, 182, 246, 0.55));
+  margin: 12px 0 4px;
+  letter-spacing: -0.5px;
+  animation: waterWaveFlow 6s ease-in-out infinite;
 }
 
+#waterTarget {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+/* Botones flotantes de acción (+250ml, +500ml, -250ml) */
 .water-actions {
   display: flex;
   gap: 10px;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.water-actions .btn-checkin,
+.water-actions button {
+  border-radius: var(--radius-full) !important;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s ease,
+              background 0.2s ease !important;
+}
+
+.water-actions .btn-checkin:hover,
+.water-actions button:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 22px rgba(41, 182, 246, 0.4);
+}
+
+.water-actions .btn-checkin:active,
+.water-actions button:active {
+  transform: translateY(0) scale(0.96);
+}
+
+/* --------------------------------------------------------------------------
+   6. LISTA DE ALIMENTOS EXTRA REGISTRADOS Y MODAL DE NUTRICIÓN
+   -------------------------------------------------------------------------- */
+#recentMealsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+}
+
+#recentMealsList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+#recentMealsList li:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateX(2px);
+}
+
+/* --------------------------------------------------------------------------
+   7. OPTIMIZACIÓN RESPONSIVA (MOBILE-FIRST)
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  /* Apilamiento suave de las 2 columnas principales */
+  .meal-schedule-section > div[style*="grid"] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .meal-day-tabs-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .meal-day-tabs,
+  #mealDayTabs {
+    padding-bottom: 6px;
+    gap: 8px;
+  }
+
+  .meal-day-pill {
+    min-width: 84px;
+    padding: 8px 10px;
+  }
+
+  .meal-block-card {
+    padding: 16px 18px;
+  }
+
+  .meal-block-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .btn-meal-check {
+    width: 100%;
+    min-height: 44px; /* WCAG touch target */
+  }
+
+  .water-actions {
+    gap: 8px;
+  }
+
+  .water-actions .btn-checkin,
+  .water-actions button {
+    flex: 1;
+    min-width: 80px;
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 540px) {
+  .macro-inputs-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+
+  .meal-macros-row {
+    gap: 6px;
+  }
+
+  .macro-chip {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  #caloriesConsumed {
+    font-size: 32px;
+  }
+
+  #waterDisplay,
+  .water-display {
+    font-size: 36px;
+  }
 }
 
 /* ==========================================================================
@@ -1356,211 +2091,8 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-/* ==========================================================================
-   MÓDULO 1: CONTROL DE TIEMPO, HORARIOS & COMIDAS DIARIAS
-   ========================================================================== */
+/* (Nota: Los estilos de Control de Horarios, Comidas y Macronutrientes se encuentran consolidados en el MÓDULO MAESTRO DE NUTRICIÓN) */
 
-.meal-schedule-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 24px;
-}
-
-.meal-day-tabs-wrapper {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.meal-day-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.meal-day-pill {
-  flex: 1;
-  min-width: 90px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-sm);
-  padding: 10px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-secondary);
-}
-
-.meal-day-pill:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--text-primary);
-  transform: translateY(-2px);
-}
-
-.meal-day-pill.active {
-  background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 217, 255, 0.15));
-  border-color: var(--accent-emerald);
-  color: var(--accent-emerald);
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
-}
-
-.meal-day-pill .day-letter {
-  font-family: var(--font-heading);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.meal-day-pill .today-indicator {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: var(--radius-full);
-  background: rgba(0, 255, 136, 0.2);
-  color: var(--accent-emerald);
-  letter-spacing: 0.5px;
-}
-
-.meal-blocks-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.meal-block-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.meal-block-card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
-}
-
-.meal-block-card.completed {
-  border-color: rgba(0, 255, 136, 0.4);
-  background: linear-gradient(180deg, rgba(0, 255, 136, 0.05), var(--bg-card));
-}
-
-.meal-block-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.meal-time-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0, 217, 255, 0.12);
-  border: 1px solid rgba(0, 217, 255, 0.3);
-  color: var(--accent-cyan);
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.meal-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.meal-block-title {
-  font-family: var(--font-heading);
-  font-size: 17px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.meal-block-desc {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  margin: 0;
-}
-
-.meal-macros-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.macro-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.macro-chip.cal { color: var(--accent-emerald); background: rgba(0, 255, 136, 0.08); border-color: rgba(0, 255, 136, 0.2); }
-.macro-chip.prot { color: var(--accent-cyan); background: rgba(0, 217, 255, 0.08); border-color: rgba(0, 217, 255, 0.2); }
-.macro-chip.carb { color: var(--accent-amber); background: rgba(255, 184, 0, 0.08); border-color: rgba(255, 184, 0, 0.2); }
-.macro-chip.fat { color: var(--accent-rose); background: rgba(255, 71, 87, 0.08); border-color: rgba(255, 71, 87, 0.2); }
-
-.btn-meal-check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--text-primary);
-}
-
-.btn-meal-check:hover {
-  background: rgba(0, 255, 136, 0.15);
-  border-color: var(--accent-emerald);
-  color: var(--accent-emerald);
-}
-
-.btn-meal-check.completed {
-  background: linear-gradient(135deg, var(--accent-emerald), #00b862);
-  border-color: var(--accent-emerald);
-  color: #000;
-  box-shadow: 0 0 12px rgba(0, 255, 136, 0.35);
-}
 
 /* ==========================================================================
    MÓDULO 2: RESTRICCIÓN ESTRICTA DE RUTINAS (DÍA ACTUAL)
