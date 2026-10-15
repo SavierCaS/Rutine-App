@@ -153,6 +153,7 @@ if ($dbAvailable) {
 
   <!-- Hoja de estilos del Design System Kynap -->
   <link rel="stylesheet" href="public/css/app.css">
+  <script src="public/js/theme.js"></script>
 
   <style>
     .config-page {

@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0a0d14">
-  <meta name="description" content="Kynap AI - Plataforma integral de fitness SaaS: periodización de rutinas con IA Llama 3.3, control de fuerza 1RM en vivo, nutrición en 5 bloques horarios, control fisiológico y sistema de rachas.">
+  <meta name="description"
+    content="Kynap AI - Plataforma integral de fitness SaaS: periodización de rutinas con IA Llama 3.3, control de fuerza 1RM en vivo, nutrición en 5 bloques horarios, control fisiológico y sistema de rachas.">
   <title>Kynap AI - Plataforma de Alto Rendimiento Fitness & Coaching Inteligente</title>
 
   <!-- Google Fonts: Outfit (Titulares de impacto) & Inter (Lectura limpia) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <!-- Hoja de estilos del Design System Kynap -->
   <link rel="stylesheet" href="public/css/app.css">
@@ -31,7 +36,7 @@
       position: sticky;
       top: 0;
       z-index: 500;
-      background: rgba(10, 13, 20, 0.88);
+      background: var(--bg-glass);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border-subtle);
@@ -75,7 +80,7 @@
       padding: 8px 18px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-subtle);
-      background: rgba(255, 255, 255, 0.04);
+      background: var(--btn-secondary-bg);
       transition: var(--transition-fast);
       cursor: pointer;
       display: inline-flex;
@@ -84,13 +89,14 @@
     }
 
     .btn-landing-login:hover {
-      background: rgba(255, 255, 255, 0.09);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: var(--btn-secondary-hover);
+      border-color: var(--accent-emerald);
+      color: var(--accent-emerald);
     }
 
     .btn-landing-cta {
       background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
-      color: #000;
+      color: var(--btn-cta-text, #ffffff);
       text-decoration: none;
       font-size: 14px;
       font-weight: 700;
@@ -138,8 +144,15 @@
     }
 
     @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 0 rgba(0, 255, 136, 0); }
-      50% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.35); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 rgba(0, 255, 136, 0);
+      }
+
+      50% {
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.35);
+      }
     }
 
     .hero-title {
@@ -312,7 +325,7 @@
     }
 
     .preview-card-mockup {
-      background: #0d111a;
+      background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       padding: 24px;
@@ -325,8 +338,8 @@
       align-items: center;
       padding: 12px 14px;
       border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: var(--pill-bg);
+      border: 1px solid var(--border-subtle);
       margin-bottom: 10px;
     }
 
@@ -365,9 +378,11 @@
     .modal-sheet::-webkit-scrollbar {
       width: 6px;
     }
+
     .modal-sheet::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.2);
     }
+
     .modal-sheet::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.15);
       border-radius: 4px;
@@ -376,7 +391,7 @@
     /* Footer */
     .landing-footer {
       border-top: 1px solid var(--border-subtle);
-      background: #080a10;
+      background: var(--bg-surface);
       padding: 60px 24px 36px;
       margin-top: auto;
     }
@@ -424,7 +439,7 @@
       max-width: 1200px;
       margin: 0 auto;
       padding-top: 24px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -438,9 +453,11 @@
       .footer-grid {
         grid-template-columns: 1fr 1fr;
       }
+
       .landing-nav {
         display: none;
       }
+
       .hero-section {
         padding: 60px 16px 40px;
       }
@@ -450,17 +467,21 @@
       .footer-grid {
         grid-template-columns: 1fr;
       }
+
       .hero-buttons {
         flex-direction: column;
         width: 100%;
       }
-      .btn-landing-cta, .btn-landing-login {
+
+      .btn-landing-cta,
+      .btn-landing-login {
         width: 100%;
         justify-content: center;
       }
     }
   </style>
 </head>
+
 <body class="landing-body">
 
   <!-- Contenedor Global de Notificaciones Toast -->
@@ -483,7 +504,8 @@
     </nav>
 
     <div class="landing-actions">
-      <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema" style="margin-right: 4px;">🌙</button>
+      <button type="button" class="btn-theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema"
+        style="margin-right: 4px;">🌙</button>
       <a href="login.html" class="btn-landing-login" onclick="openAuthModal('login', event)">Iniciar Sesión</a>
       <a href="registro.html" class="btn-landing-cta" onclick="openAuthModal('register', event)">Crear Cuenta</a>
     </div>
@@ -514,19 +536,23 @@
     </h1>
 
     <p class="hero-subtitle">
-      Kynap es la plataforma integral de rendimiento físico que unifica periodización algorítmica, registro de series y 1RM en vivo, nutrición personalizada en 5 bloques horarios y control fisiológico continuo.
+      Kynap es la plataforma integral de rendimiento físico que unifica periodización algorítmica, registro de series y
+      1RM en vivo, nutrición personalizada en 5 bloques horarios y control fisiológico continuo.
     </p>
 
     <div class="hero-buttons">
-      <a href="registro.html" class="btn-landing-cta" style="padding: 14px 32px; font-size: 16px;" onclick="openAuthModal('register', event)">
+      <a href="registro.html" class="btn-landing-cta" style="padding: 14px 32px; font-size: 16px;"
+        onclick="openAuthModal('register', event)">
         ⚡ Iniciar Prueba / Crear Cuenta
       </a>
-      <a href="login.html" class="btn-landing-login" style="padding: 14px 28px; font-size: 16px;" onclick="openAuthModal('login', event)">
+      <a href="login.html" class="btn-landing-login" style="padding: 14px 28px; font-size: 16px;"
+        onclick="openAuthModal('login', event)">
         🔑 Iniciar Sesión
       </a>
     </div>
 
-    <div style="display: flex; gap: 24px; align-items: center; justify-content: center; margin-top: 20px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
+    <div
+      style="display: flex; gap: 24px; align-items: center; justify-content: center; margin-top: 20px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
       <span>✓ Sin tarjeta requerida</span>
       <span>✓ IA Adaptativa 24/7</span>
       <span>✓ Cálculo Automático de 1RM & Macros</span>
@@ -541,7 +567,8 @@
       <span class="section-tag">Arquitectura de Vanguardia</span>
       <h2>Todo lo que tu Físico Necesita para Progresar</h2>
       <p style="color: var(--text-secondary); max-width: 680px; margin: 0 auto; font-size: 15px; line-height: 1.6;">
-        Diseñado bajo estrictos principios de ciencia del ejercicio, biomecánica y nutrición clínica para eliminar las suposiciones de tu preparación.
+        Diseñado bajo estrictos principios de ciencia del ejercicio, biomecánica y nutrición clínica para eliminar las
+        suposiciones de tu preparación.
       </p>
     </div>
 
@@ -551,7 +578,8 @@
         <div class="feature-icon-wrapper" style="color: var(--accent-emerald);">🤖</div>
         <h3 class="feature-title">Periodización con IA Llama 3.3</h3>
         <p class="feature-desc">
-          Planificación algorítmica de mesociclos y microciclos con sobrecarga progresiva autoregulada. Adaptada a tus días disponibles, nivel biomecánico y fatiga acumulada, con tachado táctil y bloqueo diario de rutinas.
+          Planificación algorítmica de mesociclos y microciclos con sobrecarga progresiva autoregulada. Adaptada a tus
+          días disponibles, nivel biomecánico y fatiga acumulada, con tachado táctil y bloqueo diario de rutinas.
         </p>
         <div class="feature-highlight-badge">
           <span>⚡ Algoritmo adaptativo en tiempo real</span>
@@ -563,7 +591,8 @@
         <div class="feature-icon-wrapper" style="color: var(--accent-amber);">🥗</div>
         <h3 class="feature-title">Nutrición & 5 Bloques Horarios</h3>
         <p class="feature-desc">
-          Crononutrición precisa organizada en 5 tiempos clave (Desayuno, Media Mañana, Almuerzo, Merienda, Cena) con reinicio automático a medianoche, cálculo de macronutrientes Atwater y control de hidratación por vasos.
+          Crononutrición precisa organizada en 5 tiempos clave (Desayuno, Media Mañana, Almuerzo, Merienda, Cena) con
+          reinicio automático a medianoche, cálculo de macronutrientes Atwater y control de hidratación por vasos.
         </p>
         <div class="feature-highlight-badge" style="color: var(--accent-amber);">
           <span>⏱ Filtro inteligente por día de la semana</span>
@@ -575,7 +604,8 @@
         <div class="feature-icon-wrapper" style="color: var(--accent-cyan);">📊</div>
         <h3 class="feature-title">Control Fisiológico Semanal</h3>
         <p class="feature-desc">
-          Monitoreo antropométrico riguroso (peso corporal, porcentaje graso, perímetros de cintura, pecho y bíceps). Registro de condición física con alertas automáticas ante estancamientos o sobreentrenamiento.
+          Monitoreo antropométrico riguroso (peso corporal, porcentaje graso, perímetros de cintura, pecho y bíceps).
+          Registro de condición física con alertas automáticas ante estancamientos o sobreentrenamiento.
         </p>
         <div class="feature-highlight-badge" style="color: var(--accent-cyan);">
           <span>📈 Análisis de tendencias 7 días / 24 horas</span>
@@ -587,7 +617,8 @@
         <div class="feature-icon-wrapper" style="color: var(--accent-rose);">🔥</div>
         <h3 class="feature-title">Sistema de Rachas Motivacional</h3>
         <p class="feature-desc">
-          Gamificación psicológica de alta adherencia: contador de días consecutivos, medallas escalonadas (Semana de Fuego, Mes de Hierro, Centurión, Año Legendario) y protección de racha en días de descanso planificados.
+          Gamificación psicológica de alta adherencia: contador de días consecutivos, medallas escalonadas (Semana de
+          Fuego, Mes de Hierro, Centurión, Año Legendario) y protección de racha en días de descanso planificados.
         </p>
         <div class="feature-highlight-badge" style="color: var(--accent-rose);">
           <span>🏆 +94% de adherencia demostrada</span>
@@ -599,7 +630,9 @@
         <div class="feature-icon-wrapper" style="color: #a855f7;">🧘</div>
         <h3 class="feature-title">Mente Sana & Respiración Guiada</h3>
         <p class="feature-desc">
-          Esfera interactiva de respiración cardiovascular con protocolos clínicos (Box 4-4-4, 4-7-8 sedante y 2-2 equilibrante) para regular el sistema simpático, reducir el cortisol y potenciar la recuperación muscular post-entreno.
+          Esfera interactiva de respiración cardiovascular con protocolos clínicos (Box 4-4-4, 4-7-8 sedante y 2-2
+          equilibrante) para regular el sistema simpático, reducir el cortisol y potenciar la recuperación muscular
+          post-entreno.
         </p>
         <div class="feature-highlight-badge" style="color: #a855f7;">
           <span>🧠 Modulación parasimpática post-esfuerzo</span>
@@ -611,7 +644,9 @@
         <div class="feature-icon-wrapper" style="color: var(--accent-cyan);">⚡</div>
         <h3 class="feature-title">Workout Logger en Vivo & 1RM</h3>
         <p class="feature-desc">
-          Registro dinámico de series, repeticiones efectivas y RPE durante tu sesión en el gimnasio. Cálculo instantáneo de tu 1RM estimado mediante la fórmula de Epley y cálculo de volumen/tonelaje acumulativo por sesión.
+          Registro dinámico de series, repeticiones efectivas y RPE durante tu sesión en el gimnasio. Cálculo
+          instantáneo de tu 1RM estimado mediante la fórmula de Epley y cálculo de volumen/tonelaje acumulativo por
+          sesión.
         </p>
         <div class="feature-highlight-badge" style="color: var(--accent-cyan);">
           <span>🏋️ Epley: Peso × (1 + Reps/30)</span>
@@ -635,20 +670,28 @@
     <div class="interactive-preview-container">
       <!-- Pestañas de la Demo -->
       <div class="preview-tab-controls" role="tablist">
-        <button type="button" class="preview-tab-btn active" onclick="switchPreviewTab('tab-workout', this)">🏋️ 1. Rutinas & Bloqueo Diario</button>
-        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-epley', this)">⚡ 2. 1RM Epley en Vivo</button>
-        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-nutrition', this)">🥗 3. Crononutrición (5 Bloques)</button>
-        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-biometrics', this)">📊 4. Antropometría & Rachas</button>
+        <button type="button" class="preview-tab-btn active" onclick="switchPreviewTab('tab-workout', this)">🏋️ 1.
+          Rutinas & Bloqueo Diario</button>
+        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-epley', this)">⚡ 2. 1RM Epley en
+          Vivo</button>
+        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-nutrition', this)">🥗 3.
+          Crononutrición (5 Bloques)</button>
+        <button type="button" class="preview-tab-btn" onclick="switchPreviewTab('tab-biometrics', this)">📊 4.
+          Antropometría & Rachas</button>
       </div>
 
       <!-- Pestaña 1: Rutinas -->
       <div id="tab-workout" class="preview-tab-content active">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Sesión Activa: Empuje & Pectoral (Fuerza / Hipertrofia)</h4>
-            <span style="font-size: 12px; color: var(--text-secondary);">Periodización IA Llama 3.3 • Semana 3 • Bloque de Sobrecarga</span>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Sesión Activa: Empuje & Pectoral
+              (Fuerza / Hipertrofia)</h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Periodización IA Llama 3.3 • Semana 3 • Bloque
+              de Sobrecarga</span>
           </div>
-          <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald); border: 1px solid var(--accent-emerald);">
+          <span class="preview-pill"
+            style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald); border: 1px solid var(--accent-emerald);">
             Adherencia: 100% al Día
           </span>
         </div>
@@ -657,53 +700,72 @@
           <div class="preview-row">
             <div>
               <div style="font-weight: 700; font-size: 14px;">1. Press de Banca Plano con Barra</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">4 Series × 6-8 Reps @ RPE 8.5 • Descanso: 120s</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">4 Series × 6-8 Reps @ RPE 8.5 • Descanso: 120s
+              </div>
             </div>
-            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-emerald);">✓ 85 kg × 8 reps</span>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-emerald);">✓ 85 kg
+              × 8 reps</span>
           </div>
 
           <div class="preview-row">
             <div>
               <div style="font-weight: 700; font-size: 14px;">2. Press Inclinado con Mancuernas</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">3 Series × 10-12 Reps @ RPE 8 • Descanso: 90s</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">3 Series × 10-12 Reps @ RPE 8 • Descanso: 90s
+              </div>
             </div>
-            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-emerald);">✓ 30 kg × 10 reps</span>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-emerald);">✓ 30 kg
+              × 10 reps</span>
           </div>
 
           <div class="preview-row">
             <div>
               <div style="font-weight: 700; font-size: 14px;">3. Fondos en Paralelas Lastrados</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">3 Series × 8-10 Reps • Énfasis Tríceps & Pectoral Inferior</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">3 Series × 8-10 Reps • Énfasis Tríceps &
+                Pectoral Inferior</div>
             </div>
-            <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);">⚡ En Curso</span>
+            <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);">⚡ En
+              Curso</span>
           </div>
         </div>
       </div>
 
       <!-- Pestaña 2: 1RM Epley -->
       <div id="tab-epley" class="preview-tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Calculadora de 1RM en Tiempo Real</h4>
-            <span style="font-size: 12px; color: var(--text-secondary);">Fórmula de Epley validada científicamente para cuantificación de fuerza</span>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Calculadora de 1RM en Tiempo Real
+            </h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Fórmula de Epley validada científicamente para
+              cuantificación de fuerza</span>
           </div>
-          <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">
+          <span class="preview-pill"
+            style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">
             Algoritmo Activo
           </span>
         </div>
 
-        <div class="preview-card-mockup" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+        <div class="preview-card-mockup"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
           <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: var(--radius-sm);">
-            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Peso Levantado (kg)</label>
-            <input type="number" id="previewWeight" value="100" class="input-custom" style="padding: 8px 12px;" oninput="updateLiveEpley()">
+            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Peso
+              Levantado (kg)</label>
+            <input type="number" id="previewWeight" value="100" class="input-custom" style="padding: 8px 12px;"
+              oninput="updateLiveEpley()">
           </div>
           <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: var(--radius-sm);">
-            <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Repeticiones Logradas</label>
-            <input type="number" id="previewReps" value="6" min="1" max="30" class="input-custom" style="padding: 8px 12px;" oninput="updateLiveEpley()">
+            <label
+              style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Repeticiones
+              Logradas</label>
+            <input type="number" id="previewReps" value="6" min="1" max="30" class="input-custom"
+              style="padding: 8px 12px;" oninput="updateLiveEpley()">
           </div>
-          <div style="background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.25); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+          <div
+            style="background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.25); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
             <div style="font-size: 12px; color: var(--accent-emerald); font-weight: 700;">1RM Estimado</div>
-            <div id="preview1RMDisplay" style="font-family: var(--font-heading); font-size: 32px; font-weight: 900; color: #fff;">120.0 kg</div>
+            <div id="preview1RMDisplay"
+              style="font-family: var(--font-heading); font-size: 32px; font-weight: 900; color: var(--text-primary);">
+              120.0 kg</div>
             <div style="font-size: 11px; color: var(--text-muted);">Cálculo: 100 × (1 + 6/30)</div>
           </div>
         </div>
@@ -711,12 +773,16 @@
 
       <!-- Pestaña 3: Crononutrición -->
       <div id="tab-nutrition" class="preview-tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Plan Alimenticio de Hoy (Lunes) • 5 Bloques</h4>
-            <span style="font-size: 12px; color: var(--text-secondary);">Meta Diaria: 2,850 kcal • P: 180g | C: 320g | G: 75g • Hidratación: 3.5L</span>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Plan Alimenticio de Hoy (Lunes) •
+              5 Bloques</h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Meta Diaria: 2,850 kcal • P: 180g | C: 320g |
+              G: 75g • Hidratación: 3.5L</span>
           </div>
-          <span class="preview-pill" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid var(--accent-amber);">
+          <span class="preview-pill"
+            style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid var(--accent-amber);">
             Reinicio Automático a Medianoche
           </span>
         </div>
@@ -725,53 +791,70 @@
           <div class="preview-row">
             <div>
               <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">08:00 AM • DESAYUNO</span>
-              <div style="font-weight: 600; font-size: 13.5px;">Avena proteica con plátano, mantequilla de maní y 3 huevos revueltos</div>
+              <div style="font-weight: 600; font-size: 13.5px;">Avena proteica con plátano, mantequilla de maní y 3
+                huevos revueltos</div>
             </div>
-            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">✓ 650 kcal</span>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">✓ 650
+              kcal</span>
           </div>
           <div class="preview-row">
             <div>
-              <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">11:00 AM • MEDIA MAÑANA</span>
-              <div style="font-weight: 600; font-size: 13.5px;">Batido de proteína aislado, almendras tostadas y manzana verde</div>
+              <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">11:00 AM • MEDIA
+                MAÑANA</span>
+              <div style="font-weight: 600; font-size: 13.5px;">Batido de proteína aislado, almendras tostadas y manzana
+                verde</div>
             </div>
-            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">✓ 380 kcal</span>
+            <span class="preview-pill" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">✓ 380
+              kcal</span>
           </div>
           <div class="preview-row">
             <div>
               <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">02:00 PM • ALMUERZO</span>
-              <div style="font-weight: 600; font-size: 13.5px;">Pechuga a la plancha (200g), arroz integral (200g) y aguacate</div>
+              <div style="font-weight: 600; font-size: 13.5px;">Pechuga a la plancha (200g), arroz integral (200g) y
+                aguacate</div>
             </div>
-            <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);">⚡ Próximo</span>
+            <span class="preview-pill" style="background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);">⚡
+              Próximo</span>
           </div>
         </div>
       </div>
 
       <!-- Pestaña 4: Antropometría -->
       <div id="tab-biometrics" class="preview-tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Evolución Antropométrica & Racha Activa</h4>
-            <span style="font-size: 12px; color: var(--text-secondary);">Monitoreo de recomposición corporal con alertas fisiológicas</span>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; margin: 0;">Evolución Antropométrica & Racha
+              Activa</h4>
+            <span style="font-size: 12px; color: var(--text-secondary);">Monitoreo de recomposición corporal con alertas
+              fisiológicas</span>
           </div>
-          <span class="preview-pill" style="background: rgba(255, 71, 87, 0.15); color: var(--accent-rose); border: 1px solid var(--accent-rose);">
+          <span class="preview-pill"
+            style="background: rgba(255, 71, 87, 0.15); color: var(--accent-rose); border: 1px solid var(--accent-rose);">
             🔥 Racha: 21 Días Consecutivos
           </span>
         </div>
 
-        <div class="preview-card-mockup" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
-          <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+        <div class="preview-card-mockup"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+          <div
+            style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
             <span style="font-size: 12px; color: var(--text-secondary);">Peso Inicial ➔ Actual</span>
-            <div style="font-size: 22px; font-weight: 800; color: #fff; margin: 4px 0;">78.5 ➔ 75.0 kg</div>
+            <div style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 4px 0;">78.5 ➔ 75.0 kg
+            </div>
             <span style="font-size: 11px; color: var(--accent-emerald); font-weight: 700;">-3.5 kg Grasa Pura</span>
           </div>
-          <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+          <div
+            style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
             <span style="font-size: 12px; color: var(--text-secondary);">% Grasa Estimado</span>
             <div style="font-size: 22px; font-weight: 800; color: var(--accent-cyan); margin: 4px 0;">13.8%</div>
             <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 700;">Rango Atlético</span>
           </div>
-          <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
+          <div
+            style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
             <span style="font-size: 12px; color: var(--text-secondary);">Medalla Desbloqueada</span>
-            <div style="font-size: 22px; font-weight: 800; color: var(--accent-amber); margin: 4px 0;">Mes de Hierro 🛡️</div>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-amber); margin: 4px 0;">Mes de Hierro 🛡️
+            </div>
             <span style="font-size: 11px; color: var(--accent-amber); font-weight: 700;">Adherencia > 90%</span>
           </div>
         </div>
@@ -787,7 +870,8 @@
       <span class="section-tag">Ventajas Competitivas</span>
       <h2>Por Qué Kynap Supera a las Alternativas</h2>
       <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto; font-size: 15px;">
-        Descubre cómo la combinación de IA avanzada, diseño premium y rigor científico deja atrás las hojas de cálculo y las aplicaciones genéricas.
+        Descubre cómo la combinación de IA avanzada, diseño premium y rigor científico deja atrás las hojas de cálculo y
+        las aplicaciones genéricas.
       </p>
     </div>
 
@@ -864,7 +948,8 @@
     </div>
 
     <div style="text-align: center; margin-top: 48px;">
-      <a href="registro.html" class="btn-landing-cta" style="padding: 14px 36px; font-size: 16px;" onclick="openAuthModal('register', event)">
+      <a href="registro.html" class="btn-landing-cta" style="padding: 14px 36px; font-size: 16px;"
+        onclick="openAuthModal('register', event)">
         Comenzar tu Evolución Ahora Gratis ➔
       </a>
     </div>
@@ -874,7 +959,8 @@
        MODAL DE AUTENTICACIÓN INTEGRADO CON WIZARD MULTIPASO Y DOBLE FEEDBACK
        ==================================================================== -->
   <div class="modal-backdrop" id="authModal" onclick="if(event.target === this) closeAuthModal(event)">
-    <div class="modal-sheet" id="modalSheetCard" style="padding: 30px 26px; max-width: 580px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-sheet" id="modalSheetCard"
+      style="padding: 30px 26px; max-width: 580px; max-height: 90vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <div class="brand" style="border: none; padding: 0;">
           <div class="brand-logo" style="width: 32px; height: 32px; font-size: 18px;">K</div>
@@ -885,35 +971,41 @@
 
       <!-- Pestañas del Modal -->
       <div class="auth-tabs">
-        <button class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login', event)">Iniciar Sesión</button>
-        <button class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register', event)">Crear Cuenta</button>
+        <button class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login', event)">Iniciar
+          Sesión</button>
+        <button class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register', event)">Crear
+          Cuenta</button>
       </div>
 
       <!-- Banner de Feedback Contextual de Error -->
       <div id="authAlertBox" class="auth-alert-banner" style="display: none; margin-bottom: 16px;" role="alert"></div>
 
       <!-- Formulario 1: Iniciar Sesión con Doble Indicador -->
-      <form id="authLoginForm" action="#" method="POST" onsubmit="handleAuthLogin(event)" style="display: flex; flex-direction: column; gap: 14px;">
+      <form id="authLoginForm" action="#" method="POST" onsubmit="handleAuthLogin(event)"
+        style="display: flex; flex-direction: column; gap: 14px;">
         <div class="form-group" style="margin: 0;">
           <label for="modalLoginEmail">Correo Electrónico</label>
-          <input type="email" id="modalLoginEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email" oninput="clearModalFieldError(this)">
+          <input type="email" id="modalLoginEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required
+            autocomplete="email" oninput="clearModalFieldError(this)">
           <div id="modalLoginEmailErr" class="field-error-msg" style="display: none;"></div>
         </div>
 
         <div class="form-group" style="margin: 0;">
           <label for="modalLoginPassword">Contraseña</label>
-          <input type="password" id="modalLoginPassword" class="input-custom" placeholder="••••••••" required autocomplete="current-password" oninput="clearModalFieldError(this)">
+          <input type="password" id="modalLoginPassword" class="input-custom" placeholder="••••••••" required
+            autocomplete="current-password" oninput="clearModalFieldError(this)">
           <div id="modalLoginPassErr" class="field-error-msg" style="display: none;"></div>
         </div>
 
-        <button type="submit" id="modalLoginSubmitBtn" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
+        <button type="submit" id="modalLoginSubmitBtn" class="btn-checkin"
+          style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
           Ingresar al Panel ➔
         </button>
       </form>
 
       <!-- Formulario 2: Crear Cuenta Onboarding Multipaso -->
       <div id="authRegisterContainer" style="display: none; flex-direction: column; gap: 14px;">
-        
+
         <!-- Indicador de Pasos del Wizard -->
         <div class="multistep-bar" style="margin-bottom: 8px;">
           <div class="step-node active" id="modalStepNode1">
@@ -935,43 +1027,51 @@
         <form id="authRegisterForm" action="#" method="POST" onsubmit="handleAuthRegister(event)">
           <!-- PASO 1: CUENTA -->
           <div class="wizard-step-pane active" id="modalPane1">
-            <div style="font-size: 13px; color: var(--accent-emerald); font-weight: 700; margin-bottom: 12px;">Paso 1: Credenciales de Acceso</div>
-            
+            <div style="font-size: 13px; color: var(--accent-emerald); font-weight: 700; margin-bottom: 12px;">Paso 1:
+              Credenciales de Acceso</div>
+
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="modalRegName">Nombre Completo *</label>
-              <input type="text" id="modalRegName" class="input-custom" placeholder="Ej: Savier Casiani" required autocomplete="name" oninput="clearModalFieldError(this)">
+              <input type="text" id="modalRegName" class="input-custom" placeholder="Ej: Savier Casiani" required
+                autocomplete="name" oninput="clearModalFieldError(this)">
               <div id="modalRegNameErr" class="field-error-msg" style="display: none;"></div>
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="modalRegEmail">Correo Electrónico *</label>
-              <input type="email" id="modalRegEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required autocomplete="email" oninput="clearModalFieldError(this)">
+              <input type="email" id="modalRegEmail" class="input-custom" placeholder="tu_correo@ejemplo.com" required
+                autocomplete="email" oninput="clearModalFieldError(this)">
               <div id="modalRegEmailErr" class="field-error-msg" style="display: none;"></div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
               <div class="form-group" style="margin: 0;">
                 <label for="modalRegPassword">Contraseña *</label>
-                <input type="password" id="modalRegPassword" class="input-custom" placeholder="Mín. 6 caracteres" required autocomplete="new-password" oninput="checkModalPasswordMatch(); clearModalFieldError(this);">
+                <input type="password" id="modalRegPassword" class="input-custom" placeholder="Mín. 6 caracteres"
+                  required autocomplete="new-password" oninput="checkModalPasswordMatch(); clearModalFieldError(this);">
                 <div id="modalRegPasswordErr" class="field-error-msg" style="display: none;"></div>
               </div>
 
               <div class="form-group" style="margin: 0;">
                 <label for="modalRegConfirm">Confirmar *</label>
-                <input type="password" id="modalRegConfirm" class="input-custom" placeholder="Repite contraseña" required autocomplete="new-password" oninput="checkModalPasswordMatch(); clearModalFieldError(this);">
+                <input type="password" id="modalRegConfirm" class="input-custom" placeholder="Repite contraseña"
+                  required autocomplete="new-password" oninput="checkModalPasswordMatch(); clearModalFieldError(this);">
                 <div id="modalRegConfirmErr" class="field-error-msg" style="display: none;"></div>
               </div>
             </div>
-            <div id="modalMatchIndicator" style="display: none; font-size: 11px; margin-top: -6px; margin-bottom: 12px;"></div>
+            <div id="modalMatchIndicator"
+              style="display: none; font-size: 11px; margin-top: -6px; margin-bottom: 12px;"></div>
 
-            <button type="button" class="btn-landing-cta" style="width: 100%; justify-content: center; padding: 12px;" onclick="goToModalStep(2)">
+            <button type="button" class="btn-landing-cta" style="width: 100%; justify-content: center; padding: 12px;"
+              onclick="goToModalStep(2)">
               Siguiente: Datos Biométricos ➔
             </button>
           </div>
 
           <!-- PASO 2: BIOMETRÍA CON IMC EN VIVO -->
           <div class="wizard-step-pane" id="modalPane2">
-            <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; margin-bottom: 12px;">Paso 2: Perfil Biométrico Inicial</div>
+            <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; margin-bottom: 12px;">Paso 2:
+              Perfil Biométrico Inicial</div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
               <div class="form-group" style="margin: 0;">
@@ -992,12 +1092,14 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
               <div class="form-group" style="margin: 0;">
                 <label for="modalRegPeso">Peso Actual (kg) *</label>
-                <input type="number" id="modalRegPeso" class="input-custom" value="75" step="0.5" min="30" max="300" required oninput="calcModalBMI()">
+                <input type="number" id="modalRegPeso" class="input-custom" value="75" step="0.5" min="30" max="300"
+                  required oninput="calcModalBMI()">
               </div>
 
               <div class="form-group" style="margin: 0;">
                 <label for="modalRegAltura">Altura (cm) *</label>
-                <input type="number" id="modalRegAltura" class="input-custom" value="175" step="0.5" min="100" max="250" required oninput="calcModalBMI()">
+                <input type="number" id="modalRegAltura" class="input-custom" value="175" step="0.5" min="100" max="250"
+                  required oninput="calcModalBMI()">
               </div>
             </div>
 
@@ -1007,16 +1109,19 @@
                 <span style="font-size: 11px; color: var(--text-secondary);">Índice de Masa Corporal (IMC)</span>
                 <div class="bmi-value-display" id="modalBmiVal">24.5 kg/m²</div>
               </div>
-              <span class="preview-pill" id="modalBmiBadge" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">
+              <span class="preview-pill" id="modalBmiBadge"
+                style="background: rgba(0, 255, 136, 0.15); color: var(--accent-emerald);">
                 Peso Normal
               </span>
             </div>
 
             <div style="display: flex; gap: 10px;">
-              <button type="button" class="btn-landing-login" style="flex: 1; justify-content: center;" onclick="goToModalStep(1)">
+              <button type="button" class="btn-landing-login" style="flex: 1; justify-content: center;"
+                onclick="goToModalStep(1)">
                 ← Volver
               </button>
-              <button type="button" class="btn-landing-cta" style="flex: 2; justify-content: center;" onclick="goToModalStep(3)">
+              <button type="button" class="btn-landing-cta" style="flex: 2; justify-content: center;"
+                onclick="goToModalStep(3)">
                 Siguiente: Metas ➔
               </button>
             </div>
@@ -1024,7 +1129,8 @@
 
           <!-- PASO 3: METAS & ESTILO DE VIDA -->
           <div class="wizard-step-pane" id="modalPane3">
-            <div style="font-size: 13px; color: var(--accent-emerald); font-weight: 700; margin-bottom: 12px;">Paso 3: Objetivos & Estilo de Vida</div>
+            <div style="font-size: 13px; color: var(--accent-emerald); font-weight: 700; margin-bottom: 12px;">Paso 3:
+              Objetivos & Estilo de Vida</div>
 
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="modalRegObjetivo">Objetivo Principal *</label>
@@ -1064,10 +1170,12 @@
             </div>
 
             <div style="display: flex; gap: 10px;">
-              <button type="button" class="btn-landing-login" style="flex: 1; justify-content: center;" onclick="goToModalStep(2)">
+              <button type="button" class="btn-landing-login" style="flex: 1; justify-content: center;"
+                onclick="goToModalStep(2)">
                 ← Volver
               </button>
-              <button type="submit" id="modalRegSubmitBtn" class="btn-checkin" style="flex: 2; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 14px;">
+              <button type="submit" id="modalRegSubmitBtn" class="btn-checkin"
+                style="flex: 2; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 14px;">
                 Crear Cuenta y Entrar ➔
               </button>
             </div>
@@ -1075,7 +1183,8 @@
         </form>
 
         <div style="text-align: center; margin-top: 10px; font-size: 12px; color: var(--text-muted);">
-          ¿Prefieres el formulario completo en pantalla completa? <a href="registro.html" style="color: var(--accent-emerald); font-weight: 600;">Abrir Onboarding Dedicado</a>
+          ¿Prefieres el formulario completo en pantalla completa? <a href="registro.html"
+            style="color: var(--accent-emerald); font-weight: 600;">Abrir Onboarding Dedicado</a>
         </div>
       </div>
     </div>
@@ -1092,7 +1201,8 @@
           <div class="brand-name">Kynap <span>AI</span></div>
         </div>
         <p style="color: var(--text-secondary); font-size: 13.5px; line-height: 1.6; max-width: 320px;">
-          Plataforma de ingeniería de entrenamiento y nutrición de precisión respaldada por algoritmos de inteligencia artificial para atletas que exigen resultados.
+          Plataforma de ingeniería de entrenamiento y nutrición de precisión respaldada por algoritmos de inteligencia
+          artificial para atletas que exigen resultados.
         </p>
       </div>
 
@@ -1121,10 +1231,18 @@
       <div class="footer-col">
         <h4>Legal & Seguridad</h4>
         <ul>
-          <li><a href="javascript:void(0)" onclick="showToast('info', 'Términos', 'Términos de servicio Kynap v2.6 disponibles en tu perfil.')">Términos de Servicio</a></li>
-          <li><a href="javascript:void(0)" onclick="showToast('info', 'Privacidad', 'Tus datos biométricos están protegidos bajo cifrado.')">Política de Privacidad</a></li>
-          <li><a href="javascript:void(0)" onclick="showToast('success', 'Seguridad', 'Sistema validado con BCRYPT y Tokens HMAC.')">Seguridad del Sistema</a></li>
-          <li><a href="javascript:void(0)" onclick="showToast('info', 'Soporte', 'Soporte 24/7 disponible en soporte@kynap.com')">Soporte y Contacto</a></li>
+          <li><a href="javascript:void(0)"
+              onclick="showToast('info', 'Términos', 'Términos de servicio Kynap v2.6 disponibles en tu perfil.')">Términos
+              de Servicio</a></li>
+          <li><a href="javascript:void(0)"
+              onclick="showToast('info', 'Privacidad', 'Tus datos biométricos están protegidos bajo cifrado.')">Política
+              de Privacidad</a></li>
+          <li><a href="javascript:void(0)"
+              onclick="showToast('success', 'Seguridad', 'Sistema validado con BCRYPT y Tokens HMAC.')">Seguridad del
+              Sistema</a></li>
+          <li><a href="javascript:void(0)"
+              onclick="showToast('info', 'Soporte', 'Soporte 24/7 disponible en soporte@kynap.com')">Soporte y
+              Contacto</a></li>
         </ul>
       </div>
     </div>
@@ -1149,7 +1267,7 @@
 
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
-      
+
       const icons = {
         success: '✓',
         error: '✕',
@@ -1598,9 +1716,10 @@
               if (banner) banner.style.display = 'none';
             }
           })
-          .catch(() => {});
+          .catch(() => { });
       }
     });
   </script>
 </body>
+
 </html>

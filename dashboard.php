@@ -212,7 +212,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
           <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);" onclick="openBreathingModal()">
             🧘 Respiración
           </button>
-          <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700;" onclick="toggleAICoach()">
+          <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700;" onclick="toggleAICoach()">
             🤖 Coach AI
           </button>
         </div>
@@ -245,7 +245,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
             </div>
             <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0;">Genera una rutina de entrenamiento personalizada según tu biometría, objetivo y nivel físico.</p>
           </div>
-          <button type="button" class="btn-checkin" id="btnOpenAiRoutineModal" onclick="openAiRoutineModal()" style="width: auto; padding: 10px 20px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(0,255,136,0.25);">
+          <button type="button" class="btn-checkin" id="btnOpenAiRoutineModal" onclick="openAiRoutineModal()" style="width: auto; padding: 10px 20px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(0,255,136,0.25);">
             ✨ Generar Nueva Rutina con IA
           </button>
         </div>
@@ -292,7 +292,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
               </table>
             </div>
 
-            <button class="btn-checkin" style="background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 18px;" onclick="finishWorkoutSession()">
+            <button class="btn-checkin" style="background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; margin-top: 18px;" onclick="finishWorkoutSession()">
               Finalizar Sesión & Guardar Tonelaje
             </button>
           </div>
@@ -316,8 +316,8 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
               <div class="timer-digits" id="timerDigits">01:30</div>
               <div class="timer-controls">
                 <button class="btn-checkin" style="background: var(--accent-purple); color: #fff; width: auto; padding: 6px 14px; font-size: 12px;" onclick="startRestTimer(90)">Iniciar 90s</button>
-                <button class="btn-checkin" style="background: rgba(255,255,255,0.08); color: #fff; width: auto; padding: 6px 12px; font-size: 12px;" onclick="addTimerSeconds(30)">+30s</button>
-                <button class="btn-checkin" style="background: rgba(255,71,87,0.15); color: var(--accent-rose); width: auto; padding: 6px 12px; font-size: 12px;" onclick="resetRestTimer()">Reset</button>
+                <button class="btn-checkin" style="background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); width: auto; padding: 6px 12px; font-size: 12px;" onclick="addTimerSeconds(30)">+30s</button>
+                <button class="btn-checkin" style="background: rgba(255,71,87,0.12); border: 1px solid rgba(255,71,87,0.25); color: var(--accent-rose); width: auto; padding: 6px 12px; font-size: 12px;" onclick="resetRestTimer()">Reset</button>
               </div>
             </div>
           </div>
@@ -363,7 +363,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <h3 style="font-family: var(--font-heading); font-size: 18px; margin: 0;" id="scheduledMealsHeading">Horarios & Alimentos Programados</h3>
-                <span class="day-badge" id="selectedDayNameBadge" style="background: rgba(255, 255, 255, 0.08); color: var(--text-primary); font-size: 11px;">Hoy</span>
+                <span class="day-badge" id="selectedDayNameBadge" style="background: var(--pill-bg, rgba(255, 255, 255, 0.08)); border: 1px solid var(--border-subtle); color: var(--text-primary); font-size: 11px;">Hoy</span>
               </div>
 
               <!-- CONTENEDOR DE BLOQUES DE COMIDAS -->
@@ -426,7 +426,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
                 <div class="water-actions">
                   <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(250)">+250 ml</button>
                   <button class="btn-checkin" style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);" onclick="adjustWater(500)">+500 ml</button>
-                  <button class="btn-checkin" style="width: auto; padding: 8px 12px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);" onclick="adjustWater(-250)">-250 ml</button>
+                  <button class="btn-checkin" style="width: auto; padding: 8px 12px; background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text);" onclick="adjustWater(-250)">-250 ml</button>
                 </div>
               </div>
 
@@ -558,7 +558,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
             <input type="number" id="mealFatsInput" class="input-custom" placeholder="0" min="0" step="0.5" required>
           </div>
         </div>
-        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 10px;">
+        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; margin-top: 10px;">
           Guardar Comida
         </button>
       </form>
@@ -575,7 +575,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
         <span class="day-badge" id="modalCategory" style="background-color: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);"></span>
         <h2 id="modalTitle" style="margin-top: 8px;"></h2>
         <p id="modalInstructionText" class="modal-instructions"></p>
-        <button class="btn-checkin" onclick="closeExerciseModal()" style="background-color: var(--border-subtle); color: var(--text-primary); margin-top: 12px;">
+        <button class="btn-checkin" onclick="closeExerciseModal()" style="background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); margin-top: 12px;">
           Cerrar
         </button>
       </div>
@@ -612,10 +612,10 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="btn-checkin" id="breathingToggleBtn" style="background: var(--accent-cyan); color: #000; width: auto; padding: 10px 24px; font-weight: 700;" onclick="toggleBreathingExercise()">
+        <button class="btn-checkin" id="breathingToggleBtn" style="background: var(--accent-cyan); color: #ffffff; width: auto; padding: 10px 24px; font-weight: 700;" onclick="toggleBreathingExercise()">
           Comenzar
         </button>
-        <button class="btn-checkin" style="background: var(--border-subtle); color: var(--text-primary); width: auto; padding: 10px 20px;" onclick="closeBreathingModal()">
+        <button class="btn-checkin" style="background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); width: auto; padding: 10px 20px;" onclick="closeBreathingModal()">
           Cerrar
         </button>
       </div>
@@ -671,10 +671,10 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 8px;">
-          <button type="submit" id="btnSubmitAiRoutine" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; flex: 1;">
+          <button type="submit" id="btnSubmitAiRoutine" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; flex: 1;">
             ✨ Generar Rutina con Llama 3.3
           </button>
-          <button type="button" class="btn-checkin" onclick="closeAiRoutineModal()" style="background: var(--border-subtle); color: var(--text-primary); width: auto; padding: 10px 18px;">
+          <button type="button" class="btn-checkin" onclick="closeAiRoutineModal()" style="background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); width: auto; padding: 10px 18px;">
             Cancelar
           </button>
         </div>
@@ -718,7 +718,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
             <input type="number" id="cfgAgua" class="input-custom" step="0.5" min="1" max="10" required>
           </div>
         </div>
-        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 8px;">
+        <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; margin-top: 8px;">
           Guardar Configuración
         </button>
       </form>
@@ -742,7 +742,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
         </div>
       </div>
 
-      <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;">
+      <div style="background: var(--bg-surface-elevated, var(--bg-card)); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 6px;">
           <span style="color: var(--text-secondary);">Próxima Medalla:</span>
           <strong style="color: var(--accent-amber);" id="streakModalGoal">2 días para Bronce 🥉</strong>
@@ -760,17 +760,17 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;">
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 10px; text-align: center;">
+        <div style="background: var(--bg-surface-elevated, var(--bg-card)); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; text-align: center;">
           <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Mejor Racha Histórica</div>
           <div style="font-size: 20px; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;" id="streakModalLongest">1 día</div>
         </div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 10px; text-align: center;">
+        <div style="background: var(--bg-surface-elevated, var(--bg-card)); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; text-align: center;">
           <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Días Activo</div>
           <div style="font-size: 20px; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;" id="streakModalTotal">1 día</div>
         </div>
       </div>
 
-      <button class="btn-checkin" style="margin-top: 18px; background: rgba(255,255,255,0.08); color: var(--text-primary);" onclick="closeStreakModal()">
+      <button class="btn-checkin" style="margin-top: 18px; background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text);" onclick="closeStreakModal()">
         Cerrar
       </button>
     </div>
@@ -839,7 +839,7 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
             <input type="text" id="bioInputNotas" class="input-custom" placeholder="Ej: En ayunas, excelente energía semanal">
           </div>
 
-          <button type="submit" id="btnSubmitBiometrics" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; margin-top: 6px;">
+          <button type="submit" id="btnSubmitBiometrics" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; margin-top: 6px;">
             💾 Guardar Medición Semanal
           </button>
         </form>

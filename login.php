@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       align-items: center;
       justify-content: center;
       background: var(--accent-emerald);
-      color: #000;
+      color: var(--btn-cta-text, #ffffff);
       font-weight: 700;
       font-size: 13px;
       padding: 8px 14px;
@@ -310,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div id="passwordError" class="field-error-msg" style="display:none;"></div>
       </div>
 
-      <button type="submit" id="submitBtn" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
+      <button type="submit" id="submitBtn" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
         Iniciar Sesión ➔
       </button>
     </form>

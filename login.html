@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0a0d14">
   <title>Iniciar Sesión - Kynap AI</title>
 
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <!-- Hoja de estilos del Design System Kynap -->
   <link rel="stylesheet" href="public/css/app.css">
@@ -91,7 +95,7 @@
       align-items: center;
       justify-content: center;
       background: var(--accent-emerald);
-      color: #000;
+      color: var(--btn-cta-text, #ffffff);
       font-weight: 700;
       font-size: 13px;
       padding: 8px 14px;
@@ -100,6 +104,7 @@
       margin-top: 4px;
       transition: all var(--transition-fast);
     }
+
     .btn-register-cta-banner:hover {
       filter: brightness(1.1);
       transform: translateY(-1px);
@@ -159,6 +164,7 @@
     }
   </style>
 </head>
+
 <body class="auth-page">
 
   <div class="theme-top-bar">
@@ -177,15 +183,8 @@
     <form id="standaloneLoginForm" onsubmit="handleLoginSubmit(event)" class="auth-form" novalidate>
       <div class="form-group" style="margin-bottom: 0;">
         <label for="emailInput">Correo Electrónico</label>
-        <input 
-          type="email" 
-          id="emailInput" 
-          name="email" 
-          class="input-custom" 
-          placeholder="tu_correo@ejemplo.com" 
-          required 
-          autocomplete="email"
-        >
+        <input type="email" id="emailInput" name="email" class="input-custom" placeholder="tu_correo@ejemplo.com"
+          required autocomplete="email">
       </div>
 
       <div class="form-group" style="margin-bottom: 0;">
@@ -193,22 +192,17 @@
           <label for="passwordInput">Contraseña</label>
         </div>
         <div class="password-wrapper">
-          <input 
-            type="password" 
-            id="passwordInput" 
-            name="password" 
-            class="input-custom" 
-            placeholder="••••••••" 
-            required 
-            autocomplete="current-password"
-          >
-          <button type="button" class="password-toggle" onclick="togglePasswordVisibility()" aria-label="Mostrar u ocultar contraseña">
+          <input type="password" id="passwordInput" name="password" class="input-custom" placeholder="••••••••" required
+            autocomplete="current-password">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility()"
+            aria-label="Mostrar u ocultar contraseña">
             👁
           </button>
         </div>
       </div>
 
-      <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: #000; font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
+      <button type="submit" class="btn-checkin"
+        style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; padding: 12px; font-size: 15px; margin-top: 6px;">
         Iniciar Sesión ➔
       </button>
     </form>
@@ -324,7 +318,7 @@
       }
 
       try {
-        const apiUrl = (window.location.protocol === 'file:') 
+        const apiUrl = (window.location.protocol === 'file:')
           ? 'http://localhost/Kynap/controllers/api_auth.php?action=login'
           : 'controllers/api_auth.php?action=login';
 
@@ -375,4 +369,5 @@
     }
   </script>
 </body>
+
 </html>
