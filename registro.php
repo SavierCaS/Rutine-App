@@ -16,12 +16,12 @@ require_once __DIR__ . '/controllers/api_bootstrap.php';
 
 // Si el usuario ya tiene sesión iniciada, redirigir al panel de control
 if (isset($_SESSION['user_id']) && isset($_SESSION['nombre'])) {
-    header('Location: dashboard.php');
+    header('Location: app.html');
     exit();
 }
 
 $errorMessage = '';
-$redirectTarget = 'dashboard.php';
+$redirectTarget = 'app.html';
 $successToken = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo "<!DOCTYPE html><html><body>";
                         echo "<script>";
                         echo "localStorage.setItem('kynap_auth_token', " . json_encode($successToken) . ");";
-                        echo "window.location.href = 'dashboard.php';";
+                        echo "window.location.href = 'app.html';";
                         echo "</script>";
                         echo "</body></html>";
                         exit();
@@ -854,7 +854,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             localStorage.setItem('kynap_auth_token', data.data.token);
             showToast('success', '¡Bienvenido a Kynap!', 'Tu cuenta ha sido creada exitosamente. Redirigiendo...');
             setTimeout(() => {
-              window.location.href = 'dashboard.php';
+              window.location.href = 'app.html';
             }, 1000);
           } else {
             triggerShake();

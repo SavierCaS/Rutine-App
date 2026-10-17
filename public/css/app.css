@@ -2932,6 +2932,88 @@ body {
 }
 
 /* ==========================================================================
+   ESTILOS DE PREVENCIÓN DE SPAM (DEBOUNCE / THROTTLING DE BOTONES)
+   ========================================================================== */
+button:disabled,
+.btn-checkin:disabled,
+.btn-meal-check:disabled,
+.btn-throttled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  filter: grayscale(0.25) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   SUB-NAVEGACIÓN DE ENTRENAMIENTO EN VIVO & MENTE SANA INTEGRADA
+   ========================================================================== */
+.workout-subnav-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  background: var(--bg-card);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.workout-subnav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.workout-subnav-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.workout-subnav-btn.active {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.16), rgba(0, 217, 255, 0.16));
+  color: var(--accent-emerald);
+  border-color: rgba(0, 255, 136, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 255, 136, 0.12);
+}
+
+.mente-sana-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.3s ease;
+}
+
+.nav-sub-item {
+  margin-left: 14px;
+}
+
+.nav-btn-sub {
+  font-size: 12px !important;
+  opacity: 0.85;
+  padding: 6px 12px !important;
+}
+
+/* ==========================================================================
    ACCESSIBILITY & FOCUS
    ========================================================================== */
 

@@ -662,7 +662,7 @@
           localStorage.setItem('kynap_auth_token', data.data.token);
           showToast('success', '¡Bienvenido a Kynap!', 'Tu cuenta ha sido creada exitosamente. Redirigiendo...');
           setTimeout(() => {
-            window.location.href = 'dashboard.php';
+            window.location.href = 'app.html';
           }, 1000);
         } else {
           // Doble feedback: banner + input highlight + toast
@@ -698,6 +698,17 @@
         const emailInput = document.getElementById('emailInput');
         if (emailInput) emailInput.value = email;
       }
+
+      // Soporte estricto de redirección hacia la vista destino del app
+      document.querySelectorAll('a, button').forEach(el => {
+        if (el.textContent && el.textContent.toLowerCase().includes('abrir onboarding dedicado')) {
+          if (el.tagName === 'A') el.setAttribute('href', 'app.html');
+          el.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            window.location.href = 'app.html';
+          });
+        }
+      });
     });
   </script>
 </body>

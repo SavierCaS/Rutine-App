@@ -207,7 +207,10 @@ const AppState = {
     type: '4-4-4',
     isActive: false,
     intervalId: null
-  }
+  },
+  workoutSubtab: 'series',
+  pendingCheckIns: new Set(),
+  pendingMeals: new Set()
 };
 
 // ==============================================================================
@@ -282,13 +285,25 @@ class ApiClient {
 // 4. SISTEMA DE TOAST NOTIFICATIONS (Reemplazo accesible de alert())
 // ==============================================================================
 /**
- * Despliega una notificación flotante moderna y no intrusiva.
+// Registro para deduplicación estricta de alertas (evita spam de notificaciones)
+const _recentToastTimes = new Map();
+
+/**
+ * Despliega una notificación flotante moderna y no intrusiva con control anti-spam de alerta única.
  * @param {'success'|'error'|'warning'|'info'} type 
  * @param {string} title 
  * @param {string} desc 
  * @param {number} duration 
  */
 function showToast(type = 'success', title = '', desc = '', duration = 3500) {
+  const key = `${type}:${title}`;
+  const now = Date.now();
+  // Si ya se disparó esta alerta en los últimos 2.5 segundos, ignorar para erradicar el spam
+  if (_recentToastTimes.has(key) && (now - _recentToastTimes.get(key)) < 2500) {
+    return;
+  }
+  _recentToastTimes.set(key, now);
+
   let container = document.getElementById('toastContainer');
   if (!container) {
     container = document.createElement('div');
@@ -296,6 +311,14 @@ function showToast(type = 'success', title = '', desc = '', duration = 3500) {
     container.className = 'toast-container';
     container.setAttribute('aria-live', 'polite');
     document.body.appendChild(container);
+  } else {
+    // Si ya existe un toast similar visible, reemplazarlo para mantener una ALERTA ÚNICA
+    const existingToasts = container.querySelectorAll('.toast');
+    existingToasts.forEach(t => {
+      if (t.innerText.includes(title)) {
+        t.remove();
+      }
+    });
   }
 
   const icons = {
@@ -402,11 +425,11 @@ function renderRoutines() {
         </ul>
         ${!day.isRest ? (
           isCurrentDay ? `
-            <button class="btn-checkin" onclick="toggleDayCheckIn('${day.id}')" aria-label="Marcar ${day.dayName}">
+            <button type="button" class="btn-checkin" onclick="toggleDayCheckIn('${day.id}', this)" aria-label="Marcar ${day.dayName}">
               ${isDone ? '✔ Completado (Desmarcar)' : 'Tachar Día Actual'}
             </button>
           ` : `
-            <button class="btn-checkin btn-locked" onclick="handleLockedDayClick('${day.dayName}')" title="Solo puedes registrar el progreso del día actual (${AppState.currentServerDayName})">
+            <button type="button" class="btn-checkin btn-locked" onclick="handleLockedDayClick('${day.dayName}')" title="Solo puedes registrar el progreso del día actual (${AppState.currentServerDayName})">
               ${isDone ? '✔ Completado (Historial)' : '🔒 Bloqueado'}
             </button>
           `
@@ -417,42 +440,38 @@ function renderRoutines() {
 }
 
 /**
- * Muestra retroalimentación amigable si el usuario intenta interactuar con un día diferente al actual.
+ * Informa sutilmente si el usuario intenta interactuar con un día diferente al actual.
  * @param {string} dayName 
  */
 window.handleLockedDayClick = function (dayName) {
-  showToast(
-    'info',
-    '🔒 Día en Modo Solo Lectura',
-    `Hoy es ${AppState.currentServerDayName}. Por rigor de tu periodización, solo se permite registrar o modificar el entrenamiento del día actual.`
-  );
+  // Acción no permitida: el estado visual y el tooltip comunican que está bloqueado
 };
 
 /**
- * Alterna el estado de cumplimiento de un día con validación estricta de fecha en frontend y backend.
+ * Alterna el estado de cumplimiento de un día de entrenamiento sin generar ventanas emergentes.
+ * Cambia limpiamente el estado y sincroniza en segundo plano.
  * @param {string} dayId 
+ * @param {HTMLElement|null} btnElement
  */
-window.toggleDayCheckIn = async function (dayId) {
-  // Validación preventiva en cliente basada en reloj del servidor
-  if (dayId !== AppState.currentServerDayKey) {
-    window.handleLockedDayClick(dayId);
-    return;
-  }
+window.toggleDayCheckIn = async function (dayId, btnElement) {
+  if (dayId !== AppState.currentServerDayKey) return;
+
+  if (!AppState.pendingCheckIns) AppState.pendingCheckIns = new Set();
+  if (AppState.pendingCheckIns.has(dayId)) return;
+  AppState.pendingCheckIns.add(dayId);
 
   const isCurrentlyDone = AppState.checkIns.has(dayId);
 
-  // 1. Actualización optimista inmediata
+  // 1. Actualización limpia de estado en el cliente (sin alertas intrusivas)
   if (isCurrentlyDone) {
     AppState.checkIns.delete(dayId);
-    showToast('info', 'Día Desmarcado', `${dayId.toUpperCase()} marcado como pendiente.`);
   } else {
     AppState.checkIns.add(dayId);
     triggerCelebration();
-    showToast('success', '¡Día Completado!', `Gran trabajo completando el entrenamiento de hoy (${dayId.toUpperCase()}).`);
   }
   renderRoutines();
 
-  // 2. Sincronización segura con el backend
+  // 2. Sincronización transparente con el backend
   try {
     const res = await ApiClient.request('controllers/api_routines.php', {
       method: 'POST',
@@ -469,18 +488,17 @@ window.toggleDayCheckIn = async function (dayId) {
       }
       renderRoutines();
     } else if (res && !res.success) {
-      showToast('warning', 'Validación del Servidor', res.message || 'No se pudo registrar.');
-      // Revertir optimismo
+      // Revertir estado si el servidor no pudo procesar
       if (isCurrentlyDone) AppState.checkIns.add(dayId);
       else AppState.checkIns.delete(dayId);
       renderRoutines();
     }
   } catch (err) {
-    // Si el backend rechaza por discrepancia de fecha
-    showToast('warning', 'Restricción de Fecha', err.message || 'Solo puedes registrar el progreso del día presente.');
     if (isCurrentlyDone) AppState.checkIns.add(dayId);
     else AppState.checkIns.delete(dayId);
     renderRoutines();
+  } finally {
+    AppState.pendingCheckIns.delete(dayId);
   }
 };
 
@@ -527,12 +545,12 @@ function renderWorkoutLogger() {
           onchange="updateSetData(${idx}, 'rpe', this.value)" min="1" max="10" step="0.5" aria-label="RPE">
       </td>
       <td>
-        <button class="btn-check-set ${set.isCompleted ? 'checked' : ''}" onclick="toggleSetCheck(${idx})" aria-label="Marcar serie ${set.setNumber}">
+        <button type="button" class="btn-check-set ${set.isCompleted ? 'checked' : ''}" onclick="toggleSetCheck(${idx})" aria-label="Marcar serie ${set.setNumber}">
           ${set.isCompleted ? '✔' : ''}
         </button>
       </td>
       <td>
-        <button class="btn-icon" onclick="deleteSetRow(${idx})" title="Eliminar serie" aria-label="Eliminar serie">✕</button>
+        <button type="button" class="btn-icon" onclick="deleteSetRow(${idx})" title="Eliminar serie" aria-label="Eliminar serie">✕</button>
       </td>
     </tr>
   `).join('');
@@ -552,21 +570,27 @@ window.updateSetData = function (index, field, value) {
 };
 
 /**
- * Alterna el estado de una serie y dispara el temporizador de descanso.
+ * Alterna el estado de una serie y dispara el temporizador de descanso sin ventanas emergentes.
  */
+const _pendingSets = new Set();
 window.toggleSetCheck = async function (index) {
+  if (_pendingSets.has(index)) return;
+  _pendingSets.add(index);
+
   const set = AppState.activeWorkout.sets[index];
-  if (!set) return;
+  if (!set) {
+    _pendingSets.delete(index);
+    return;
+  }
 
   set.isCompleted = !set.isCompleted;
 
   if (set.isCompleted) {
     startRestTimer(90);
-    showToast('success', `Serie #${set.setNumber} Registrada`, `${set.weightKg} kg x ${set.reps} reps (RPE ${set.rpe || 8}).`);
   }
   renderWorkoutLogger();
 
-  // Persistir serie en backend
+  // Persistir serie en backend de forma silenciosa
   try {
     await ApiClient.request('controllers/api_workouts.php?action=save_set', {
       method: 'POST',
@@ -581,6 +605,8 @@ window.toggleSetCheck = async function (index) {
     });
   } catch (e) {
     // Persistencia local tolerante
+  } finally {
+    _pendingSets.delete(index);
   }
 };
 
@@ -599,7 +625,6 @@ window.addSetRow = function () {
     isCompleted: false
   });
   renderWorkoutLogger();
-  showToast('info', 'Serie Añadida', `Serie #${current.length} lista.`);
 };
 
 /**
@@ -613,8 +638,20 @@ window.deleteSetRow = function (index) {
 
 /**
  * Finaliza la sesión de entrenamiento y almacena el tonelaje acumulado.
+ * Deshabilita temporalmente el botón durante 2 segundos para evitar registros duplicados.
  */
-window.finishWorkoutSession = async function () {
+let _isFinishingWorkout = false;
+window.finishWorkoutSession = async function (btnElement) {
+  if (_isFinishingWorkout) return;
+  _isFinishingWorkout = true;
+
+  const finishBtn = btnElement || document.querySelector('button[onclick*="finishWorkoutSession"]');
+  if (finishBtn) {
+    finishBtn.disabled = true;
+    finishBtn.classList.add('btn-throttled');
+    finishBtn.textContent = '⏳ Finalizando y Guardando...';
+  }
+
   let volume = 0;
   AppState.activeWorkout.sets.forEach(set => {
     if (set.isCompleted) volume += (set.weightKg * set.reps);
@@ -630,9 +667,17 @@ window.finishWorkoutSession = async function () {
     });
   } catch (e) {
     // Guardado local
+  } finally {
+    showToast('success', '¡Entrenamiento Finalizado!', `Tonelaje total acumulado: ${volume.toLocaleString()} kg.`);
+    setTimeout(() => {
+      _isFinishingWorkout = false;
+      if (finishBtn) {
+        finishBtn.disabled = false;
+        finishBtn.classList.remove('btn-throttled');
+        finishBtn.textContent = 'Finalizar Sesión & Guardar Tonelaje';
+      }
+    }, 2500);
   }
-
-  showToast('success', '¡Entrenamiento Finalizado!', `Tonelaje total acumulado: ${volume.toLocaleString()} kg.`);
 };
 
 /**
@@ -674,7 +719,6 @@ function startRestTimer(seconds) {
       clearInterval(AppState.timer.intervalId);
       AppState.timer.isRunning = false;
       playBeep();
-      showToast('info', '¡Descanso Finalizado!', 'Es momento de iniciar tu siguiente serie.');
     }
   }, 1000);
 }
@@ -850,7 +894,7 @@ function renderNutritionSchedule() {
             </div>
             <div>
               ${isTodayView ? `
-                <button type="button" class="btn-meal-check ${isDone ? 'completed' : ''}" onclick="toggleScheduledMeal('${meal.mealKey}')" aria-label="Marcar ${meal.name}">
+                <button type="button" class="btn-meal-check ${isDone ? 'completed' : ''}" onclick="toggleScheduledMeal('${meal.mealKey}', this)" aria-label="Marcar ${meal.name}">
                   ${isDone ? '✔ Consumido' : 'Marcar Consumo'}
                 </button>
               ` : `
@@ -877,31 +921,28 @@ function renderNutritionSchedule() {
 
 /**
  * Alterna el estado de una comida programada para hoy (Desayuno, Almuerzo, etc.)
- * y sincroniza con el backend con reinicio automático diario.
+ * y sincroniza con el backend sin popups ni bloqueos invasivos.
  * @param {string} mealKey
+ * @param {HTMLElement|null} btnElement
  */
-window.toggleScheduledMeal = async function (mealKey) {
-  // Solo se puede marcar o desmarcar en el día de hoy
-  if (!AppState.nutrition.isToday) {
-    showToast('info', 'Plan Programado', 'Solo puedes marcar como consumidas las comidas correspondientes al día de hoy.');
-    return;
-  }
+window.toggleScheduledMeal = async function (mealKey, btnElement) {
+  if (!AppState.pendingMeals) AppState.pendingMeals = new Set();
+  if (AppState.pendingMeals.has(mealKey)) return;
 
-  // 1. Actualización optimista en el cliente
+  // Solo se puede marcar o desmarcar en el día de hoy
+  if (!AppState.nutrition.isToday) return;
+
+  AppState.pendingMeals.add(mealKey);
+
+  // 1. Actualización optimista inmediata en la interfaz (sin alertas emergentes)
   const mealItem = AppState.nutrition.schedule.find(m => m.mealKey === mealKey);
   const wasDone = mealItem ? !!mealItem.isCompleted : false;
   if (mealItem) {
     mealItem.isCompleted = !wasDone;
-    if (mealItem.isCompleted) {
-      triggerCelebration();
-      showToast('success', '¡Comida Completada!', `${mealItem.name} registrada en tu nutrición de hoy.`);
-    } else {
-      showToast('info', 'Comida Desmarcada', `${mealItem.name} marcada como pendiente.`);
-    }
     renderNutritionSchedule();
   }
 
-  // 2. Persistencia en base de datos bajo fecha de hoy
+  // 2. Persistencia en base de datos
   try {
     const res = await ApiClient.request('controllers/api_nutrition.php?action=toggle_scheduled_meal', {
       method: 'POST',
@@ -916,7 +957,6 @@ window.toggleScheduledMeal = async function (mealKey) {
       // Re-sincronizar totales precisos desde el backend
       loadNutritionData(AppState.nutrition.selectedDayKey);
     } else if (res && !res.success) {
-      showToast('warning', 'Error de Registro', res.message || 'No se pudo actualizar la comida.');
       if (mealItem) {
         mealItem.isCompleted = wasDone;
         renderNutritionSchedule();
@@ -924,6 +964,8 @@ window.toggleScheduledMeal = async function (mealKey) {
     }
   } catch (err) {
     // Si falla la petición, mantener estado local
+  } finally {
+    AppState.pendingMeals.delete(mealKey);
   }
 };
 
@@ -990,23 +1032,30 @@ function renderNutrition() {
 
 /**
  * Ajusta la cantidad de agua consumida en mililitros.
+ * Actualiza la interfaz de inmediato sin ventanas emergentes ni bloqueo de botones.
  * @param {number} deltaMl 
  */
-window.adjustWater = async function (deltaMl) {
+let _waterDebounceTimer = null;
+let _pendingWaterDelta = 0;
+window.adjustWater = function (deltaMl) {
   const current = AppState.nutrition.consumed.waterMl;
   AppState.nutrition.consumed.waterMl = Math.max(0, current + deltaMl);
   renderNutritionSummary();
 
-  showToast('info', 'Hidratación Actualizada', `${deltaMl > 0 ? '+' : ''}${deltaMl} ml registrados.`);
-
-  try {
-    await ApiClient.request('controllers/api_nutrition.php?action=adjust_water', {
-      method: 'POST',
-      body: JSON.stringify({ delta: deltaMl })
-    });
-  } catch (e) {
-    // Persistencia local
-  }
+  _pendingWaterDelta += deltaMl;
+  clearTimeout(_waterDebounceTimer);
+  _waterDebounceTimer = setTimeout(async () => {
+    const toSend = _pendingWaterDelta;
+    _pendingWaterDelta = 0;
+    try {
+      await ApiClient.request('controllers/api_nutrition.php?action=adjust_water', {
+        method: 'POST',
+        body: JSON.stringify({ delta: toSend })
+      });
+    } catch (e) {
+      // Persistencia local
+    }
+  }, 400);
 };
 
 /**
@@ -1024,9 +1073,13 @@ window.closeAddMealModal = function () {
 
 /**
  * Registra una comida con cálculo automático de calorías.
+ * Deshabilita el botón de envío durante el proceso para evitar peticiones repetidas.
  */
+let _isAddMealPending = false;
 window.submitAddMealForm = async function (e) {
   if (e) e.preventDefault();
+  if (_isAddMealPending) return;
+
   const nameInput = document.getElementById('mealNameInput');
   const typeInput = document.getElementById('mealTypeInput');
   const pInput = document.getElementById('mealProteinInput');
@@ -1043,6 +1096,13 @@ window.submitAddMealForm = async function (e) {
   if (!name) {
     showToast('warning', 'Campo Requerido', 'Por favor ingresa el nombre de la comida.');
     return;
+  }
+
+  _isAddMealPending = true;
+  const submitBtn = document.querySelector('#addMealModal button[type="submit"]') || document.querySelector('#formAddMeal button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('btn-throttled');
   }
 
   const newMeal = { id: Date.now(), name, type, p, c, f, calories: cal };
@@ -1068,6 +1128,14 @@ window.submitAddMealForm = async function (e) {
     });
   } catch (err) {
     // Guardado local
+  } finally {
+    setTimeout(() => {
+      _isAddMealPending = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-throttled');
+      }
+    }, 2500);
   }
 };
 
@@ -1160,13 +1228,22 @@ window.toggleAICoach = function () {
   }
 };
 
+let _isAiCoachPending = false;
 window.sendAICoachMessage = async function () {
+  if (_isAiCoachPending) return;
   const input = document.getElementById('aiCoachInput');
   const box = document.getElementById('aiCoachMessages');
+  const sendBtn = document.getElementById('aiCoachSendBtn') || document.querySelector('#aiCoachDrawer button[onclick*="sendAICoachMessage"]');
   if (!input || !box) return;
 
   const text = input.value.trim();
   if (!text) return;
+
+  _isAiCoachPending = true;
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.classList.add('btn-throttled');
+  }
 
   // Insertar mensaje del usuario
   const userMsg = document.createElement('div');
@@ -1198,6 +1275,12 @@ window.sendAICoachMessage = async function () {
     botMsg.innerHTML = reply.replace(/\n/g, '<br>');
   } catch (e) {
     botMsg.innerHTML = `Entendido atleta. Te sugiero mantener una hidratación de ${AppState.nutrition.targets.waterMl} ml y priorizar tu descanso nocturno para optimizar la hipertrofia.`;
+  } finally {
+    _isAiCoachPending = false;
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.classList.remove('btn-throttled');
+    }
   }
   box.scrollTop = box.scrollHeight;
 };
@@ -1266,102 +1349,359 @@ window.handleGenerateAIRoutine = async function (e) {
 // 10. MÓDULO 6: MENTE SANA & RESPIRACIÓN GUIADA
 // ==============================================================================
 const BREATHING_PRESETS = {
-  '4-4-4': { inhale: 4, hold: 4, exhale: 4, rest: 4, label: 'Box Breathing (Equilibrio)' },
-  '4-7-8': { inhale: 4, hold: 7, exhale: 8, rest: 0, label: '4-7-8 (Sueño Profundo)' },
-  '2-2': { inhale: 2, hold: 0, exhale: 2, rest: 0, label: '2-2 (Energizante Rápido)' },
-  '5-5': { inhale: 5, hold: 0, exhale: 5, rest: 0, label: '5-5 (Coherencia Cardíaca)' }
+// ==============================================================================
+// 10. MÓDULO 6: MENTE SANA & RESPIRACIÓN GUIADA (MOTOR REACTIVO INTERNO)
+// ==============================================================================
+const BREATHING_CONFIG = {
+  '4-4-4': {
+    name: '4-4-4 Box Breathing (Equilibrio Mental & Enfoque)',
+    phases: [
+      { name: 'Inhala', duration: 4, scale: 2.1, glow: '0 0 50px rgba(0, 217, 255, 0.75)' },
+      { name: 'Mantén', duration: 4, scale: 2.1, glow: '0 0 50px rgba(0, 217, 255, 0.75)' },
+      { name: 'Exhala', duration: 4, scale: 1.0, glow: '0 0 20px rgba(0, 217, 255, 0.25)' },
+      { name: 'Pausa', duration: 4, scale: 1.0, glow: '0 0 15px rgba(0, 217, 255, 0.15)' }
+    ]
+  },
+  '4-7-8': {
+    name: '4-7-8 Respiración Profunda (Recuperación y Calma)',
+    phases: [
+      { name: 'Inhala', duration: 4, scale: 2.1, glow: '0 0 50px rgba(0, 217, 255, 0.75)' },
+      { name: 'Mantén', duration: 7, scale: 2.1, glow: '0 0 50px rgba(0, 217, 255, 0.75)' },
+      { name: 'Exhala', duration: 8, scale: 1.0, glow: '0 0 20px rgba(0, 217, 255, 0.25)' }
+    ]
+  },
+  '2-2': {
+    name: '2-2 Respiración Energizante (Activación Pre-Entreno)',
+    phases: [
+      { name: 'Inhala', duration: 2, scale: 2.0, glow: '0 0 45px rgba(0, 255, 136, 0.75)' },
+      { name: 'Exhala', duration: 2, scale: 1.0, glow: '0 0 20px rgba(0, 255, 136, 0.25)' }
+    ]
+  },
+  '5-5': {
+    name: '5-5 Coherencia Cardíaca (Estabilidad Cardiorrespiratoria)',
+    phases: [
+      { name: 'Inhala', duration: 5, scale: 2.1, glow: '0 0 50px rgba(0, 217, 255, 0.75)' },
+      { name: 'Exhala', duration: 5, scale: 1.0, glow: '0 0 20px rgba(0, 217, 255, 0.25)' }
+    ]
+  }
 };
 
+let _breathingClockInterval = null;
+let _sessionSeconds = 0;
+let _currentPhaseIdx = 0;
+let _phaseSecondsLeft = 0;
+let _activePresetKey = '4-4-4';
+
+/**
+ * Obtiene el preset activo consultando los selectores del DOM.
+ */
+function getActiveBreathingPresetKey() {
+  const openModal = document.querySelector('#breathingModal.open');
+  if (openModal) {
+    const sel = openModal.querySelector('.breathing-preset-select, select[id*="breathing"]');
+    if (sel && sel.value) return sel.value;
+  }
+  const anySel = document.querySelector('.breathing-preset-select, select[id*="breathing"]');
+  return anySel ? anySel.value : _activePresetKey;
+}
+
+/**
+ * Actualiza la visualización del reloj de sesión (MM:SS) en todos los contenedores.
+ */
+function updateSessionClockDisplay() {
+  const mins = String(Math.floor(_sessionSeconds / 60)).padStart(2, '0');
+  const secs = String(_sessionSeconds % 60).padStart(2, '0');
+  const str = `${mins}:${secs}`;
+  document.querySelectorAll('.breathing-session-clock, #breathingSessionClock').forEach(el => {
+    el.textContent = str;
+  });
+}
+
+/**
+ * Inicializa explícitamente el módulo de respiración y enlaza de forma segura todos los elementos del DOM.
+ * Incluye comprobaciones previas contra null/undefined para evitar errores en tiempo de ejecución.
+ */
+window.initRespiracion = function () {
+  _activePresetKey = getActiveBreathingPresetKey();
+
+  // 1. Sincronizar selectores de patrón y registrar eventos con verificación de presencia
+  const selects = document.querySelectorAll('.breathing-preset-select, select[id*="breathingPresetSelect"]');
+  selects.forEach(sel => {
+    if (!sel) return;
+    if (sel.value !== _activePresetKey) sel.value = _activePresetKey;
+    if (!sel.dataset.listenerBound) {
+      sel.dataset.listenerBound = 'true';
+      sel.addEventListener('change', (e) => {
+        window.changeBreathingPreset(e.target.value);
+      });
+    }
+  });
+
+  // 2. Enlazar botones de Play / Pausa con guarda contra múltiples listeners
+  const toggleBtns = document.querySelectorAll('.btn-breathing-toggle, #breathingToggleBtn');
+  toggleBtns.forEach(btn => {
+    if (!btn) return;
+    if (!btn.dataset.listenerBound) {
+      btn.dataset.listenerBound = 'true';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.toggleBreathingExercise();
+      });
+    }
+  });
+
+  // 3. Enlazar botones de reinicio
+  const resetBtns = document.querySelectorAll('.btn-breathing-reset');
+  resetBtns.forEach(btn => {
+    if (!btn) return;
+    if (!btn.dataset.listenerBound) {
+      btn.dataset.listenerBound = 'true';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.resetBreathingExercise();
+      });
+    }
+  });
+
+  // 4. Enlazar clic directo en la esfera de respiración
+  const spheres = document.querySelectorAll('.breathing-sphere');
+  spheres.forEach(sphere => {
+    if (!sphere) return;
+    if (!sphere.dataset.listenerBound) {
+      sphere.dataset.listenerBound = 'true';
+      sphere.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.toggleBreathingExercise();
+      });
+    }
+  });
+
+  // 5. Restablecer interfaz visual únicamente si la sesión no está en ejecución
+  if (!AppState.breathing.isActive) {
+    document.querySelectorAll('.breathing-text').forEach(t => { if (t) t.textContent = 'Iniciar'; });
+    document.querySelectorAll('.breathing-countdown').forEach(c => { if (c) c.textContent = ''; });
+    spheres.forEach(s => {
+      if (s) {
+        s.style.transition = 'transform 0.4s ease, box-shadow 0.4s ease';
+        s.style.transform = 'scale(1)';
+        s.style.boxShadow = '';
+      }
+    });
+    toggleBtns.forEach(b => {
+      if (b) b.textContent = '▶ Comenzar Sesión';
+    });
+    updateSessionClockDisplay();
+  }
+};
+
+/**
+ * Cambia el preset de respiración en tiempo real y reinicia el ciclo.
+ */
+window.changeBreathingPreset = function (presetKey) {
+  if (BREATHING_CONFIG[presetKey]) {
+    _activePresetKey = presetKey;
+  }
+  const selects = document.querySelectorAll('.breathing-preset-select, select[id*="breathingPresetSelect"]');
+  selects.forEach(sel => { if (sel) sel.value = _activePresetKey; });
+
+  if (AppState.breathing.isActive) {
+    _currentPhaseIdx = 0;
+    const config = BREATHING_CONFIG[_activePresetKey];
+    _phaseSecondsLeft = config.phases[0].duration;
+    applyPhaseVisuals(config.phases[0]);
+  }
+};
+window.cambiarRutina = window.changeBreathingPreset;
+
+/**
+ * Aplica los estilos visuales de la fase actual a todas las esferas y textos activos.
+ */
+function applyPhaseVisuals(phase) {
+  if (!phase) return;
+  const spheres = document.querySelectorAll('.breathing-sphere');
+  const textEls = document.querySelectorAll('.breathing-text');
+  const countEls = document.querySelectorAll('.breathing-countdown');
+
+  textEls.forEach(el => { if (el) el.textContent = phase.name; });
+  countEls.forEach(el => { if (el) el.textContent = `${_phaseSecondsLeft}s`; });
+
+  spheres.forEach(s => {
+    if (s) {
+      s.style.transition = `transform ${phase.duration}s cubic-bezier(0.4, 0, 0.2, 1), box-shadow ${phase.duration}s ease`;
+      s.style.transform = `scale(${phase.scale})`;
+      s.style.boxShadow = phase.glow;
+    }
+  });
+}
+
+/**
+ * Inicia la ejecución de la respiración guiada con temporizador reactivo segundo a segundo.
+ * Ejecuta la animación y el cronómetro de forma explícita.
+ */
+window.startBreathingExercise = function () {
+  if (_breathingClockInterval) clearInterval(_breathingClockInterval);
+
+  AppState.breathing.isActive = true;
+  _activePresetKey = getActiveBreathingPresetKey();
+  const config = BREATHING_CONFIG[_activePresetKey] || BREATHING_CONFIG['4-4-4'];
+
+  _currentPhaseIdx = 0;
+  const initialPhase = config.phases[_currentPhaseIdx];
+  _phaseSecondsLeft = initialPhase.duration;
+
+  // Actualizar botones a estado Pausar
+  document.querySelectorAll('.btn-breathing-toggle, #breathingToggleBtn').forEach(b => {
+    if (b) b.textContent = '⏸ Pausar Sesión';
+  });
+
+  applyPhaseVisuals(initialPhase);
+
+  // Reloj de ejecución a 1 segundo de intervalo (1000ms)
+  _breathingClockInterval = setInterval(() => {
+    if (!AppState.breathing.isActive) return;
+
+    // 1. Avanzar cronómetro de sesión general
+    _sessionSeconds++;
+    updateSessionClockDisplay();
+
+    // 2. Decrementar cuenta regresiva de la fase activa
+    _phaseSecondsLeft--;
+    document.querySelectorAll('.breathing-countdown').forEach(el => {
+      if (el) el.textContent = _phaseSecondsLeft > 0 ? `${_phaseSecondsLeft}s` : '1s';
+    });
+
+    // 3. Cuando termina la fase, avanzar a la siguiente
+    if (_phaseSecondsLeft <= 0) {
+      _currentPhaseIdx = (_currentPhaseIdx + 1) % config.phases.length;
+      const nextPhase = config.phases[_currentPhaseIdx];
+      _phaseSecondsLeft = nextPhase.duration;
+      applyPhaseVisuals(nextPhase);
+    }
+  }, 1000);
+};
+window.iniciarRespiracion = window.startBreathingExercise;
+window.startTimer = window.startBreathingExercise;
+
+/**
+ * Pausa la respiración guiada manteniendo el tiempo acumulado de sesión.
+ */
+window.stopBreathingExercise = function () {
+  if (_breathingClockInterval) {
+    clearInterval(_breathingClockInterval);
+    _breathingClockInterval = null;
+  }
+  AppState.breathing.isActive = false;
+
+  document.querySelectorAll('.btn-breathing-toggle, #breathingToggleBtn').forEach(b => {
+    if (b) b.textContent = '▶ Reanudar Sesión';
+  });
+  document.querySelectorAll('.breathing-text').forEach(t => { if (t) t.textContent = 'Pausado'; });
+  document.querySelectorAll('.breathing-countdown').forEach(c => { if (c) c.textContent = ''; });
+
+  document.querySelectorAll('.breathing-sphere').forEach(s => {
+    if (s) {
+      s.style.transition = 'transform 0.4s ease, box-shadow 0.4s ease';
+      s.style.transform = 'scale(1)';
+      s.style.boxShadow = '';
+    }
+  });
+};
+window.pausarRespiracion = window.stopBreathingExercise;
+
+/**
+ * Reinicia completamente la sesión de respiración y el cronómetro a cero.
+ */
+window.resetBreathingExercise = function () {
+  if (_breathingClockInterval) {
+    clearInterval(_breathingClockInterval);
+    _breathingClockInterval = null;
+  }
+  AppState.breathing.isActive = false;
+  _sessionSeconds = 0;
+  _phaseSecondsLeft = 0;
+  _currentPhaseIdx = 0;
+
+  window.initRespiracion();
+};
+
+/**
+ * Alterna entre iniciar y pausar con protección de debounce (300ms) para evitar
+ * dobles llamadas cuando coexisten inline onclick y addEventListener.
+ */
+let _lastToggleTime = 0;
+window.toggleBreathingExercise = function () {
+  const now = Date.now();
+  if (now - _lastToggleTime < 300) return;
+  _lastToggleTime = now;
+
+  if (AppState.breathing.isActive) {
+    window.stopBreathingExercise();
+  } else {
+    window.startBreathingExercise();
+  }
+};
+
+/**
+ * Alterna entre sub-secciones dentro de Entrenamiento en Vivo (Series vs Mente Sana).
+ * Inicia la sesión de respiración automáticamente al ingresar a la sub-pestaña.
+ * @param {'series'|'breathing'} subtab 
+ */
+window.switchWorkoutSubTab = function (subtab) {
+  AppState.workoutSubtab = subtab;
+  const btnSeries = document.getElementById('btnSubnavSeries');
+  const btnBreathing = document.getElementById('btnSubnavBreathing');
+  const viewSeries = document.getElementById('workoutSubtabSeries');
+  const viewBreathing = document.getElementById('workoutSubtabBreathing');
+
+  if (subtab === 'breathing') {
+    if (btnSeries) {
+      btnSeries.classList.remove('active');
+      btnSeries.setAttribute('aria-selected', 'false');
+    }
+    if (btnBreathing) {
+      btnBreathing.classList.add('active');
+      btnBreathing.setAttribute('aria-selected', 'true');
+    }
+    if (viewSeries) viewSeries.style.display = 'none';
+    if (viewBreathing) viewBreathing.style.display = 'block';
+    window.initRespiracion();
+    window.startBreathingExercise();
+  } else {
+    if (btnSeries) {
+      btnSeries.classList.add('active');
+      btnSeries.setAttribute('aria-selected', 'true');
+    }
+    if (btnBreathing) {
+      btnBreathing.classList.remove('active');
+      btnBreathing.setAttribute('aria-selected', 'false');
+    }
+    if (viewSeries) viewSeries.style.display = '';
+    if (viewBreathing) viewBreathing.style.display = 'none';
+    window.stopBreathingExercise();
+  }
+};
+
+/**
+ * Abre el modal interactivo de Mente Sana & Respiración Guiada.
+ * Ejecuta explícitamente initRespiracion() y startBreathingExercise() / startTimer()
+ * al momento exacto de abrir el modal para que no quede congelado.
+ */
 window.openBreathingModal = function () {
   const modal = document.getElementById('breathingModal');
-  if (modal) modal.classList.add('open');
+  if (modal) {
+    modal.classList.add('open');
+  }
+  window.initRespiracion();
+  window.startBreathingExercise();
 };
 
 window.closeBreathingModal = function () {
   const modal = document.getElementById('breathingModal');
   if (modal) {
     modal.classList.remove('open');
-    stopBreathingExercise();
   }
+  window.stopBreathingExercise();
 };
-
-window.toggleBreathingExercise = function () {
-  if (AppState.breathing.isActive) {
-    stopBreathingExercise();
-  } else {
-    startBreathingExercise();
-  }
-};
-
-function startBreathingExercise() {
-  AppState.breathing.isActive = true;
-  const sphere = document.getElementById('breathingSphere');
-  const textEl = document.getElementById('breathingSphereText');
-  const btn = document.getElementById('breathingToggleBtn');
-  const select = document.getElementById('breathingPresetSelect');
-  const type = select ? select.value : '4-4-4';
-  const config = BREATHING_PRESETS[type] || BREATHING_PRESETS['4-4-4'];
-
-  if (btn) btn.textContent = 'Pausar Sesión';
-
-  function runCycle() {
-    if (!AppState.breathing.isActive) return;
-
-    // 1. Inhalar
-    if (textEl) textEl.textContent = 'Inhala...';
-    if (sphere) {
-      sphere.style.transition = `transform ${config.inhale}s cubic-bezier(0.4, 0, 0.2, 1)`;
-      sphere.style.transform = 'scale(2.2)';
-    }
-
-    setTimeout(() => {
-      if (!AppState.breathing.isActive) return;
-
-      // 2. Mantener (si aplica)
-      if (config.hold > 0) {
-        if (textEl) textEl.textContent = 'Mantén...';
-        setTimeout(exhaleStep, config.hold * 1000);
-      } else {
-        exhaleStep();
-      }
-    }, config.inhale * 1000);
-
-    function exhaleStep() {
-      if (!AppState.breathing.isActive) return;
-      if (textEl) textEl.textContent = 'Exhala...';
-      if (sphere) {
-        sphere.style.transition = `transform ${config.exhale}s cubic-bezier(0.4, 0, 0.2, 1)`;
-        sphere.style.transform = 'scale(1)';
-      }
-
-      setTimeout(() => {
-        if (!AppState.breathing.isActive) return;
-        if (config.rest > 0) {
-          if (textEl) textEl.textContent = 'Pausa...';
-          setTimeout(runCycle, config.rest * 1000);
-        } else {
-          runCycle();
-        }
-      }, config.exhale * 1000);
-    }
-  }
-
-  runCycle();
-}
-
-function stopBreathingExercise() {
-  AppState.breathing.isActive = false;
-  const sphere = document.getElementById('breathingSphere');
-  const textEl = document.getElementById('breathingSphereText');
-  const btn = document.getElementById('breathingToggleBtn');
-
-  if (sphere) {
-    sphere.style.transition = 'transform 0.5s ease';
-    sphere.style.transform = 'scale(1)';
-  }
-  if (textEl) textEl.textContent = 'Iniciar';
-  if (btn) btn.textContent = 'Comenzar';
-}
 
 // ==============================================================================
 // 11. NAVEGACIÓN Y CONTROLADOR DE TABS (DESKTOP + MOBILE)
@@ -1391,7 +1731,12 @@ window.switchTab = function (tabId, navBtn) {
 
   // Renderizar contenido de la pestaña
   if (tabId === 'routines') renderRoutines();
-  if (tabId === 'workouts') renderWorkoutLogger();
+  if (tabId === 'workouts') {
+    renderWorkoutLogger();
+    if (AppState.workoutSubtab) {
+      switchWorkoutSubTab(AppState.workoutSubtab);
+    }
+  }
   if (tabId === 'nutrition') renderNutrition();
   if (tabId === 'exercises') renderExerciseCatalog();
 
@@ -1761,9 +2106,12 @@ window.handleBiometricsSubmit = async function (e) {
   } catch (err) {
     showToast('warning', 'Restricción de Tiempo', err.message || 'Solo se permite actualizar una vez cada 7 días.');
   } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-    }
+    setTimeout(() => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '💾 Guardar Medición Semanal';
+      }
+    }, 2500);
   }
 };
 
@@ -1990,6 +2338,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderStreakComponent();
   updateSidebarUserProfile(AppState.user.name);
   updateTimerUI();
+  window.initRespiracion();
 
   // Búsqueda en catálogo de ejercicios
   const search = document.getElementById('exerciseSearchInput');

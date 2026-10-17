@@ -74,3 +74,25 @@
     applyTheme(initialTheme);
   });
 })();
+
+/**
+ * ==============================================================================
+ * KYNAP FITNESS PLATFORM - CONTROLADOR COMPATIBLE ANTI-SPAM
+ * ==============================================================================
+ * Proporciona métodos de compatibilidad limpios y no intrusivos.
+ * No intercepta eventos en fase de captura ni altera el comportamiento natural del DOM.
+ * ==============================================================================
+ */
+(function () {
+  'use strict';
+
+  const GlobalAntiSpam = {
+    isWhitelisted() { return true; },
+    isMutatingAction() { return false; },
+    lock() { return false; },
+    unlock() { return; }
+  };
+
+  window.GlobalAntiSpam = GlobalAntiSpam;
+})();
+

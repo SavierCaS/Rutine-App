@@ -47,55 +47,55 @@
 
       <ul class="nav-links">
         <li>
-          <button class="nav-btn active" onclick="switchTab('routines', this)" id="nav-routines">
+          <button type="button" class="nav-btn active" onclick="switchTab('routines', this)" id="nav-routines">
             <span class="icon">📅</span>
             <span>Rutina Semanal</span>
           </button>
         </li>
         <li>
-          <button class="nav-btn" onclick="switchTab('workouts', this)" id="nav-workouts">
+          <button type="button" class="nav-btn" onclick="switchTab('workouts', this)" id="nav-workouts">
             <span class="icon">⚡</span>
             <span>Entrenar en Vivo</span>
           </button>
         </li>
         <li>
-          <button class="nav-btn" onclick="switchTab('nutrition', this)" id="nav-nutrition">
+          <button type="button" class="nav-btn" onclick="switchTab('nutrition', this)" id="nav-nutrition">
             <span class="icon">🥗</span>
             <span>Nutrición & Macros</span>
           </button>
         </li>
         <li>
-          <button class="nav-btn" onclick="switchTab('exercises', this)" id="nav-exercises">
+          <button type="button" class="nav-btn" onclick="switchTab('exercises', this)" id="nav-exercises">
             <span class="icon">📚</span>
             <span>Librería de Ejercicios</span>
           </button>
         </li>
         <li style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
-          <button class="nav-btn" onclick="openBreathingModal()" id="nav-breathing">
+          <button type="button" class="nav-btn" onclick="openBreathingModal()" id="nav-breathing">
             <span class="icon">🧘</span>
             <span>Mente Sana</span>
           </button>
         </li>
         <li>
-          <button class="nav-btn" onclick="toggleAICoach()" id="nav-aicoach">
+          <button type="button" class="nav-btn" onclick="toggleAICoach()" id="nav-aicoach">
             <span class="icon">🤖</span>
             <span>Coach AI</span>
           </button>
         </li>
         <li>
-          <button class="nav-btn" onclick="toggleTheme()" id="nav-theme">
+          <button type="button" class="nav-btn" onclick="toggleTheme()" id="nav-theme">
             <span class="icon">🌓</span>
             <span>Modo Oscuro / Claro</span>
           </button>
         </li>
         <li>
-          <button class="nav-btn" onclick="openConfigModal()" id="nav-config">
+          <button type="button" class="nav-btn" onclick="openConfigModal()" id="nav-config">
             <span class="icon">⚙️</span>
             <span>Configuración</span>
           </button>
         </li>
         <li>
-          <button class="nav-btn" onclick="handleLogout(event)" style="color: var(--accent-rose);" id="nav-logout">
+          <button type="button" class="nav-btn" onclick="handleLogout(event)" style="color: var(--accent-rose);" id="nav-logout">
             <span class="icon">🚪</span>
             <span>Cerrar Sesión</span>
           </button>
@@ -134,20 +134,10 @@
             <span id="streakCounter">1 día activo</span>
             <span class="streak-medal-pill" id="streakMedalTag">🔥 Fuego</span>
           </div>
-          <button class="btn-checkin"
+          <button type="button" class="btn-checkin"
             style="width: auto; padding: 8px 16px; background: rgba(0, 255, 136, 0.15); border: 1px solid rgba(0, 255, 136, 0.35); color: var(--accent-emerald);"
             onclick="openBiometricsModal()">
             📊 Evolución Física
-          </button>
-          <button class="btn-checkin"
-            style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.15); border: 1px solid rgba(0, 217, 255, 0.35); color: var(--accent-cyan);"
-            onclick="openBreathingModal()">
-            🧘 Respiración
-          </button>
-          <button class="btn-checkin"
-            style="width: auto; padding: 8px 16px; background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700;"
-            onclick="toggleAICoach()">
-            🤖 Coach AI
           </button>
         </div>
       </header>
@@ -211,7 +201,7 @@
                 aria-label="Seleccionar ejercicio">
                 <!-- Opciones de ejercicios inyectadas por app.js -->
               </select>
-              <button class="btn-checkin" style="width: auto; padding: 0 20px;" onclick="addSetRow()">+ Serie</button>
+              <button type="button" class="btn-checkin" style="width: auto; padding: 0 20px;" onclick="addSetRow()">+ Serie</button>
             </div>
 
             <div class="sets-table-wrapper">
@@ -232,7 +222,7 @@
               </table>
             </div>
 
-            <button class="btn-checkin"
+            <button type="button" class="btn-checkin"
               style="background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; margin-top: 18px;"
               onclick="finishWorkoutSession()">
               Finalizar Sesión & Guardar Tonelaje
@@ -261,13 +251,13 @@
                 Descanso Entre Series</h4>
               <div class="timer-digits" id="timerDigits">01:30</div>
               <div class="timer-controls">
-                <button class="btn-checkin"
+                <button type="button" class="btn-checkin"
                   style="background: var(--accent-purple); color: #fff; width: auto; padding: 6px 14px; font-size: 12px;"
                   onclick="startRestTimer(90)">Iniciar 90s</button>
-                <button class="btn-checkin"
+                <button type="button" class="btn-checkin"
                   style="background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); width: auto; padding: 6px 12px; font-size: 12px;"
                   onclick="addTimerSeconds(30)">+30s</button>
-                <button class="btn-checkin"
+                <button type="button" class="btn-checkin"
                   style="background: rgba(255,71,87,0.12); border: 1px solid rgba(255,71,87,0.25); color: var(--accent-rose); width: auto; padding: 6px 12px; font-size: 12px;"
                   onclick="resetRestTimer()">Reset</button>
               </div>
@@ -336,7 +326,7 @@
               <div class="macro-summary-card">
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
                   <h2 style="font-family: var(--font-heading); font-size: 18px;">Balance Energético</h2>
-                  <button class="btn-checkin" style="width: auto; padding: 6px 14px; font-size: 12px;"
+                  <button type="button" class="btn-checkin" style="width: auto; padding: 6px 14px; font-size: 12px;"
                     onclick="openAddMealModal()">+ Añadir Extra</button>
                 </div>
 
@@ -386,13 +376,13 @@
                 <p id="waterTarget" style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">Meta:
                   2500 ml</p>
                 <div class="water-actions">
-                  <button class="btn-checkin"
+                  <button type="button" class="btn-checkin"
                     style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);"
                     onclick="adjustWater(250)">+250 ml</button>
-                  <button class="btn-checkin"
+                  <button type="button" class="btn-checkin"
                     style="width: auto; padding: 8px 16px; background: rgba(0, 217, 255, 0.2); color: var(--accent-cyan);"
                     onclick="adjustWater(500)">+500 ml</button>
-                  <button class="btn-checkin"
+                  <button type="button" class="btn-checkin"
                     style="width: auto; padding: 8px 12px; background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text);"
                     onclick="adjustWater(-250)">-250 ml</button>
                 </div>
@@ -420,13 +410,13 @@
             aria-label="Buscar ejercicio">
 
           <div class="chip-filters">
-            <button class="chip active" onclick="filterExercisesByMuscle('all', this)">Todos</button>
-            <button class="chip" onclick="filterExercisesByMuscle('cuadriceps', this)">Cuádriceps</button>
-            <button class="chip" onclick="filterExercisesByMuscle('gluteos', this)">Glúteos</button>
-            <button class="chip" onclick="filterExercisesByMuscle('abdomen', this)">Abdomen</button>
-            <button class="chip" onclick="filterExercisesByMuscle('pecho', this)">Pecho</button>
-            <button class="chip" onclick="filterExercisesByMuscle('triceps', this)">Tríceps</button>
-            <button class="chip" onclick="filterExercisesByMuscle('cardio', this)">Cardio</button>
+            <button type="button" class="chip active" onclick="filterExercisesByMuscle('all', this)">Todos</button>
+            <button type="button" class="chip" onclick="filterExercisesByMuscle('cuadriceps', this)">Cuádriceps</button>
+            <button type="button" class="chip" onclick="filterExercisesByMuscle('gluteos', this)">Glúteos</button>
+            <button type="button" class="chip" onclick="filterExercisesByMuscle('abdomen', this)">Abdomen</button>
+            <button type="button" class="chip" onclick="filterExercisesByMuscle('pecho', this)">Pecho</button>
+            <button type="button" class="chip" onclick="filterExercisesByMuscle('triceps', this)">Tríceps</button>
+            <button type="button" class="chip" onclick="filterExercisesByMuscle('cardio', this)">Cardio</button>
           </div>
         </div>
 
@@ -440,30 +430,30 @@
 
   <!-- NAVEGACIÓN INFERIOR PARA MÓVILES -->
   <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
-    <button class="mobile-nav-item active" id="mobile-nav-routines" onclick="switchTab('routines')">
+    <button type="button" class="mobile-nav-item active" id="mobile-nav-routines" onclick="switchTab('routines')">
       <span class="icon">📅</span>
       <span>Rutina</span>
     </button>
-    <button class="mobile-nav-item" id="mobile-nav-workouts" onclick="switchTab('workouts')">
+    <button type="button" class="mobile-nav-item" id="mobile-nav-workouts" onclick="switchTab('workouts')">
       <span class="icon">⚡</span>
       <span>Entrenar</span>
     </button>
-    <button class="mobile-nav-item" id="mobile-nav-nutrition" onclick="switchTab('nutrition')">
+    <button type="button" class="mobile-nav-item" id="mobile-nav-nutrition" onclick="switchTab('nutrition')">
       <span class="icon">🥗</span>
       <span>Nutrición</span>
     </button>
-    <button class="mobile-nav-item" id="mobile-nav-exercises" onclick="switchTab('exercises')">
+    <button type="button" class="mobile-nav-item" id="mobile-nav-exercises" onclick="switchTab('exercises')">
       <span class="icon">📚</span>
       <span>Ejercicios</span>
     </button>
-    <button class="mobile-nav-item" id="mobile-nav-coach" onclick="toggleAICoach()">
+    <button type="button" class="mobile-nav-item" id="mobile-nav-coach" onclick="toggleAICoach()">
       <span class="icon">🤖</span>
       <span>Coach AI</span>
     </button>
   </nav>
 
   <!-- BOTÓN FLOTANTE Y DRAWER DE KYNAP AI COACH -->
-  <button class="floating-ai-btn" onclick="toggleAICoach()" aria-label="Abrir asistente inteligente Kynap AI">
+  <button type="button" class="floating-ai-btn" onclick="toggleAICoach()" aria-label="Abrir asistente inteligente Kynap AI">
     🤖
   </button>
 
@@ -473,7 +463,7 @@
         <span style="font-size: 18px;">🤖</span>
         <strong style="font-family: var(--font-heading); font-size: 15px;">Kynap Coach AI</strong>
       </div>
-      <button class="btn-icon" onclick="toggleAICoach()" style="font-size: 16px;">✕</button>
+      <button type="button" class="btn-icon" onclick="toggleAICoach()" style="font-size: 16px;">✕</button>
     </div>
     <div class="chat-drawer-messages" id="aiCoachMessages">
       <div class="chat-bubble bot">
@@ -484,7 +474,7 @@
     <div class="chat-drawer-input">
       <input type="text" id="aiCoachInput" class="input-custom" placeholder="Escribe tu consulta fitness..."
         style="flex-grow: 1;">
-      <button class="btn-checkin" style="width: auto; padding: 0 16px;" onclick="sendAICoachMessage()">Enviar</button>
+      <button type="button" class="btn-checkin" style="width: auto; padding: 0 16px;" onclick="sendAICoachMessage()">Enviar</button>
     </div>
   </aside>
 
@@ -493,7 +483,7 @@
     <div class="modal-sheet" style="padding: 24px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="font-family: var(--font-heading); font-size: 20px;">Registrar Alimento</h2>
-        <button class="btn-icon" onclick="closeAddMealModal()">✕</button>
+        <button type="button" class="btn-icon" onclick="closeAddMealModal()">✕</button>
       </div>
       <form id="addMealForm" action="#" method="POST" onsubmit="submitAddMealForm(event)">
         <div class="form-group">
@@ -541,7 +531,7 @@
           style="background-color: rgba(0, 217, 255, 0.15); color: var(--accent-cyan);"></span>
         <h2 id="modalTitle" style="margin-top: 8px;"></h2>
         <p id="modalInstructionText" class="modal-instructions"></p>
-        <button class="btn-checkin" onclick="closeExerciseModal()"
+        <button type="button" class="btn-checkin" onclick="closeExerciseModal()"
           style="background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); margin-top: 12px;">
           Cerrar
         </button>
@@ -554,7 +544,7 @@
     <div class="modal-sheet" style="padding: 24px; text-align: center;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="font-family: var(--font-heading); font-size: 20px;">🧘 Mente Sana: Respiración Guiada</h2>
-        <button class="btn-icon" onclick="closeBreathingModal()">✕</button>
+        <button type="button" class="btn-icon" onclick="closeBreathingModal()">✕</button>
       </div>
       <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
         Reduce el estrés pre o post-entreno sincronizando el ritmo de tu respiración.
@@ -578,12 +568,12 @@
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="btn-checkin" id="breathingToggleBtn"
+        <button type="button" class="btn-checkin" id="breathingToggleBtn"
           style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); width: auto; padding: 10px 24px; font-weight: 700;"
           onclick="toggleBreathingExercise()">
           Comenzar
         </button>
-        <button class="btn-checkin"
+        <button type="button" class="btn-checkin"
           style="background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); width: auto; padding: 10px 20px;"
           onclick="closeBreathingModal()">
           Cerrar
@@ -597,7 +587,7 @@
     <div class="modal-sheet" style="padding: 24px; max-width: 480px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="font-family: var(--font-heading); font-size: 20px;">⚙️ Configuración del Atleta</h2>
-        <button class="btn-icon" onclick="closeConfigModal()">✕</button>
+        <button type="button" class="btn-icon" onclick="closeConfigModal()">✕</button>
       </div>
       <form id="profileConfigForm" action="#" method="POST" onsubmit="handleProfileUpdate(event)"
         style="display: flex; flex-direction: column; gap: 14px;">
@@ -645,7 +635,7 @@
           <span style="font-size: 22px;">🤖</span>
           <h2 style="font-family: var(--font-heading); font-size: 20px; margin: 0;">Diseñar Rutina con IA</h2>
         </div>
-        <button class="btn-icon" onclick="closeAiRoutineModal()">✕</button>
+        <button type="button" class="btn-icon" onclick="closeAiRoutineModal()">✕</button>
       </div>
       <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 18px;">
         Kynap AI analiza tu perfil biométrico y programa una periodización óptima usando el modelo <strong>Llama 3.3
@@ -707,7 +697,7 @@
     <div class="modal-sheet" style="padding: 26px; max-width: 480px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="font-family: var(--font-heading); font-size: 20px; margin: 0;">🔥 Tu Racha de Entrenamiento</h2>
-        <button class="btn-icon" onclick="closeStreakModal()">✕</button>
+        <button type="button" class="btn-icon" onclick="closeStreakModal()">✕</button>
       </div>
 
       <div class="streak-hero-card">
@@ -756,7 +746,7 @@
         </div>
       </div>
 
-      <button class="btn-checkin"
+      <button type="button" class="btn-checkin"
         style="margin-top: 18px; background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text);"
         onclick="closeStreakModal()">
         Cerrar
@@ -772,7 +762,7 @@
           <span style="font-size: 22px;">📊</span>
           <h2 style="font-family: var(--font-heading); font-size: 20px; margin: 0;">Evolución de Condición Física</h2>
         </div>
-        <button class="btn-icon" onclick="closeBiometricsModal()">✕</button>
+        <button type="button" class="btn-icon" onclick="closeBiometricsModal()">✕</button>
       </div>
 
       <!-- BANNER DINÁMICO DE POLÍTICA (MODO CORRECCIÓN 24H vs COOLDOWN 7 DÍAS) -->
