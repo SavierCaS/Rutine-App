@@ -2158,6 +2158,20 @@ async function syncInitialData() {
       AppState.user.token = s.token;
       localStorage.setItem('kynap_auth_token', s.token);
     }
+    // Hidratar biometría desde sesión PHP para que openConfigModal tenga datos inmediatos
+    if (s.biometrics) {
+      const b = s.biometrics;
+      if (b.peso) AppState.user.peso = b.peso;
+      if (b.altura) AppState.user.altura = b.altura;
+      if (b.edad) AppState.user.edad = b.edad;
+      if (b.sexo) AppState.user.sexo = b.sexo;
+      if (b.objetivo) AppState.user.objetivo = b.objetivo;
+      if (b.nivel_actividad) AppState.user.nivel_actividad = b.nivel_actividad;
+      if (b.agua) AppState.user.agua = b.agua;
+      if (b.condiciones) AppState.user.condiciones = b.condiciones;
+      if (b.alergias) AppState.user.alergias = b.alergias;
+      if (b.preferencia) AppState.user.preferencia = b.preferencia;
+    }
     updateSidebarUserProfile(AppState.user.name);
   }
 
@@ -2187,7 +2201,21 @@ async function syncInitialData() {
       }
       if (d.policy) AppState.biometrics.policy = d.policy;
       if (d.history) AppState.biometrics.history = d.history;
-      if (d.biometrics) AppState.biometrics.current = d.biometrics;
+      if (d.biometrics) {
+        AppState.biometrics.current = d.biometrics;
+        // Sincronizar también en AppState.user para que openConfigModal use datos frescos
+        const b = d.biometrics;
+        if (b.peso) AppState.user.peso = b.peso;
+        if (b.altura) AppState.user.altura = b.altura;
+        if (b.edad) AppState.user.edad = b.edad;
+        if (b.sexo) AppState.user.sexo = b.sexo;
+        if (b.objetivo) AppState.user.objetivo = b.objetivo;
+        if (b.nivel_actividad) AppState.user.nivel_actividad = b.nivel_actividad;
+        if (b.agua) AppState.user.agua = b.agua;
+        if (b.condiciones) AppState.user.condiciones = b.condiciones;
+        if (b.alergias) AppState.user.alergias = b.alergias;
+        if (b.preferencia) AppState.user.preferencia = b.preferencia;
+      }
 
       renderNutrition();
     }
@@ -2245,19 +2273,32 @@ window.openConfigModal = function (e) {
   const modal = document.getElementById('configModal');
   if (!modal) return;
 
+  // Los inputs ya tienen value="" pre-rellenado por PHP en el HTML.
+  // Solo actualizamos si AppState tiene datos más frescos (post-API sync).
   const n = document.getElementById('cfgNombre');
   const em = document.getElementById('cfgEmail');
   const p = document.getElementById('cfgPeso');
   const al = document.getElementById('cfgAltura');
   const ed = document.getElementById('cfgEdad');
   const ag = document.getElementById('cfgAgua');
+  const obj = document.getElementById('cfgObjetivo');
+  const act = document.getElementById('cfgNivelActividad');
 
-  if (n) n.value = AppState.user.name || 'Savier CaS';
-  if (em) em.value = AppState.user.email || 'atleta@kynap.com';
-  if (p) p.value = AppState.user.peso || 75;
-  if (al) al.value = AppState.user.altura || 175;
-  if (ed) ed.value = AppState.user.edad || 25;
-  if (ag) ag.value = (AppState.nutrition.targets.waterMl / 1000) || 2.5;
+  if (n && AppState.user.name) n.value = AppState.user.name;
+  if (em && AppState.user.email) em.value = AppState.user.email;
+  if (p && AppState.user.peso) p.value = AppState.user.peso;
+  if (al && AppState.user.altura) al.value = AppState.user.altura;
+  if (ed && AppState.user.edad) ed.value = AppState.user.edad;
+  if (ag) {
+    // Prioridad: agua en litros del user > waterMl de targets > valor actual del input
+    if (AppState.user.agua) {
+      ag.value = AppState.user.agua;
+    } else if (AppState.nutrition.targets.waterMl) {
+      ag.value = (AppState.nutrition.targets.waterMl / 1000).toFixed(1);
+    }
+  }
+  if (obj && AppState.user.objetivo) obj.value = AppState.user.objetivo;
+  if (act && AppState.user.nivel_actividad) act.value = AppState.user.nivel_actividad;
 
   modal.classList.add('open');
 };
@@ -2272,37 +2313,49 @@ window.handleProfileUpdate = async function (e) {
   if (e) e.preventDefault();
   const n = document.getElementById('cfgNombre')?.value.trim();
   const em = document.getElementById('cfgEmail')?.value.trim();
-  const p = parseFloat(document.getElementById('cfgPeso')?.value) || 75;
-  const al = parseFloat(document.getElementById('cfgAltura')?.value) || 175;
-  const ed = parseInt(document.getElementById('cfgEdad')?.value, 10) || 25;
-  const ag = parseFloat(document.getElementById('cfgAgua')?.value) || 2.5;
+  const p = parseFloat(document.getElementById('cfgPeso')?.value) || (AppState.user.peso || 75);
+  const al = parseFloat(document.getElementById('cfgAltura')?.value) || (AppState.user.altura || 175);
+  const ed = parseInt(document.getElementById('cfgEdad')?.value, 10) || (AppState.user.edad || 25);
+  const ag = parseFloat(document.getElementById('cfgAgua')?.value) || (AppState.user.agua || 3.0);
+  const obj = document.getElementById('cfgObjetivo')?.value || (AppState.user.objetivo || 'ganar_musculo');
+  const act = document.getElementById('cfgNivelActividad')?.value || (AppState.user.nivel_actividad || 'moderado');
 
   if (n) AppState.user.name = n;
   if (em) AppState.user.email = em;
   AppState.user.peso = p;
   AppState.user.altura = al;
   AppState.user.edad = ed;
+  AppState.user.agua = ag;
+  AppState.user.objetivo = obj;
+  AppState.user.nivel_actividad = act;
   AppState.nutrition.targets.waterMl = Math.round(ag * 1000);
 
-  // Mifflin-St Jeor: Recálculo inmediato de macros
-  const bmr = (10 * p) + (6.25 * al) - (5 * ed) + 5;
-  const tdee = Math.round(bmr * 1.55);
-  AppState.nutrition.targets.calories = tdee;
-  AppState.nutrition.targets.proteinG = Math.round(p * 2);
-  AppState.nutrition.targets.fatsG = Math.round(p * 0.9);
-  const remainingCal = tdee - (AppState.nutrition.targets.proteinG * 4) - (AppState.nutrition.targets.fatsG * 9);
+  // Recalcular macros en cliente con Mifflin-St Jeor
+  const isFemale = AppState.user.sexo === 'femenino';
+  const bmr = isFemale
+    ? (10 * p) + (6.25 * al) - (5 * ed) - 161
+    : (10 * p) + (6.25 * al) - (5 * ed) + 5;
+  const actFactors = { sedentario: 1.2, ligero: 1.375, moderado: 1.55, muy_activo: 1.725, activo: 1.725 };
+  const factor = actFactors[act] || 1.55;
+  const tdee = Math.round(bmr * factor);
+  const goalAdj = (obj === 'ganar_musculo') ? 350 : (obj === 'perder_grasa') ? -450 : 0;
+  AppState.nutrition.targets.calories = Math.max(1300, tdee + goalAdj);
+  const protMult = (obj === 'perder_grasa') ? 2.2 : (obj === 'ganar_musculo') ? 2.0 : 1.8;
+  AppState.nutrition.targets.proteinG = Math.round(p * protMult);
+  AppState.nutrition.targets.fatsG = Math.round((AppState.nutrition.targets.calories * 0.25) / 9);
+  const remainingCal = AppState.nutrition.targets.calories - (AppState.nutrition.targets.proteinG * 4) - (AppState.nutrition.targets.fatsG * 9);
   AppState.nutrition.targets.carbsG = Math.max(50, Math.round(remainingCal / 4));
 
   const sidebarName = document.getElementById('sidebarUserName');
-  if (sidebarName) sidebarName.textContent = n;
-  updateSidebarUserProfile(n);
+  if (sidebarName && n) sidebarName.textContent = n;
+  if (n) updateSidebarUserProfile(n);
   renderNutrition();
   closeConfigModal();
 
-  showToast('success', 'Perfil Actualizado', 'Metas nutricionales recalculadas con éxito.');
+  showToast('success', 'Perfil Actualizado', 'Guardando configuración...');
 
   try {
-    await ApiClient.request('controllers/api_profile.php', {
+    const res = await ApiClient.request('controllers/api_profile.php', {
       method: 'POST',
       body: JSON.stringify({
         nombre: n,
@@ -2310,11 +2363,28 @@ window.handleProfileUpdate = async function (e) {
         peso: p,
         altura: al,
         edad: ed,
-        agua: ag
+        agua: ag,
+        objetivo: obj,
+        nivel_actividad: act,
+        sexo: AppState.user.sexo || 'masculino',
+        condiciones: AppState.user.condiciones || '',
+        alergias: AppState.user.alergias || '',
+        preferencia: AppState.user.preferencia || 'omnivora'
       })
     });
+    if (res && res.success && res.data && res.data.targets) {
+      AppState.nutrition.targets = {
+        calories: res.data.targets.calories || AppState.nutrition.targets.calories,
+        proteinG: res.data.targets.proteinG || AppState.nutrition.targets.proteinG,
+        carbsG: res.data.targets.carbsG || AppState.nutrition.targets.carbsG,
+        fatsG: res.data.targets.fatsG || AppState.nutrition.targets.fatsG,
+        waterMl: res.data.targets.waterMl || AppState.nutrition.targets.waterMl
+      };
+      renderNutrition();
+      showToast('success', 'Perfil Guardado', 'Metas nutricionales actualizadas correctamente.');
+    }
   } catch (err) {
-    // Sincronización local
+    // Los cambios ya están en memoria; la sincronización con BD fallará silenciosamente
   }
 };
 

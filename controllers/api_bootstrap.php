@@ -43,6 +43,151 @@ if (!function_exists('kynap_env')) {
     }
 }
 
+// PHP 8 Compatibility Polyfills for PHP 7.3
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool {
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(string $haystack, string $needle): bool {
+        return $needle === '' || strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+if (!function_exists('str_ends_with')) {
+    function str_ends_with(string $haystack, string $needle): bool {
+        return $needle === '' || substr($haystack, -strlen($needle)) === $needle;
+    }
+}
+
+/**
+ * Calcula las metas de macronutrientes basadas en fórmulas científicas validadas.
+ */
+if (!function_exists('calculateNutritionTargets')) {
+    function calculateNutritionTargets(
+        $weightKg = 75.0,
+        float $heightCm = 175.0,
+        int $age = 25,
+        string $gender = 'masculino',
+        string $activity = 'moderado',
+        string $goal = 'ganar_musculo'
+    ): array {
+        if (is_array($weightKg)) {
+            $arr = $weightKg;
+            $weightKg = (float)($arr['peso'] ?? $arr['weightKg'] ?? $arr['weight'] ?? 75.0);
+            $heightCm = (float)($arr['altura'] ?? $arr['heightCm'] ?? $arr['height'] ?? 175.0);
+            $age = (int)($arr['edad'] ?? $arr['age'] ?? 25);
+            $gender = (string)($arr['sexo'] ?? $arr['gender'] ?? 'masculino');
+            $activity = (string)($arr['nivel_actividad'] ?? $arr['activity'] ?? 'moderado');
+            $goal = (string)($arr['objetivo'] ?? $arr['goal'] ?? 'ganar_musculo');
+        } else {
+            $weightKg = (float)$weightKg;
+        }
+
+        if ($weightKg <= 0 || $heightCm <= 0) {
+            return [
+                'calories' => 2200,
+                'proteinG' => 150,
+                'carbsG'   => 230,
+                'fatsG'    => 65,
+                'waterMl'  => 2500
+            ];
+        }
+
+        $age = $age > 0 ? $age : 25;
+
+        // Fórmula Mifflin-St Jeor para BMR
+        if (strtolower($gender) === 'femenino') {
+            $bmr = (10 * $weightKg) + (6.25 * $heightCm) - (5 * $age) - 161;
+        } else {
+            $bmr = (10 * $weightKg) + (6.25 * $heightCm) - (5 * $age) + 5;
+        }
+
+        $activityFactors = [
+            'sedentario' => 1.2,
+            'ligero'     => 1.375,
+            'moderado'   => 1.55,
+            'activo'     => 1.725,
+            'intenso'    => 1.9
+        ];
+        $factor = $activityFactors[$activity] ?? 1.55;
+        $tdee = $bmr * $factor;
+
+        switch ($goal) {
+            case 'bajar_peso':
+            case 'perder_peso':
+            case 'perder_grasa':
+                $targetCalories = round($tdee - 450);
+                $proteinMultiplier = 2.2;
+                $fatsPercentage = 0.25;
+                break;
+            case 'ganar_musculo':
+                $targetCalories = round($tdee + 350);
+                $proteinMultiplier = 2.0;
+                $fatsPercentage = 0.25;
+                break;
+            case 'mantener':
+            case 'mantener_peso':
+            default:
+                $targetCalories = round($tdee);
+                $proteinMultiplier = 1.8;
+                $fatsPercentage = 0.28;
+                break;
+        }
+
+        $targetCalories = max(1300, (int)$targetCalories);
+        $proteinG = round($weightKg * $proteinMultiplier);
+        $fatsG = round(($targetCalories * $fatsPercentage) / 9);
+        $caloriesFromProteinAndFats = ($proteinG * 4) + ($fatsG * 9);
+        $carbsCalories = max(0, $targetCalories - $caloriesFromProteinAndFats);
+        $carbsG = round($carbsCalories / 4);
+
+        $waterTargetMl = max(2000, min(4500, (int)round($weightKg * 35)));
+
+        return [
+            'calories' => (int)$targetCalories,
+            'proteinG' => (int)$proteinG,
+            'carbsG'   => (int)$carbsG,
+            'fatsG'    => (int)$fatsG,
+            'waterMl'  => (int)$waterTargetMl
+        ];
+    }
+}
+
+/**
+ * Persiste las metas nutricionales calculadas en la base de datos (tabla nutrition_goals).
+ */
+if (!function_exists('saveNutritionGoals')) {
+    function saveNutritionGoals(?mysqli $conn, int $userId, array $targets): bool {
+        if (!$conn || $userId <= 0) {
+            return false;
+        }
+        $calories = (int)($targets['calories'] ?? $targets['daily_calories'] ?? 2200);
+        $protein  = (int)($targets['proteinG'] ?? $targets['protein_g'] ?? 150);
+        $carbs    = (int)($targets['carbsG'] ?? $targets['carbs_g'] ?? 230);
+        $fats     = (int)($targets['fatsG'] ?? $targets['fats_g'] ?? 65);
+        $water    = (int)($targets['waterMl'] ?? $targets['water_ml'] ?? 2500);
+
+        $stmt = $conn->prepare("INSERT INTO nutrition_goals (user_id, daily_calories, protein_g, carbs_g, fats_g, water_ml, is_active, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, 1, NOW()) 
+            ON DUPLICATE KEY UPDATE 
+            daily_calories = VALUES(daily_calories), 
+            protein_g = VALUES(protein_g), 
+            carbs_g = VALUES(carbs_g), 
+            fats_g = VALUES(fats_g), 
+            water_ml = VALUES(water_ml), 
+            is_active = 1, 
+            updated_at = NOW()");
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param("iiiiii", $userId, $calories, $protein, $carbs, $fats, $water);
+        $res = $stmt->execute();
+        $stmt->close();
+        return (bool)$res;
+    }
+}
+
 // 2. Cabeceras HTTP estándar y CORS seguro
 header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: *');
@@ -525,20 +670,392 @@ function calculateUserStreak(?mysqli $conn, int $userId): array {
 }
 
 /**
- * Evalúa la política de periodicidad de actualización física (7 días vs 24 horas de gracia).
+ * Asegura que el usuario tenga una rutina activa personalizada persistida en la base de datos.
+ * Genera la rutina basada en los datos específicos de su encuesta (objetivo, condiciones, actividad).
+ *
+ * @param mysqli|null $conn
+ * @param int $userId
+ * @return array|null
+ */
+function ensureUserActiveRoutine(?mysqli $conn, int $userId): ?array {
+    if (!$conn || $userId <= 0) return null;
+
+    // 1. Verificar si ya existe una rutina activa
+    $checkStmt = $conn->prepare("SELECT id, name, description FROM routines WHERE user_id = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
+    if ($checkStmt) {
+        $checkStmt->bind_param("i", $userId);
+        $checkStmt->execute();
+        $res = $checkStmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            $checkStmt->close();
+            return [
+                'id' => (int)$row['id'],
+                'name' => $row['name'],
+                'description' => $row['description']
+            ];
+        }
+        $checkStmt->close();
+    }
+
+    // 2. Obtener datos de la encuesta del atleta
+    $bio = [
+        'objetivo' => 'ganar_musculo',
+        'condiciones' => 'ninguna',
+        'nivel_actividad' => 'moderado',
+        'preferencia' => 'omnivora'
+    ];
+    $bStmt = $conn->prepare("SELECT objetivo, condiciones, nivel_actividad, preferencia FROM user_biometrics WHERE user_id = ? LIMIT 1");
+    if ($bStmt) {
+        $bStmt->bind_param("i", $userId);
+        $bStmt->execute();
+        $bRes = $bStmt->get_result();
+        if ($bRow = $bRes->fetch_assoc()) {
+            if (!empty($bRow['objetivo'])) $bio['objetivo'] = $bRow['objetivo'];
+            if (!empty($bRow['condiciones'])) $bio['condiciones'] = $bRow['condiciones'];
+            if (!empty($bRow['nivel_actividad'])) $bio['nivel_actividad'] = $bRow['nivel_actividad'];
+            if (!empty($bRow['preferencia'])) $bio['preferencia'] = $bRow['preferencia'];
+        }
+        $bStmt->close();
+    }
+
+    // 3. Diseñar plan personalizado
+    $obj = $bio['objetivo'];
+    $cond = strtolower($bio['condiciones']);
+    $hasKneeIssue = str_contains($cond, 'rodilla');
+    $hasBackIssue = str_contains($cond, 'lumbar') || str_contains($cond, 'espalda');
+
+    $routineName = "Kynap Hipertrofia & Fuerza (Plan Personalizado)";
+    $routineDesc = "Periodización científica optimizada para desarrollo muscular y sobrecarga progresiva.";
+
+    if ($obj === 'perder_grasa') {
+        $routineName = "Kynap Definición Metabólica (Plan Personalizado)";
+        $routineDesc = "Periodización de alta densidad para máxima preservación de masa muscular y déficit calórico.";
+    } elseif ($obj === 'recomposicion') {
+        $routineName = "Kynap Recomposición Muscular (Plan Personalizado)";
+        $routineDesc = "Plan equilibrado de tensión mecánica y acondicionamiento para quemar grasa ganando fuerza.";
+    } elseif ($obj === 'mantener') {
+        $routineName = "Kynap Fuerza Funcional & Salud (Plan Personalizado)";
+        $routineDesc = "Programa integral de longevidad motora, fuerza isométrica y estabilidad articular.";
+    }
+
+    if ($hasKneeIssue) {
+        $routineDesc .= " Adaptado para protección articular de rodillas.";
+    }
+    if ($hasBackIssue) {
+        $routineDesc .= " Adaptado para protección y fortalecimiento lumbar.";
+    }
+
+    // Estructura de días y ejercicios
+    $daysConfig = [
+        [
+            'day_key' => 'lunes',
+            'day_name' => 'Lunes',
+            'focus' => ($hasKneeIssue ? 'Tren Inferior (Bajo Impacto Articular)' : 'Pierna & Glúteos (Fuerza Base)'),
+            'day_order' => 1,
+            'is_rest_day' => 0,
+            'exercises' => $hasKneeIssue
+                ? [
+                    ['slug' => 'puente-de-gluteos', 'sets' => 4, 'reps' => '12-15', 'rpe' => 8.0, 'rest' => 75],
+                    ['slug' => 'elevacion-de-piernas-para-gluteos', 'sets' => 3, 'reps' => '15', 'rpe' => 7.5, 'rest' => 60],
+                    ['slug' => 'plancha-tradicional', 'sets' => 3, 'reps' => '45s', 'rpe' => 8.0, 'rest' => 60]
+                ]
+                : [
+                    ['slug' => 'sentadillas', 'sets' => 4, 'reps' => '10-12', 'rpe' => 8.0, 'rest' => 90],
+                    ['slug' => 'puente-de-gluteos', 'sets' => 3, 'reps' => '12-15', 'rpe' => 8.0, 'rest' => 75],
+                    ['slug' => 'estocada-hacia-atras', 'sets' => 3, 'reps' => '10-12', 'rpe' => 8.0, 'rest' => 75]
+                ]
+        ],
+        [
+            'day_key' => 'martes',
+            'day_name' => 'Martes',
+            'focus' => 'Torso Superior & Core',
+            'day_order' => 2,
+            'is_rest_day' => 0,
+            'exercises' => [
+                ['slug' => 'flexiones-con-inclinacion', 'sets' => 4, 'reps' => '10-12', 'rpe' => 8.0, 'rest' => 90],
+                ['slug' => 'fondos-de-triceps-en-silla', 'sets' => 3, 'reps' => '12', 'rpe' => 8.0, 'rest' => 75],
+                ['slug' => 'crunch-de-bicicleta', 'sets' => 3, 'reps' => '20', 'rpe' => 8.0, 'rest' => 60]
+            ]
+        ],
+        [
+            'day_key' => 'miercoles',
+            'day_name' => 'Miércoles',
+            'focus' => 'Descanso Activo & Movilidad',
+            'day_order' => 3,
+            'is_rest_day' => 1,
+            'exercises' => []
+        ],
+        [
+            'day_key' => 'jueves',
+            'day_name' => 'Jueves',
+            'focus' => ($hasBackIssue ? 'Estabilidad Lumbar & Cadena Posterior' : 'Potencia & Glúteos'),
+            'day_order' => 4,
+            'is_rest_day' => 0,
+            'exercises' => [
+                ['slug' => 'puente-de-gluteos', 'sets' => 4, 'reps' => '12', 'rpe' => 8.5, 'rest' => 75],
+                ['slug' => 'step-en-silla', 'sets' => 3, 'reps' => '10-12', 'rpe' => 8.0, 'rest' => 75],
+                ['slug' => 'plancha-tradicional', 'sets' => 3, 'reps' => '45s', 'rpe' => 8.0, 'rest' => 60]
+            ]
+        ],
+        [
+            'day_key' => 'viernes',
+            'day_name' => 'Viernes',
+            'focus' => 'Full Body Funcional & Resistencia',
+            'day_order' => 5,
+            'is_rest_day' => 0,
+            'exercises' => [
+                ['slug' => 'burpees', 'sets' => 4, 'reps' => '10', 'rpe' => 8.5, 'rest' => 90],
+                ['slug' => 'crunch-abdominal', 'sets' => 3, 'reps' => '15-20', 'rpe' => 8.0, 'rest' => 60],
+                ['slug' => 'elevacion-de-rodillas', 'sets' => 3, 'reps' => '30s', 'rpe' => 8.0, 'rest' => 60]
+            ]
+        ],
+        [
+            'day_key' => 'sabado',
+            'day_name' => 'Sábado',
+            'focus' => 'Recuperación Muscular & Hidratación',
+            'day_order' => 6,
+            'is_rest_day' => 1,
+            'exercises' => []
+        ],
+        [
+            'day_key' => 'domingo',
+            'day_name' => 'Domingo',
+            'focus' => 'Descanso Total & Preparación Semanal',
+            'day_order' => 7,
+            'is_rest_day' => 1,
+            'exercises' => []
+        ]
+    ];
+
+    $conn->begin_transaction();
+    try {
+        $deact = $conn->prepare("UPDATE routines SET is_active = 0 WHERE user_id = ?");
+        $deact->bind_param("i", $userId);
+        $deact->execute();
+        $deact->close();
+
+        $insR = $conn->prepare("INSERT INTO routines (user_id, name, description, is_active) VALUES (?, ?, ?, 1)");
+        $insR->bind_param("iss", $userId, $routineName, $routineDesc);
+        $insR->execute();
+        $routineId = (int)$insR->insert_id;
+        $insR->close();
+
+        $insDay = $conn->prepare("INSERT INTO routine_days (routine_id, day_name, focus, day_key, day_order, is_rest_day) VALUES (?, ?, ?, ?, ?, ?)");
+        $insEx = $conn->prepare("INSERT INTO routine_exercises (routine_day_id, exercise_id, order_index, target_sets, target_reps, target_rpe, rest_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+        // Mapa de slug a id de ejercicios
+        $exMap = [];
+        $exRes = $conn->query("SELECT id, slug FROM exercises");
+        if ($exRes) {
+            while ($erow = $exRes->fetch_assoc()) {
+                $exMap[$erow['slug']] = (int)$erow['id'];
+            }
+        }
+
+        foreach ($daysConfig as $day) {
+            $insDay->bind_param("isssii", $routineId, $day['day_name'], $day['focus'], $day['day_key'], $day['day_order'], $day['is_rest_day']);
+            $insDay->execute();
+            $dayId = (int)$insDay->insert_id;
+
+            if (empty($day['is_rest_day']) && !empty($day['exercises'])) {
+                $orderIdx = 1;
+                foreach ($day['exercises'] as $ex) {
+                    $slug = $ex['slug'];
+                    $exerciseId = $exMap[$slug] ?? null;
+                    if (!$exerciseId) {
+                        foreach ($exMap as $s => $id) {
+                            if (str_contains($s, $slug) || str_contains($slug, $s)) {
+                                $exerciseId = $id;
+                                break;
+                            }
+                        }
+                    }
+                    if (!$exerciseId && !empty($exMap)) {
+                        $exerciseId = reset($exMap);
+                    }
+                    if ($exerciseId) {
+                        $rpeVal = (float)$ex['rpe'];
+                        $insEx->bind_param("iiiisdi", $dayId, $exerciseId, $orderIdx, $ex['sets'], $ex['reps'], $rpeVal, $ex['rest']);
+                        $insEx->execute();
+                        $orderIdx++;
+                    }
+                }
+            }
+        }
+
+        $insDay->close();
+        $insEx->close();
+        $conn->commit();
+
+        return [
+            'id' => $routineId,
+            'name' => $routineName,
+            'description' => $routineDesc
+        ];
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("[ENSURE ROUTINE ERROR]: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Verifica si el usuario ha completado el 100% de los entrenamientos de su rutina asignada.
+ * Requerimiento 3: Restricción estricta de cambios hasta completar la rutina.
+ *
+ * @param mysqli|null $conn
+ * @param int $userId
+ * @return array
+ */
+function checkRoutinePlanCompletion(?mysqli $conn, int $userId): array {
+    $result = [
+        'isCompleted'       => false,
+        'hasActiveRoutine'  => false,
+        'routineId'         => null,
+        'routineName'       => 'Rutina Asignada',
+        'totalDays'         => 4,
+        'completedCount'    => 0,
+        'completedDays'     => [],
+        'pendingDays'       => ['Lunes', 'Martes', 'Jueves', 'Viernes'],
+        'progressPct'       => 0,
+        'requiresUpdate'    => false,
+        'message'           => ''
+    ];
+
+    if (!$conn || $userId <= 0) {
+        return $result;
+    }
+
+    $now = new DateTime();
+    $week = (int)$now->format("W");
+    $year = (int)$now->format("Y");
+
+    // 1. Días completados en routine_check_ins
+    $completedMap = [];
+    $stmtC = $conn->prepare("SELECT day_id FROM routine_check_ins WHERE user_id = ? AND week_number = ? AND year = ? AND is_completed = 1");
+    if ($stmtC) {
+        $stmtC->bind_param("iii", $userId, $week, $year);
+        $stmtC->execute();
+        $rC = $stmtC->get_result();
+        while ($row = $rC->fetch_assoc()) {
+            $completedMap[strtolower($row['day_id'])] = true;
+        }
+        $stmtC->close();
+    }
+
+    // 2. Rutina activa del atleta
+    $routineStmt = $conn->prepare("SELECT id, name FROM routines WHERE user_id = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
+    if ($routineStmt) {
+        $routineStmt->bind_param("i", $userId);
+        $routineStmt->execute();
+        $rRes = $routineStmt->get_result();
+        if ($rotRow = $rRes->fetch_assoc()) {
+            $result['hasActiveRoutine'] = true;
+            $result['routineId'] = (int)$rotRow['id'];
+            $result['routineName'] = $rotRow['name'];
+
+            $dayStmt = $conn->prepare("SELECT day_name, day_key, is_rest_day FROM routine_days WHERE routine_id = ? ORDER BY day_order ASC");
+            if ($dayStmt) {
+                $dayStmt->bind_param("i", $result['routineId']);
+                $dayStmt->execute();
+                $dRes = $dayStmt->get_result();
+                $plannedDays = [];
+                while ($dRow = $dRes->fetch_assoc()) {
+                    if (empty($dRow['is_rest_day'])) {
+                        $plannedDays[] = [
+                            'key'  => strtolower($dRow['day_key']),
+                            'name' => $dRow['day_name']
+                        ];
+                    }
+                }
+                $dayStmt->close();
+
+                if (!empty($plannedDays)) {
+                    $result['totalDays'] = count($plannedDays);
+                    $pendingNames = [];
+                    $compCount = 0;
+                    $compDays = [];
+
+                    foreach ($plannedDays as $pd) {
+                        if (isset($completedMap[$pd['key']])) {
+                            $compCount++;
+                            $compDays[] = $pd['key'];
+                        } else {
+                            $pendingNames[] = $pd['name'];
+                        }
+                    }
+
+                    $result['completedCount'] = $compCount;
+                    $result['completedDays'] = $compDays;
+                    $result['pendingDays'] = $pendingNames;
+                    $result['progressPct'] = $result['totalDays'] > 0 ? (int)round(($compCount / $result['totalDays']) * 100) : 0;
+                    $result['isCompleted'] = ($compCount >= $result['totalDays'] && $result['totalDays'] > 0);
+                }
+            }
+        }
+        $routineStmt->close();
+    }
+
+    // Si aún no tiene rutina persistida en routines, usar los 4 días estándar de la periodización
+    if (!$result['hasActiveRoutine']) {
+        $standardDays = [
+            'lunes'   => 'Lunes',
+            'martes'  => 'Martes',
+            'jueves'  => 'Jueves',
+            'viernes' => 'Viernes'
+        ];
+        $result['totalDays'] = count($standardDays);
+        $pending = [];
+        $compCount = 0;
+        $compDays = [];
+        foreach ($standardDays as $k => $n) {
+            if (isset($completedMap[$k])) {
+                $compCount++;
+                $compDays[] = $k;
+            } else {
+                $pending[] = $n;
+            }
+        }
+        $result['completedCount'] = $compCount;
+        $result['completedDays'] = $compDays;
+        $result['pendingDays'] = $pending;
+        $result['progressPct'] = (int)round(($compCount / $result['totalDays']) * 100);
+        $result['isCompleted'] = ($compCount >= $result['totalDays']);
+    }
+
+    if ($result['isCompleted']) {
+        $result['requiresUpdate'] = true;
+        $result['message'] = "¡Enhorabuena! Has completado el 100% de los entrenamientos de tu rutina ({$result['completedCount']}/{$result['totalDays']} días). Para continuar, es momento de actualizar tu información física y evaluar tu progreso con IA.";
+    } else {
+        $pendingStr = implode(', ', $result['pendingDays']);
+        $result['message'] = "Actualización bloqueada: Para garantizar la efectividad de tu plan, solo puedes actualizar tu información personal después de completar tu rutina asignada ({$result['completedCount']}/{$result['totalDays']} días completados). Días pendientes: {$pendingStr}.";
+    }
+
+    return $result;
+}
+
+/**
+ * Evalúa la política de actualización de información y biometría.
+ * REQUERIMIENTO 3:
+ * - Restringe cambios a la información del usuario hasta que la rutina asignada esté 100% completada.
+ * - Ventana de corrección de 24 horas para subsanar errores tipográficos recientes.
  *
  * @param mysqli|null $conn
  * @param int $userId
  * @return array
  */
 function evaluateBiometricsPolicy(?mysqli $conn, int $userId): array {
+    $routineStatus = checkRoutinePlanCompletion($conn, $userId);
+
     $policy = [
-        'canUpdate'                 => true,
-        'mode'                      => 'create', // 'create' | 'correction' | 'locked'
-        'message'                   => 'Puedes registrar tu actualización de condición física.',
+        'canUpdate'                 => false,
+        'mode'                      => 'locked', // 'locked' | 'routine_completed' | 'correction' | 'initial'
+        'reason'                    => 'routine_pending',
+        'message'                   => $routineStatus['message'],
+        'routineStatus'             => $routineStatus,
         'hoursRemainingCorrection'  => null,
-        'daysRemainingNextUpdate'   => 0,
-        'nextAllowedDate'           => date('Y-m-d'),
+        'daysRemainingNextUpdate'   => max(0, $routineStatus['totalDays'] - $routineStatus['completedCount']),
+        'nextAllowedDate'           => null,
         'lastRecordId'              => null,
         'lastRecordDate'            => null
     ];
@@ -547,6 +1064,7 @@ function evaluateBiometricsPolicy(?mysqli $conn, int $userId): array {
         return $policy;
     }
 
+    // Comprobar último registro en historial
     $stmt = $conn->prepare("SELECT id, created_at FROM user_biometrics_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
     if ($stmt) {
         $stmt->bind_param("i", $userId);
@@ -559,40 +1077,206 @@ function evaluateBiometricsPolicy(?mysqli $conn, int $userId): array {
             $createdTimestamp = strtotime($row['created_at']);
             $secondsElapsed = time() - $createdTimestamp;
             $hoursElapsed = $secondsElapsed / 3600.0;
-            $daysElapsed = floor($secondsElapsed / 86400.0);
 
+            // Ventana de corrección de 24h para errores tipográficos
             if ($hoursElapsed <= 24.0) {
-                // Dentro del margen de corrección de 24 horas
                 $remainingHours = max(0.1, round(24.0 - $hoursElapsed, 1));
                 $policy['canUpdate'] = true;
                 $policy['mode'] = 'correction';
+                $policy['reason'] = 'correction_window';
                 $policy['hoursRemainingCorrection'] = $remainingHours;
-                $policy['daysRemainingNextUpdate'] = 0;
-                $policy['nextAllowedDate'] = date('Y-m-d', strtotime('+7 days', $createdTimestamp));
-                $policy['message'] = "Modo corrección activo: Tienes {$remainingHours} horas restantes para rectificar o editar tu registro más reciente sin esperar los 7 días.";
-            } elseif ($daysElapsed < 7) {
-                // Bloqueado: aún no pasan los 7 días y ya expiró la ventana de corrección
-                $daysRemaining = (int)(7 - $daysElapsed);
-                $nextDate = date('Y-m-d', strtotime('+7 days', $createdTimestamp));
-                $policy['canUpdate'] = false;
-                $policy['mode'] = 'locked';
-                $policy['hoursRemainingCorrection'] = 0;
-                $policy['daysRemainingNextUpdate'] = $daysRemaining;
-                $policy['nextAllowedDate'] = $nextDate;
-                $policy['message'] = "Actualización bloqueada: Para garantizar un seguimiento fisiológico real, las mediciones se realizan cada 7 días. Próxima actualización disponible en {$daysRemaining} día(s) ({$nextDate}).";
-            } else {
-                // Han pasado 7 días o más: listo para nuevo registro semanal
-                $policy['canUpdate'] = true;
-                $policy['mode'] = 'create';
-                $policy['hoursRemainingCorrection'] = null;
-                $policy['daysRemainingNextUpdate'] = 0;
-                $policy['nextAllowedDate'] = date('Y-m-d');
-                $policy['message'] = "¡Periodo semanal cumplido! Ya puedes ingresar tu nueva medición de condición física.";
+                $policy['message'] = "Modo corrección activo: Cuentas con {$remainingHours} horas restantes para rectificar o corregir errores en tu registro más reciente.";
+                $stmt->close();
+                return $policy;
             }
         }
         $stmt->close();
     }
 
+    // Si la rutina está completada al 100%, se habilita obligatoriamente la actualización
+    if ($routineStatus['isCompleted']) {
+        $policy['canUpdate'] = true;
+        $policy['mode'] = 'routine_completed';
+        $policy['reason'] = 'routine_finished';
+        $policy['message'] = $routineStatus['message'];
+        return $policy;
+    }
+
+    // Si no tiene ningún registro en el historial de evolución (es nuevo)
+    if (empty($policy['lastRecordId'])) {
+        // Puede ingresar su medición inicial de partida o bloquearse según la rutina
+        if ($routineStatus['completedCount'] == 0) {
+            $policy['canUpdate'] = false;
+            $policy['mode'] = 'locked';
+            $policy['reason'] = 'routine_pending';
+            $policy['message'] = "Tu rutina ha sido programada. Completa todos tus días de entrenamiento ({$routineStatus['totalDays']} días) para desbloquear la actualización de condición física y recibir la evaluación de tu progreso.";
+        }
+    }
+
     return $policy;
 }
+
+/**
+ * Compara los datos actuales con los datos previos del usuario y genera un análisis de progreso
+ * detallado con recomendaciones personalizadas de la IA.
+ * REQUERIMIENTO 3.
+ *
+ * @param array $previousBio
+ * @param array $newBio
+ * @param array $userProfile
+ * @return array
+ */
+function evaluateUserProgress(array $previousBio, array $newBio, array $userProfile = []): array {
+    $prevPeso = (float)($previousBio['peso'] ?? 75.0);
+    $newPeso  = (float)($newBio['peso'] ?? 75.0);
+    $deltaPeso = round($newPeso - $prevPeso, 2);
+
+    $altCm = (float)($newBio['altura'] ?? $previousBio['altura'] ?? 175.0);
+    $altM  = $altCm / 100.0;
+    $prevBmi = ($altM > 0) ? round($prevPeso / ($altM * $altM), 1) : 24.5;
+    $newBmi  = ($altM > 0) ? round($newPeso / ($altM * $altM), 1) : 24.5;
+    $deltaBmi = round($newBmi - $prevBmi, 1);
+
+    $prevCintura = isset($previousBio['cintura_cm']) && is_numeric($previousBio['cintura_cm']) ? (float)$previousBio['cintura_cm'] : null;
+    $newCintura  = isset($newBio['cintura_cm']) && is_numeric($newBio['cintura_cm']) ? (float)$newBio['cintura_cm'] : null;
+    $deltaCintura = ($prevCintura !== null && $newCintura !== null) ? round($newCintura - $prevCintura, 1) : null;
+
+    $prevBrazo = isset($previousBio['brazo_cm']) && is_numeric($previousBio['brazo_cm']) ? (float)$previousBio['brazo_cm'] : null;
+    $newBrazo  = isset($newBio['brazo_cm']) && is_numeric($newBio['brazo_cm']) ? (float)$newBio['brazo_cm'] : null;
+    $deltaBrazo = ($prevBrazo !== null && $newBrazo !== null) ? round($newBrazo - $prevBrazo, 1) : null;
+
+    $prevPecho = isset($previousBio['pecho_cm']) && is_numeric($previousBio['pecho_cm']) ? (float)$previousBio['pecho_cm'] : null;
+    $newPecho  = isset($newBio['pecho_cm']) && is_numeric($newBio['pecho_cm']) ? (float)$newBio['pecho_cm'] : null;
+    $deltaPecho = ($prevPecho !== null && $newPecho !== null) ? round($newPecho - $prevPecho, 1) : null;
+
+    $prevGrasa = isset($previousBio['grasa_corporal']) && is_numeric($previousBio['grasa_corporal']) ? (float)$previousBio['grasa_corporal'] : null;
+    $newGrasa  = isset($newBio['grasa_corporal']) && is_numeric($newBio['grasa_corporal']) ? (float)$newBio['grasa_corporal'] : null;
+    $deltaGrasa = ($prevGrasa !== null && $newGrasa !== null) ? round($newGrasa - $prevGrasa, 1) : null;
+
+    $objetivo = strtolower(trim((string)($newBio['objetivo'] ?? $previousBio['objetivo'] ?? 'ganar_musculo')));
+    $nombreAtleta = $userProfile['nombre'] ?? 'Atleta Kynap';
+
+    $isImprovement = false;
+    $score = 0; // Puntos positivos
+    $explanations = [];
+    $areasAttention = [];
+
+    // Evaluación según el objetivo fisiológico
+    switch ($objetivo) {
+        case 'perder_grasa':
+        case 'perder_peso':
+        case 'bajar_peso':
+            if ($deltaPeso < -0.3) {
+                $isImprovement = true;
+                $score += 3;
+                $explanations[] = "Has logrado una reducción efectiva de " . abs($deltaPeso) . " kg de peso corporal, alineado directamente con tu meta de déficit calórico.";
+            } elseif ($deltaPeso > 0.4) {
+                $areasAttention[] = "Se observa un incremento de {$deltaPeso} kg. Para pérdida de grasa, revisa tu balance calórico diario y evita picoteos entre comidas.";
+            }
+
+            if ($deltaCintura !== null && $deltaCintura < 0) {
+                $isImprovement = true;
+                $score += 2;
+                $explanations[] = "Reducción de " . abs($deltaCintura) . " cm en perímetro de cintura, confirmando pérdida de grasa visceral y reducción abdominal.";
+            } elseif ($deltaCintura !== null && $deltaCintura > 0.5) {
+                $areasAttention[] = "La circunferencia de cintura aumentó en {$deltaCintura} cm. Podría indicar retención de líquidos o ingesta excesiva de carbohidratos refinados o sodio.";
+            }
+
+            if ($deltaGrasa !== null && $deltaGrasa < 0) {
+                $isImprovement = true;
+                $score += 2;
+                $explanations[] = "Tu porcentaje de grasa corporal se redujo en " . abs($deltaGrasa) . "%, demostrando retención de masa magra durante la definición.";
+            }
+            break;
+
+        case 'ganar_musculo':
+        case 'hipertrofia':
+            if ($deltaPeso > 0.2 && $deltaPeso <= 1.2) {
+                $isImprovement = true;
+                $score += 3;
+                $explanations[] = "Aumento controlado de +{$deltaPeso} kg en peso corporal, compatible con ganancia muscular magra y mínima acumulación de grasa.";
+            } elseif ($deltaPeso < -0.3) {
+                $areasAttention[] = "Has perdido " . abs($deltaPeso) . " kg de peso corporal. En fase de hipertrofia necesitas asegurar un superávit calórico de 300-400 kcal diarias.";
+            }
+
+            if ($deltaBrazo !== null && $deltaBrazo > 0) {
+                $isImprovement = true;
+                $score += 2;
+                $explanations[] = "Incremento de +{$deltaBrazo} cm en perímetro de brazo, señal de hipertrofia activa en bíceps y tríceps.";
+            }
+            if ($deltaPecho !== null && $deltaPecho > 0) {
+                $isImprovement = true;
+                $score += 2;
+                $explanations[] = "Expansión torácica de +{$deltaPecho} cm en perímetro de pecho, reflejando desarrollo en pectorales y dorsales.";
+            }
+            break;
+
+        case 'recomposicion':
+            if ($deltaCintura !== null && $deltaCintura < 0) {
+                $isImprovement = true;
+                $score += 3;
+                $explanations[] = "Reducción de " . abs($deltaCintura) . " cm en cintura mientras mantienes tu peso estable, signo definitivo de recomposición corporal.";
+            }
+            if (($deltaBrazo !== null && $deltaBrazo > 0) || ($deltaPecho !== null && $deltaPecho > 0)) {
+                $isImprovement = true;
+                $score += 2;
+                $explanations[] = "Aumento en medidas de torso superior combinado con estabilidad de peso general.";
+            }
+            break;
+
+        case 'mantener':
+        case 'mantener_peso':
+        default:
+            if (abs($deltaPeso) <= 0.8) {
+                $isImprovement = true;
+                $score += 3;
+                $explanations[] = "Excelente estabilidad ponderal con variación mínima de " . abs($deltaPeso) . " kg, cumpliendo tu objetivo de mantenimiento físico.";
+            } else {
+                $areasAttention[] = "Variación de " . abs($deltaPeso) . " kg detectada. Para mantenimiento, ajusta tus porciones energéticas.";
+            }
+            break;
+    }
+
+    if ($score >= 2 || (empty($areasAttention) && !empty($explanations))) {
+        $isImprovement = true;
+    }
+
+    $analysisType = $isImprovement ? 'mejora' : 'atencion';
+    $title = $isImprovement ? "🎉 ¡Excelente Progreso Detectado!" : "📊 Evaluación de Rendimiento: Áreas de Atención";
+
+    $recommendationsList = [];
+    if ($isImprovement) {
+        $recommendationsList[] = "Continúa con la sobrecarga progresiva en tu siguiente rutina: intenta añadir 1-2 repeticiones o un incremento de 1.25 a 2.5 kg en tus ejercicios básicos.";
+        $recommendationsList[] = "Mantén la distribución de macronutrientes actual y prioriza 7-8 horas de sueño profundo para permitir la regeneración neuromuscular.";
+        $recommendationsList[] = "Conserva la meta de hidratación diaria calculada para tu biometría ({$newBio['peso']} kg × 35 ml).";
+    } else {
+        $recommendationsList[] = "Revisión Nutricional: Asegúrate de registrar fielmente tus comidas en el módulo de Nutrición & Macros. La inconsistencia en fines de semana suele diluir el déficit o superávit semanal.";
+        $recommendationsList[] = "Intensidad de Entrenamiento: Exige un RPE de 8.0 a 8.5 en tus series de trabajo. No dejes más de 2 repeticiones en reserva (RIR 2) para estimular adaptaciones reales.";
+        $recommendationsList[] = "Aporte Proteico: Asegura al menos 2.0 g de proteína por kg de peso corporal distribuidos en 3-4 ingestas principales.";
+        $recommendationsList[] = "Descanso y Cortisol: El estrés elevado y la falta de descanso limitan la recuperación y promueven la retención de agua extracelular.";
+    }
+
+    $summaryText = $isImprovement
+        ? "¡Gran trabajo, {$nombreAtleta}! Tu constancia al completar todos los entrenamientos de tu rutina ha producido adaptaciones medibles y favorables:\n- " . implode("\n- ", $explanations)
+        : "Hola {$nombreAtleta}, tras completar tu ciclo de entrenamiento hemos analizado tus mediciones y detectamos que tu evolución física se encuentra en una meseta:\n- " . implode("\n- ", !empty($areasAttention) ? $areasAttention : ["No se apreciaron cambios significativos respecto a la medición anterior."]);
+
+    return [
+        'type'                  => $analysisType,
+        'isImprovement'         => $isImprovement,
+        'title'                 => $title,
+        'summary'               => $summaryText,
+        'explanations'          => $explanations,
+        'areasAttention'        => $areasAttention,
+        'recommendations'       => $recommendationsList,
+        'metricsComparison'     => [
+            'peso'    => ['prev' => $prevPeso, 'current' => $newPeso, 'delta' => $deltaPeso, 'unit' => 'kg'],
+            'bmi'     => ['prev' => $prevBmi, 'current' => $newBmi, 'delta' => $deltaBmi, 'unit' => 'kg/m²'],
+            'cintura' => ['prev' => $prevCintura, 'current' => $newCintura, 'delta' => $deltaCintura, 'unit' => 'cm'],
+            'brazo'   => ['prev' => $prevBrazo, 'current' => $newBrazo, 'delta' => $deltaBrazo, 'unit' => 'cm'],
+            'pecho'   => ['prev' => $prevPecho, 'current' => $newPecho, 'delta' => $deltaPecho, 'unit' => 'cm'],
+            'grasa'   => ['prev' => $prevGrasa, 'current' => $newGrasa, 'delta' => $deltaGrasa, 'unit' => '%']
+        ]
+    ];
+}
 ?>
+

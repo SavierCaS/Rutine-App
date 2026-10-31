@@ -94,14 +94,23 @@ if ($action === 'generate_ai' && $method === 'POST') {
     $payloadJson = json_encode($bioData, JSON_UNESCAPED_UNICODE);
 
     $pythonBin = kynap_env('PYTHON_BINARY');
-    if (empty($pythonBin) || (!file_exists($pythonBin) && $pythonBin !== 'python')) {
+    if (empty($pythonBin) || (!file_exists($pythonBin) && !in_array($pythonBin, ['python', 'python3', 'py']))) {
+        // Buscar Python automáticamente en ubicaciones comunes de Windows y Linux
+        $userProfile = getenv('USERPROFILE') ?: getenv('HOME') ?: 'C:\\Users\\Default';
         $candidates = [
-            'C:\\Users\\pc\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
+            'C:\\Users\\Diud Ospino\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
+            $userProfile . '\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
+            $userProfile . '\\AppData\\Local\\Programs\\Python\\Python311\\python.exe',
+            $userProfile . '\\AppData\\Local\\Programs\\Python\\Python310\\python.exe',
+            'C:\\Python312\\python.exe',
+            'C:\\Python311\\python.exe',
+            'C:\\Python310\\python.exe',
+            'python3',
             'python',
             'py'
         ];
         foreach ($candidates as $cand) {
-            if (file_exists($cand) || $cand === 'python') {
+            if (file_exists($cand) || in_array($cand, ['python', 'python3', 'py'])) {
                 $pythonBin = $cand;
                 break;
             }
@@ -115,8 +124,20 @@ if ($action === 'generate_ai' && $method === 'POST') {
         2 => ["pipe", "w"]  // stderr
     ];
 
-    $cmd = '"' . $pythonBin . '" ' . escapeshellarg($pythonScript);
-    $process = @proc_open($cmd, $descriptorSpec, $pipes, dirname(__DIR__));
+    // Pasar variables de entorno explícitamente al subproceso (Apache/PHP-CGI no hereda .env)
+    $envVars = array_merge(getenv() ?: [], [
+        'GROQ_API_KEY'          => kynap_env('GROQ_API_KEY', ''),
+        'GROQ_MODEL'            => kynap_env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+        'GROQ_TIMEOUT_SECONDS'  => kynap_env('GROQ_TIMEOUT_SECONDS', '30'),
+        'PYTHONIOENCODING'      => 'utf-8',
+        'PYTHONUNBUFFERED'      => '1'
+    ]);
+
+    $isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+    $cmd = $isWin 
+        ? 'cmd /c ""' . $pythonBin . '" "' . $pythonScript . '""'
+        : escapeshellcmd($pythonBin) . ' ' . escapeshellarg($pythonScript);
+    $process = @proc_open($cmd, $descriptorSpec, $pipes, dirname(__DIR__), $envVars);
     $aiRawOutput = "";
     $aiErrorOutput = "";
 
@@ -124,15 +145,23 @@ if ($action === 'generate_ai' && $method === 'POST') {
         fwrite($pipes[0], $payloadJson);
         fclose($pipes[0]);
 
-        $aiRawOutput = stream_get_contents($pipes[1]);
+        // Leer con timeout para evitar bloqueo infinito
+        stream_set_blocking($pipes[1], false);
+        $deadline = microtime(true) + (float)kynap_env('GROQ_TIMEOUT_SECONDS', 35);
+        while (!feof($pipes[1]) && microtime(true) < $deadline) {
+            $chunk = fread($pipes[1], 8192);
+            if ($chunk !== false) $aiRawOutput .= $chunk;
+            else usleep(50000); // 50ms espera si no hay datos aún
+        }
         fclose($pipes[1]);
 
-        $aiErrorOutput = stream_get_contents($pipes[2]);
+        stream_set_blocking($pipes[2], false);
+        $aiErrorOutput = fread($pipes[2], 4096) ?: '';
         fclose($pipes[2]);
 
         proc_close($process);
     } else {
-        error_log("[GROQ ROUTINE SERVICE ERROR]: No se pudo iniciar el proceso de Python.");
+        error_log("[GROQ ROUTINE SERVICE ERROR]: No se pudo iniciar el proceso Python en: $pythonBin");
     }
 
     $routineData = json_decode($aiRawOutput, true);
@@ -296,9 +325,12 @@ if ($method === 'GET') {
         }
     }
 
-    // Buscar si el usuario tiene una rutina activa guardada en base de datos
+    // Buscar o generar la rutina activa del usuario en base de datos
     $activeRoutine = null;
     if ($dbAvailable && $userId > 0) {
+        // Asegurar que exista una rutina activa personalizada persistida
+        ensureUserActiveRoutine($conn, $userId);
+
         $rStmt = $conn->prepare("SELECT id, name, description FROM routines WHERE user_id = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
         if ($rStmt) {
             $rStmt->bind_param("i", $userId);
@@ -356,7 +388,7 @@ if ($method === 'GET') {
         }
     }
 
-    // Plan por defecto verificado si aún no hay rutina guardada
+    // Plan de respaldo de emergencia si la BD no está disponible
     if (!$activeRoutine) {
         $activeRoutine = [
             'id'   => 'rot-default',
@@ -373,12 +405,13 @@ if ($method === 'GET') {
         ];
     }
 
-    $plannedDaysCount = count(array_filter($activeRoutine['days'], fn($d) => empty($d['isRest'])));
+    $plannedDaysCount = count(array_filter($activeRoutine['days'], function($d) { return empty($d['isRest']); }));
     $compliancePct = $plannedDaysCount > 0 ? min(100, round((count($completedDays) / $plannedDaysCount) * 100)) : 0;
 
     $currentServerDayKey = getCurrentServerDayKey();
     $currentServerDayName = getSpanishDayName($currentServerDayKey);
     $streakData = calculateUserStreak($conn, $userId);
+    $routinePlanStatus = checkRoutinePlanCompletion($conn, $userId);
 
     apiSuccess([
         'week'                 => $week,
@@ -392,6 +425,7 @@ if ($method === 'GET') {
         'totalPlannedDays'     => $plannedDaysCount,
         'compliancePercentage' => $compliancePct,
         'routine'              => $activeRoutine,
+        'routinePlanStatus'    => $routinePlanStatus,
         'streak'               => $streakData,
         'dbConnected'          => $dbAvailable
     ], 'Rutina y check-ins obtenidos correctamente');

@@ -31,13 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = (string)($_POST['password'] ?? '');
     $confirmPassword = (string)($_POST['confirm_password'] ?? '');
 
-    // 2. Parámetros biométricos
+    // 2. Parámetros biométricos y encuesta de salud/estilo de vida
     $edad = max(12, min(100, (int)($_POST['edad'] ?? 25)));
     $peso = max(30.0, min(300.0, (float)($_POST['peso'] ?? 75.0)));
     $altura = max(100.0, min(250.0, (float)($_POST['altura'] ?? 175.0)));
     $sexo = in_array($_POST['sexo'] ?? '', ['masculino', 'femenino', 'otro']) ? $_POST['sexo'] : 'masculino';
     $objetivo = in_array($_POST['objetivo'] ?? '', ['ganar_musculo', 'perder_grasa', 'mantener', 'recomposicion']) ? $_POST['objetivo'] : 'ganar_musculo';
     $nivelActividad = in_array($_POST['nivel_actividad'] ?? '', ['sedentario', 'ligero', 'moderado', 'muy_activo']) ? $_POST['nivel_actividad'] : 'moderado';
+    $condiciones = sanitizeString($_POST['condiciones'] ?? 'ninguna');
+    $alergias = sanitizeString($_POST['alergias'] ?? 'ninguna');
+    $preferencia = sanitizeString($_POST['preferencia'] ?? 'omnivora');
+    $agua = max(1.0, min(10.0, (float)($_POST['agua'] ?? 3.0)));
 
     if (empty($nombre)) {
         $errorMessage = 'Por favor ingresa tu nombre completo.';
@@ -77,45 +81,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $newUserId = (int)$stmt->insert_id;
                         $stmt->close();
 
-                        // 4. Inserción de perfil biométrico en user_biometrics
-                        $bioStmt = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua) VALUES (?, ?, ?, ?, ?, ?, ?, 3.0) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
-                        if ($bioStmt) {
-                            $bioStmt->bind_param("iddiiss", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad);
-                            $bioStmt->execute();
-                            $bioStmt->close();
+                        // 4. Inserción o actualización de perfil biométrico y encuesta médica en user_biometrics
+                        $checkBio = $conn->prepare("SELECT id FROM user_biometrics WHERE user_id = ? LIMIT 1");
+                        $bioExists = false;
+                        if ($checkBio) {
+                            $checkBio->bind_param("i", $newUserId);
+                            $checkBio->execute();
+                            $checkBio->store_result();
+                            $bioExists = ($checkBio->num_rows > 0);
+                            $checkBio->close();
+                        }
+
+                        if ($bioExists) {
+                            $bioStmt = $conn->prepare("UPDATE user_biometrics SET peso = ?, altura = ?, edad = ?, sexo = ?, objetivo = ?, nivel_actividad = ?, agua = ?, condiciones = ?, alergias = ?, preferencia = ?, modified_at = NOW() WHERE user_id = ?");
+                            if ($bioStmt) {
+                                $bioStmt->bind_param("ddisssdsssi", $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $agua, $condiciones, $alergias, $preferencia, $newUserId);
+                                $bioStmt->execute();
+                                $bioStmt->close();
+                            }
+                        } else {
+                            $bioStmt = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            if ($bioStmt) {
+                                $bioStmt->bind_param("iddisssdsss", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $agua, $condiciones, $alergias, $preferencia);
+                                $bioStmt->execute();
+                                $bioStmt->close();
+                            }
+                        }
+
+                        // Inserción de medición de línea base en user_biometrics_history
+                        $histStmt = $conn->prepare("INSERT INTO user_biometrics_history (user_id, peso, altura, edad, sexo, notas, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'Registro inicial del atleta', NOW(), NOW())");
+                        if ($histStmt) {
+                            $histStmt->bind_param("iddis", $newUserId, $peso, $altura, $edad, $sexo);
+                            $histStmt->execute();
+                            $histStmt->close();
                         }
 
                         // 5. Cálculo y guardado de metas nutricionales
-                        $targetCalories = 2200;
-                        $proteinG = 150;
-                        $fatsG = 65;
-
-                        if ($objetivo === 'ganar_musculo') {
-                            $targetCalories = (int)round($peso * 34);
-                            $proteinG = (int)round($peso * 2.0);
-                            $fatsG = (int)round($peso * 0.9);
-                        } elseif ($objetivo === 'perder_grasa') {
-                            $targetCalories = (int)round($peso * 25);
-                            $proteinG = (int)round($peso * 2.2);
-                            $fatsG = (int)round($peso * 0.8);
-                        } elseif ($objetivo === 'recomposicion') {
-                            $targetCalories = (int)round($peso * 29);
-                            $proteinG = (int)round($peso * 2.2);
-                            $fatsG = (int)round($peso * 0.85);
-                        } else {
-                            $targetCalories = (int)round($peso * 30);
-                            $proteinG = (int)round($peso * 1.8);
-                            $fatsG = (int)round($peso * 0.9);
+                        $macroTargets = calculateNutritionTargets($peso, $altura, $edad, $sexo, $nivelActividad, $objetivo);
+                        if ($agua > 0) {
+                            $macroTargets['waterMl'] = (int)round($agua * 1000);
                         }
-                        $carbsG = max(80, (int)round(($targetCalories - ($proteinG * 4 + $fatsG * 9)) / 4));
-                        $waterMl = max(2000, (int)round($peso * 35));
+                        saveNutritionGoals($conn, $newUserId, $macroTargets);
 
-                        $goalStmt = $conn->prepare("INSERT INTO nutrition_goals (user_id, daily_calories, protein_g, carbs_g, fats_g, water_ml, is_active) VALUES (?, ?, ?, ?, ?, ?, 1) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
-                        if ($goalStmt) {
-                            $goalStmt->bind_param("iiiiii", $newUserId, $targetCalories, $proteinG, $carbsG, $fatsG, $waterMl);
-                            $goalStmt->execute();
-                            $goalStmt->close();
-                        }
+                        // Asegurar rutina activa para el nuevo usuario
+                        ensureUserActiveRoutine($conn, $newUserId);
 
                         // Regeneración segura de sesión
                         if (session_status() === PHP_SESSION_ACTIVE) {
@@ -536,6 +545,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <option value="5">5 Días (Push / Pull / Legs + Especialización)</option>
             <option value="6">6 Días (Alto Rendimiento Deportivo)</option>
           </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label for="preferenciaInput">Preferencia Dietética / Alimentación *</label>
+          <select id="preferenciaInput" name="preferencia" class="input-custom" required>
+            <option value="omnivora" selected>🥩 Omnívora / Balanceada (Todo tipo de alimentos)</option>
+            <option value="vegetariano">🥗 Vegetariana (Sin carne ni pescado)</option>
+            <option value="vegano">🌱 Vegana (100% de origen vegetal)</option>
+            <option value="keto">🥑 Cetogénica / Low-Carb (Alta en grasas y proteínas)</option>
+          </select>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group" style="margin: 0;">
+            <label for="condicionesInput">Salud & Limitaciones Físicas</label>
+            <select id="condicionesInput" name="condiciones" class="input-custom">
+              <option value="ninguna" selected>Ninguna / Saludable</option>
+              <option value="lesion_rodilla">Lesión / Dolor de Rodilla</option>
+              <option value="dolor_lumbar">Dolor Lumbar / Espalda</option>
+              <option value="hipertension">Hipertensión / Cardiovascular</option>
+              <option value="diabetes">Diabetes / Resistencia Insulina</option>
+              <option value="asma">Asma / Respiratorio</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label for="alergiasInput">Alergias o Intolerancias</label>
+            <select id="alergiasInput" name="alergias" class="input-custom">
+              <option value="ninguna" selected>Ninguna</option>
+              <option value="lactosa">Intolerancia a la Lactosa</option>
+              <option value="gluten">Gluten / Celíaco</option>
+              <option value="mani">Maní / Frutos Secos</option>
+              <option value="mariscos">Pescados y Mariscos</option>
+              <option value="huevo">Alergia al Huevo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label for="aguaInput">Meta de Hidratación Diaria (Litros/día)</label>
+          <input type="number" id="aguaInput" name="agua" class="input-custom" value="3.0" step="0.5" min="1.5" max="6.0" required>
         </div>
 
         <div class="wizard-actions">

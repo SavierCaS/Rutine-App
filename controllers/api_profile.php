@@ -35,6 +35,7 @@ $method = $_SERVER['REQUEST_METHOD'];
  * @param string $goal
  * @return array
  */
+if (!function_exists('calculateNutritionTargets')) {
 function calculateNutritionTargets(
     float $weightKg,
     float $heightCm,
@@ -51,7 +52,8 @@ function calculateNutritionTargets(
             'fatsG'    => 65,
             'waterMl'  => 2500
         ];
-    }
+}
+}
 
     $age = $age > 0 ? $age : 25;
 
@@ -128,6 +130,7 @@ if ($method === 'GET') {
         'agua'            => 3.0,
         'condiciones'     => '',
         'alergias'        => '',
+        'preferencia'     => 'cualquierCosa',
         'grasa_corporal'  => null,
         'cintura_cm'      => null,
         'pecho_cm'        => null,
@@ -135,15 +138,33 @@ if ($method === 'GET') {
     ];
 
     if ($dbAvailable && $userId > 0) {
-        $stmt = $conn->prepare("SELECT peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias FROM user_biometrics WHERE user_id = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia FROM user_biometrics WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+        if (!$stmt) {
+            $stmt = $conn->prepare("SELECT peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia FROM usuarios WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+        }
         if ($stmt) {
             $stmt->bind_param("i", $userId);
             $stmt->execute();
             $res = $stmt->get_result();
             if ($row = $res->fetch_assoc()) {
-                $biometrics = array_merge($biometrics, array_filter($row, fn($v) => !is_null($v)));
+                $biometrics = array_merge($biometrics, array_filter($row, function($v) { return !is_null($v); }));
             }
             $stmt->close();
+        }
+
+        // Recuperar medidas corporales más recientes desde user_biometrics_history
+        $mStmt = $conn->prepare("SELECT grasa_corporal, cintura_cm, pecho_cm, brazo_cm, notas FROM user_biometrics_history WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+        if ($mStmt) {
+            $mStmt->bind_param("i", $userId);
+            $mStmt->execute();
+            $mRes = $mStmt->get_result();
+            if ($mRow = $mRes->fetch_assoc()) {
+                if ($mRow['grasa_corporal'] !== null) $biometrics['grasa_corporal'] = (float)$mRow['grasa_corporal'];
+                if ($mRow['cintura_cm'] !== null) $biometrics['cintura_cm'] = (float)$mRow['cintura_cm'];
+                if ($mRow['pecho_cm'] !== null) $biometrics['pecho_cm'] = (float)$mRow['pecho_cm'];
+                if ($mRow['brazo_cm'] !== null) $biometrics['brazo_cm'] = (float)$mRow['brazo_cm'];
+            }
+            $mStmt->close();
         }
     }
 
@@ -156,7 +177,7 @@ if ($method === 'GET') {
         (string)$biometrics['objetivo']
     );
 
-    // Evaluar política de periodicidad (7 días / 24h corrección)
+    // Evaluar política de periodicidad y cumplimiento de rutina (Requerimiento 3)
     $policy = evaluateBiometricsPolicy($conn, $userId);
 
     // Recuperar historial de evolución física
@@ -220,21 +241,43 @@ if ($method === 'GET') {
         ];
     }
 
+    // Recuperar última evaluación o recomendación de la IA
+    $latestRecommendation = null;
+    if ($dbAvailable && $userId > 0) {
+        $recStmt = $conn->prepare("SELECT id, tipo, recomendacion, evaluacion_datos, created_at FROM recomendaciones WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+        if ($recStmt) {
+            $recStmt->bind_param("i", $userId);
+            $recStmt->execute();
+            $rRes = $recStmt->get_result();
+            if ($rRow = $rRes->fetch_assoc()) {
+                $latestRecommendation = [
+                    'id'              => (int)$rRow['id'],
+                    'tipo'            => $rRow['tipo'],
+                    'recomendacion'   => $rRow['recomendacion'],
+                    'evaluacionDatos' => json_decode($rRow['evaluacion_datos'] ?? 'null', true),
+                    'createdAt'       => $rRow['created_at']
+                ];
+            }
+            $recStmt->close();
+        }
+    }
+
     $streakData = calculateUserStreak($conn, $userId);
 
     apiSuccess([
-        'user'        => $user,
-        'biometrics'  => $biometrics,
-        'targets'     => $targets,
-        'policy'      => $policy,
-        'history'     => $historyDescending,
-        'streak'      => $streakData,
-        'dbConnected' => $dbAvailable
+        'user'           => $user,
+        'biometrics'     => $biometrics,
+        'targets'        => $targets,
+        'policy'         => $policy,
+        'recommendation' => $latestRecommendation,
+        'history'        => $historyDescending,
+        'streak'         => $streakData,
+        'dbConnected'    => $dbAvailable
     ], 'Perfil, biometría y evolución física obtenidos');
 }
 
 // ==============================================================================
-// 2. POST: ACTUALIZACIÓN DE CONDICIÓN FÍSICA CON CONTROL DE PERIODICIDAD & 24H
+// 2. POST: ACTUALIZACIÓN DE CONDICIÓN FÍSICA Y EVALUACIÓN DE PROGRESO CON IA
 // ==============================================================================
 if ($method === 'POST') {
     $input = getJsonInput();
@@ -247,6 +290,9 @@ if ($method === 'POST') {
     $objetivo = sanitizeString($input['objetivo'] ?? 'ganar_musculo');
     $nivelActividad = sanitizeString($input['nivel_actividad'] ?? 'moderado');
     $aguaLitros = isset($input['agua']) ? (int)$input['agua'] : 3;
+    $condiciones = sanitizeString($input['condiciones'] ?? '');
+    $alergias = sanitizeString($input['alergias'] ?? '');
+    $preferencia = sanitizeString($input['preferencia'] ?? 'cualquierCosa');
 
     // Métricas complementarias de composición corporal
     $grasaCorporal = isset($input['grasa_corporal']) && is_numeric($input['grasa_corporal']) ? max(3.0, min(60.0, (float)$input['grasa_corporal'])) : null;
@@ -259,9 +305,11 @@ if ($method === 'POST') {
         apiError('El peso (kg) y la altura (cm) son datos obligatorios para la condición física.', 422);
     }
 
+    $evaluationResult = null;
+
     if ($dbAvailable && $userId > 0) {
         // ======================================================================
-        // VALIDACIÓN ESTRICTA EN BACKEND: CONTROL DE PERIODICIDAD (REQUERIMIENTO 4)
+        // VALIDACIÓN ESTRICTA EN BACKEND: CONTROL DE CUMPLIMIENTO DE RUTINA (REQUERIMIENTO 3)
         // ======================================================================
         $policy = evaluateBiometricsPolicy($conn, $userId);
 
@@ -271,11 +319,37 @@ if ($method === 'POST') {
                 403,
                 [
                     'isBlocked'        => true,
-                    'daysRemaining'    => $policy['daysRemainingNextUpdate'],
-                    'nextAllowedDate'  => $policy['nextAllowedDate'],
-                    'lastRecordDate'   => $policy['lastRecordDate']
+                    'policy'           => $policy,
+                    'routineStatus'    => $policy['routineStatus'] ?? null
                 ]
             );
+        }
+
+        // Obtener biometría previa para la comparación de progreso
+        $prevBio = [];
+        $pStmt = $conn->prepare("SELECT * FROM user_biometrics WHERE user_id = ? LIMIT 1");
+        if ($pStmt) {
+            $pStmt->bind_param("i", $userId);
+            $pStmt->execute();
+            $pRes = $pStmt->get_result();
+            if ($pRow = $pRes->fetch_assoc()) {
+                $prevBio = $pRow;
+            }
+            $pStmt->close();
+        }
+
+        // Si no había en user_biometrics, buscar último en historial
+        if (empty($prevBio)) {
+            $phStmt = $conn->prepare("SELECT * FROM user_biometrics_history WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+            if ($phStmt) {
+                $phStmt->bind_param("i", $userId);
+                $phStmt->execute();
+                $phRes = $phStmt->get_result();
+                if ($phRow = $phRes->fetch_assoc()) {
+                    $prevBio = $phRow;
+                }
+                $phStmt->close();
+            }
         }
 
         // ======================================================================
@@ -292,22 +366,70 @@ if ($method === 'POST') {
             }
             $actionNotice = 'Registro corregido exitosamente dentro del margen de 24 horas.';
         } else {
-            // Nuevo registro semanal (después de 7 días o primer registro)
+            // Nuevo registro tras completar la rutina asignada
             $insHist = $conn->prepare("INSERT INTO user_biometrics_history (user_id, peso, altura, edad, sexo, grasa_corporal, cintura_cm, pecho_cm, brazo_cm, notas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             if ($insHist) {
                 $insHist->bind_param("iddisdddds", $userId, $peso, $altura, $edad, $sexo, $grasaCorporal, $cinturaCm, $pechoCm, $brazoCm, $notas);
                 $insHist->execute();
                 $insHist->close();
             }
-            $actionNotice = 'Nueva medición semanal registrada y añadida a tu evolución física.';
+
+            // Realizar evaluación comparativa con IA si existían mediciones anteriores
+            if (!empty($prevBio)) {
+                $evaluationResult = evaluateUserProgress($prevBio, [
+                    'peso'           => $peso,
+                    'altura'         => $altura,
+                    'edad'           => $edad,
+                    'sexo'           => $sexo,
+                    'objetivo'       => $objetivo,
+                    'grasa_corporal' => $grasaCorporal,
+                    'cintura_cm'     => $cinturaCm,
+                    'pecho_cm'       => $pechoCm,
+                    'brazo_cm'       => $brazoCm
+                ], $user);
+
+                // Persistir en tabla recomendaciones
+                $evalFullText = $evaluationResult['title'] . "\n\n" . $evaluationResult['summary'] . "\n\nRecomendaciones Clave:\n- " . implode("\n- ", $evaluationResult['recommendations']);
+                $evalJson = json_encode($evaluationResult, JSON_UNESCAPED_UNICODE);
+                $recStmt = $conn->prepare("INSERT INTO recomendaciones (user_id, tipo, recomendacion, evaluacion_datos) VALUES (?, ?, ?, ?)");
+                if ($recStmt) {
+                    $recStmt->bind_param("isss", $userId, $evaluationResult['type'], $evalFullText, $evalJson);
+                    $recStmt->execute();
+                    $recStmt->close();
+                }
+
+                // Archivar / avanzar ciclo de routine_check_ins para la siguiente rutina
+                $conn->query("UPDATE routine_check_ins SET is_completed = 2 WHERE user_id = $userId AND is_completed = 1");
+            }
+
+            $actionNotice = '¡Medición registrada con éxito tras completar tu rutina! Progreso evaluado por la IA.';
         }
 
-        // Actualizar tabla principal user_biometrics
-        $updBio = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE peso = VALUES(peso), altura = VALUES(altura), edad = VALUES(edad), sexo = VALUES(sexo), objetivo = VALUES(objetivo), nivel_actividad = VALUES(nivel_actividad), agua = VALUES(agua), updated_at = NOW()");
-        if ($updBio) {
-            $updBio->bind_param("iddisssi", $userId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros);
-            $updBio->execute();
-            $updBio->close();
+        // Actualizar tabla principal user_biometrics con todos los datos del perfil y encuesta
+        $checkBio = $conn->prepare("SELECT id FROM user_biometrics WHERE user_id = ? LIMIT 1");
+        $bioExists = false;
+        if ($checkBio) {
+            $checkBio->bind_param("i", $userId);
+            $checkBio->execute();
+            $checkBio->store_result();
+            $bioExists = ($checkBio->num_rows > 0);
+            $checkBio->close();
+        }
+
+        if ($bioExists) {
+            $updBio = $conn->prepare("UPDATE user_biometrics SET peso = ?, altura = ?, edad = ?, sexo = ?, objetivo = ?, nivel_actividad = ?, agua = ?, condiciones = ?, alergias = ?, preferencia = ?, modified_at = NOW() WHERE user_id = ?");
+            if ($updBio) {
+                $updBio->bind_param("ddisssdsssi", $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros, $condiciones, $alergias, $preferencia, $userId);
+                $updBio->execute();
+                $updBio->close();
+            }
+        } else {
+            $updBio = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($updBio) {
+                $updBio->bind_param("iddisssdsss", $userId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros, $condiciones, $alergias, $preferencia);
+                $updBio->execute();
+                $updBio->close();
+            }
         }
 
         // Sincronizar nombre y email si se enviaron
@@ -333,6 +455,12 @@ if ($method === 'POST') {
         $nivelActividad,
         $objetivo
     );
+    if ($aguaLitros > 0) {
+        $updatedTargets['waterMl'] = (int)round($aguaLitros * 1000);
+    }
+    if ($dbAvailable && $userId > 0) {
+        saveNutritionGoals($conn, $userId, $updatedTargets);
+    }
 
     // Re-evaluar política tras el cambio
     $updatedPolicy = evaluateBiometricsPolicy($conn, $userId);
@@ -347,6 +475,9 @@ if ($method === 'POST') {
             'objetivo'        => $objetivo,
             'nivel_actividad' => $nivelActividad,
             'agua'            => $aguaLitros,
+            'condiciones'     => $condiciones,
+            'alergias'        => $alergias,
+            'preferencia'     => $preferencia,
             'grasa_corporal'  => $grasaCorporal,
             'cintura_cm'      => $cinturaCm,
             'pecho_cm'        => $pechoCm,
@@ -354,9 +485,11 @@ if ($method === 'POST') {
         ],
         'targets'     => $updatedTargets,
         'policy'      => $updatedPolicy,
+        'evaluation'  => $evaluationResult,
         'streak'      => $streakData,
         'dbConnected' => $dbAvailable
     ], $actionNotice);
 }
 
 apiError('Método HTTP no soportado', 405);
+

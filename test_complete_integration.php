@@ -16,7 +16,17 @@ echo "====================================================================\n";
 echo "   KYNAP FITNESS PLATFORM - TEST DE SEGURIDAD & GROQ AI INTEGRATION \n";
 echo "====================================================================\n\n";
 
-$baseUrl = 'http://localhost/Kynap';
+$baseUrl = 'http://localhost/Rutine-App';
+// Verificación de disponibilidad de endpoint base
+$testCh = curl_init("$baseUrl/controllers/api_bootstrap.php");
+curl_setopt($testCh, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($testCh, CURLOPT_TIMEOUT, 2);
+curl_exec($testCh);
+$codeTest = curl_getinfo($testCh, CURLINFO_HTTP_CODE);
+curl_close($testCh);
+if ($codeTest !== 200) {
+    $baseUrl = 'http://localhost/Kynap';
+}
 $passedTests = 0;
 $totalTests = 0;
 
@@ -72,6 +82,7 @@ curl_close($ch);
 $loginData = json_decode($resRaw, true);
 
 $authToken = $loginData['data']['token'] ?? '';
+$authUserId = (int)($loginData['data']['user']['id'] ?? 1);
 $hasValidToken = $code === 200 && !empty($authToken) && count(explode('.', $authToken)) === 2;
 assertTest($hasValidToken, "Login exitoso y emisión de token HMAC válido", "Usuario: " . ($loginData['data']['user']['email'] ?? ''));
 
@@ -148,8 +159,8 @@ assertTest($aiAuthCode === 201 && $has7Days, "Generación y estructuración de r
 
 // Test 2.4: Comprobación de persistencia relacional en BD (routines -> routine_days -> routine_exercises)
 require_once __DIR__ . '/config/db.php';
-$stmtCheck = $conn->prepare("SELECT id, name, is_active FROM routines WHERE user_id = 1 AND is_active = 1 ORDER BY id DESC LIMIT 1");
-$stmtCheck->execute();
+$stmtCheck = $conn->prepare("SELECT id, name, is_active FROM routines WHERE user_id = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
+$stmtCheck->execute([$authUserId]);
 $dbRoutine = $stmtCheck->fetch();
 
 $daysCount = 0;
@@ -182,11 +193,15 @@ assertTest($getCode === 200 && !empty($retrievedName), "Endpoint GET recupera ru
 // ------------------------------------------------------------------------------
 echo "\n--- FASE 3: VALIDACIÓN DE REGLAS DE NEGOCIO Y MÓDULOS REDISEÑADOS ---\n";
 
-// Test 3.1: Restricción estricta de día de rutina (Intentar marcar Martes cuando hoy es Lunes -> HTTP 403)
+$dayMap = ['monday' => 'lunes', 'tuesday' => 'martes', 'wednesday' => 'miercoles', 'thursday' => 'jueves', 'friday' => 'viernes', 'saturday' => 'sabado', 'sunday' => 'domingo'];
+$currentServerDayKey = $dayMap[strtolower(date('l'))] ?? 'lunes';
+$differentDayKey = ($currentServerDayKey === 'martes') ? 'miercoles' : 'martes';
+
+// Test 3.1: Restricción estricta de día de rutina (Intentar marcar día no actual -> HTTP 403)
 $ch = curl_init("$baseUrl/controllers/api_routines.php");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['day_id' => 'martes']));
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['day_id' => $differentDayKey]));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $authToken", "Content-Type: application/json"]);
 $resRaw = curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -194,22 +209,22 @@ curl_close($ch);
 $resData = json_decode($resRaw, true);
 
 $isDayBlocked = ($code === 403 && isset($resData['errors']['isBlocked']) && $resData['errors']['isBlocked'] === true);
-assertTest($isDayBlocked, "Bloqueo estricto de marcado de rutina en días no actuales (HTTP 403)", "Día probado: Martes | Mensaje: {$resData['message']}");
+assertTest($isDayBlocked, "Bloqueo estricto de marcado de rutina en días no actuales (HTTP 403)", "Día probado: $differentDayKey | Mensaje: {$resData['message']}");
 
-// Test 3.2: Permitir marcado exclusivamente en el día actual (Lunes)
+// Test 3.2: Permitir marcado exclusivamente en el día actual ($currentServerDayKey)
 $ch = curl_init("$baseUrl/controllers/api_routines.php");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['day_id' => 'lunes']));
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['day_id' => $currentServerDayKey]));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $authToken", "Content-Type: application/json"]);
 $resRaw = curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 $resData = json_decode($resRaw, true);
-assertTest($code === 200 && ($resData['success'] ?? false), "Marcado permitido exitosamente en el día actual del servidor (Lunes)");
+assertTest($code === 200 && ($resData['success'] ?? false), "Marcado permitido exitosamente en el día actual del servidor ($currentServerDayKey)");
 
 // Test 3.3: Horarios de comidas estructuradas y macros del día
-$ch = curl_init("$baseUrl/controllers/api_nutrition.php?day=lunes");
+$ch = curl_init("$baseUrl/controllers/api_nutrition.php?day=$currentServerDayKey");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $authToken"]);
 $nutRaw = curl_exec($ch);
@@ -237,6 +252,16 @@ $hasStreak = isset($streak['currentStreak']) && isset($streak['badge']['name']);
 assertTest($hasStreak, "Motor de rachas con cálculo dinámico y medallas", "Racha: {$streak['currentStreak']} días | Medalla: {$streak['badge']['name']}");
 
 // Test 3.6: Política de condición física (Ventana de corrección 24h)
+// Pre-requisito: insertar registro reciente (<24h) en user_biometrics_history
+// para que atleta@kynap.com entre en modo corrección.
+if ($conn && $authUserId > 0) {
+    try {
+        // Eliminar registro antiguo si existe y agregar uno fresco
+        $conn->prepare("DELETE FROM user_biometrics_history WHERE user_id = ? AND created_at < NOW() - INTERVAL 1 HOUR")->execute([$authUserId]);
+        $ins = $conn->prepare("INSERT INTO user_biometrics_history (user_id, peso, altura, edad, sexo, notas, created_at, updated_at) VALUES (?, 76.0, 175.0, 28, 'masculino', 'Pre-test corrección', NOW(), NOW())");
+        $ins->execute([$authUserId]);
+    } catch (Exception $e) {}
+}
 $ch = curl_init("$baseUrl/controllers/api_profile.php");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
@@ -255,7 +280,32 @@ assertTest($bioData['success'] ?? false, "Actualización y corrección física d
 
 // Limpieza de usuario de prueba si se generó uno temporal
 if ($conn && !empty($testEmail)) {
-    $conn->prepare("DELETE FROM users WHERE email = ?")->execute([$testEmail]);
+    // Obtener ID del usuario de prueba
+    $cleanStmt = $conn->prepare("SELECT id FROM accounts WHERE email = ?");
+    if ($cleanStmt) {
+        $cleanStmt->execute([$testEmail]);
+        $cleanId = (int)($cleanStmt->fetchColumn() ?? 0);
+        $cleanStmt->closeCursor();
+        if ($cleanId > 0) {
+            // Borrar registros hijo primero (FK constraint)
+            $tables = ['routine_check_ins', 'user_biometrics_history', 'nutrition_goals', 'usuarios', 'recomendaciones'];
+            foreach ($tables as $t) {
+                try { $conn->prepare("DELETE FROM $t WHERE user_id = ?")->execute([$cleanId]); } catch (Exception $ex) {}
+            }
+            // Borrar rutinas relacionadas
+            try {
+                $r = $conn->prepare("SELECT id FROM user_routines WHERE user_id = ?");
+                $r->execute([$cleanId]);
+                while ($rid = $r->fetchColumn()) {
+                    $conn->prepare("DELETE FROM routine_days WHERE routine_id = ?")->execute([$rid]);
+                    $conn->prepare("DELETE FROM routine_exercises WHERE routine_id = ?")->execute([$rid]);
+                }
+            } catch (Exception $ex) {}
+            try { $conn->prepare("DELETE FROM user_routines WHERE user_id = ?")->execute([$cleanId]); } catch (Exception $ex) {}
+            // Finalmente eliminar la cuenta
+            $conn->prepare("DELETE FROM accounts WHERE id = ?")->execute([$cleanId]);
+        }
+    }
 }
 
 echo "\n====================================================================\n";

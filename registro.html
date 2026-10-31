@@ -342,6 +342,47 @@
           </select>
         </div>
 
+        <div class="form-group" style="margin: 0;">
+          <label for="preferenciaInput">Preferencia Dietética / Alimentación *</label>
+          <select id="preferenciaInput" name="preferencia" class="input-custom" required>
+            <option value="omnivora" selected>🥩 Omnívora / Balanceada (Todo tipo de alimentos)</option>
+            <option value="vegetariano">🥗 Vegetariana (Sin carne ni pescado)</option>
+            <option value="vegano">🌱 Vegana (100% de origen vegetal)</option>
+            <option value="keto">🥑 Cetogénica / Low-Carb (Alta en grasas y proteínas)</option>
+          </select>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group" style="margin: 0;">
+            <label for="condicionesInput">Salud & Limitaciones Físicas</label>
+            <select id="condicionesInput" name="condiciones" class="input-custom">
+              <option value="ninguna" selected>Ninguna / Saludable</option>
+              <option value="lesion_rodilla">Lesión / Dolor de Rodilla</option>
+              <option value="dolor_lumbar">Dolor Lumbar / Espalda</option>
+              <option value="hipertension">Hipertensión / Cardiovascular</option>
+              <option value="diabetes">Diabetes / Resistencia Insulina</option>
+              <option value="asma">Asma / Respiratorio</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label for="alergiasInput">Alergias o Intolerancias</label>
+            <select id="alergiasInput" name="alergias" class="input-custom">
+              <option value="ninguna" selected>Ninguna</option>
+              <option value="lactosa">Intolerancia a la Lactosa</option>
+              <option value="gluten">Gluten / Celíaco</option>
+              <option value="mani">Maní / Frutos Secos</option>
+              <option value="mariscos">Pescados y Mariscos</option>
+              <option value="huevo">Alergia al Huevo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label for="aguaInput">Meta de Hidratación Diaria (Litros/día)</label>
+          <input type="number" id="aguaInput" name="agua" class="input-custom" value="3.0" step="0.5" min="1.5" max="6.0" required>
+        </div>
+
         <div class="wizard-actions">
           <button type="button" class="btn-checkin"
             style="width: auto; padding: 12px 20px; background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text);"
@@ -627,6 +668,10 @@
       const objetivo = document.getElementById('objetivoInput').value;
       const nivel_actividad = document.getElementById('actividadInput').value;
       const dias_entrenamiento = parseInt(document.getElementById('diasEntrenamientoInput').value, 10);
+      const preferencia = document.getElementById('preferenciaInput')?.value || 'omnivora';
+      const condiciones = document.getElementById('condicionesInput')?.value || 'ninguna';
+      const alergias = document.getElementById('alergiasInput')?.value || 'ninguna';
+      const agua = parseFloat(document.getElementById('aguaInput')?.value) || 3.0;
 
       const submitBtn = document.getElementById('btnSubmitRegister');
       const origText = submitBtn.innerHTML;
@@ -652,7 +697,11 @@
             sexo,
             objetivo,
             nivel_actividad,
-            dias_entrenamiento
+            dias_entrenamiento,
+            preferencia,
+            condiciones,
+            alergias,
+            agua
           })
         });
 

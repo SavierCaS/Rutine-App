@@ -37,9 +37,9 @@ if ($action === 'verify' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($isAuthenticated) {
         $biometrics = null;
         if ($dbAvailable) {
-            $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
+            $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo, condiciones, alergias, preferencia FROM user_biometrics WHERE user_id = ? ORDER BY id DESC LIMIT 1");
             if (!$stmt) {
-                $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM usuarios WHERE user_id = ? LIMIT 1");
+                $stmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo, condiciones, alergias, preferencia FROM usuarios WHERE user_id = ? ORDER BY id DESC LIMIT 1");
             }
             if ($stmt) {
                 $stmt->bind_param("i", $user['id']);
@@ -49,11 +49,14 @@ if ($action === 'verify' && $_SERVER['REQUEST_METHOD'] === 'GET') {
                     $biometrics = [
                         'peso'            => (float)$bRow['peso'],
                         'altura'          => (float)$bRow['altura'],
-                        'objetivo'        => htmlspecialchars($bRow['objetivo'], ENT_QUOTES, 'UTF-8'),
-                        'nivel_actividad' => htmlspecialchars($bRow['nivel_actividad'], ENT_QUOTES, 'UTF-8'),
-                        'agua'            => (float)$bRow['agua'],
-                        'edad'            => (int)$bRow['edad'],
-                        'sexo'            => htmlspecialchars($bRow['sexo'], ENT_QUOTES, 'UTF-8')
+                        'objetivo'        => htmlspecialchars($bRow['objetivo'] ?? 'ganar_musculo', ENT_QUOTES, 'UTF-8'),
+                        'nivel_actividad' => htmlspecialchars($bRow['nivel_actividad'] ?? 'moderado', ENT_QUOTES, 'UTF-8'),
+                        'agua'            => (float)($bRow['agua'] ?? 3.0),
+                        'edad'            => (int)($bRow['edad'] ?? 25),
+                        'sexo'            => htmlspecialchars($bRow['sexo'] ?? 'masculino', ENT_QUOTES, 'UTF-8'),
+                        'condiciones'     => htmlspecialchars($bRow['condiciones'] ?? '', ENT_QUOTES, 'UTF-8'),
+                        'alergias'        => htmlspecialchars($bRow['alergias'] ?? '', ENT_QUOTES, 'UTF-8'),
+                        'preferencia'     => htmlspecialchars($bRow['preferencia'] ?? 'omnivora', ENT_QUOTES, 'UTF-8')
                     ];
                 }
                 $stmt->close();
@@ -130,7 +133,10 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Recuperar datos biométricos
             $biometrics = null;
-            $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo FROM user_biometrics WHERE user_id = ? LIMIT 1");
+            $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo, condiciones, alergias, preferencia FROM user_biometrics WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+            if (!$bioStmt) {
+                $bioStmt = $conn->prepare("SELECT peso, altura, objetivo, nivel_actividad, agua, edad, sexo, condiciones, alergias, preferencia FROM usuarios WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+            }
             if ($bioStmt) {
                 $bioStmt->bind_param("i", $userId);
                 $bioStmt->execute();
@@ -139,11 +145,14 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $biometrics = [
                         'peso'            => (float)$bRow['peso'],
                         'altura'          => (float)$bRow['altura'],
-                        'objetivo'        => htmlspecialchars($bRow['objetivo'], ENT_QUOTES, 'UTF-8'),
-                        'nivel_actividad' => htmlspecialchars($bRow['nivel_actividad'], ENT_QUOTES, 'UTF-8'),
-                        'agua'            => (float)$bRow['agua'],
-                        'edad'            => (int)$bRow['edad'],
-                        'sexo'            => htmlspecialchars($bRow['sexo'], ENT_QUOTES, 'UTF-8')
+                        'objetivo'        => htmlspecialchars($bRow['objetivo'] ?? 'ganar_musculo', ENT_QUOTES, 'UTF-8'),
+                        'nivel_actividad' => htmlspecialchars($bRow['nivel_actividad'] ?? 'moderado', ENT_QUOTES, 'UTF-8'),
+                        'agua'            => (float)($bRow['agua'] ?? 3.0),
+                        'edad'            => (int)($bRow['edad'] ?? 25),
+                        'sexo'            => htmlspecialchars($bRow['sexo'] ?? 'masculino', ENT_QUOTES, 'UTF-8'),
+                        'condiciones'     => htmlspecialchars($bRow['condiciones'] ?? '', ENT_QUOTES, 'UTF-8'),
+                        'alergias'        => htmlspecialchars($bRow['alergias'] ?? '', ENT_QUOTES, 'UTF-8'),
+                        'preferencia'     => htmlspecialchars($bRow['preferencia'] ?? 'omnivora', ENT_QUOTES, 'UTF-8')
                     ];
                 }
                 $bioStmt->close();
@@ -283,45 +292,50 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $newUserId = (int)$insertStmt->insert_id;
         $insertStmt->close();
 
-        // 6. Inserción de perfil biométrico en user_biometrics
-        $bioStmt = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
-        if ($bioStmt) {
-            $bioStmt->bind_param("iddiissdsss", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros, $condiciones, $alergias, $preferencia);
-            $bioStmt->execute();
-            $bioStmt->close();
+        // 6. Inserción o actualización de perfil biométrico en user_biometrics
+        $checkBio = $conn->prepare("SELECT id FROM user_biometrics WHERE user_id = ? LIMIT 1");
+        $bioExists = false;
+        if ($checkBio) {
+            $checkBio->bind_param("i", $newUserId);
+            $checkBio->execute();
+            $checkBio->store_result();
+            $bioExists = ($checkBio->num_rows > 0);
+            $checkBio->close();
+        }
+
+        if ($bioExists) {
+            $bioStmt = $conn->prepare("UPDATE user_biometrics SET peso = ?, altura = ?, edad = ?, sexo = ?, objetivo = ?, nivel_actividad = ?, agua = ?, condiciones = ?, alergias = ?, preferencia = ?, modified_at = NOW() WHERE user_id = ?");
+            if ($bioStmt) {
+                $bioStmt->bind_param("ddisssdsssi", $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros, $condiciones, $alergias, $preferencia, $newUserId);
+                $bioStmt->execute();
+                $bioStmt->close();
+            }
+        } else {
+            $bioStmt = $conn->prepare("INSERT INTO user_biometrics (user_id, peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($bioStmt) {
+                $bioStmt->bind_param("iddisssdsss", $newUserId, $peso, $altura, $edad, $sexo, $objetivo, $nivelActividad, $aguaLitros, $condiciones, $alergias, $preferencia);
+                $bioStmt->execute();
+                $bioStmt->close();
+            }
+        }
+
+        // Inserción de medición de línea base en user_biometrics_history (activa ventana de 24h)
+        $histStmt = $conn->prepare("INSERT INTO user_biometrics_history (user_id, peso, altura, edad, sexo, notas, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'Registro inicial del atleta', NOW(), NOW())");
+        if ($histStmt) {
+            $histStmt->bind_param("iddis", $newUserId, $peso, $altura, $edad, $sexo);
+            $histStmt->execute();
+            $histStmt->close();
         }
 
         // 7. Cálculo y guardado de metas nutricionales
-        $targetCalories = 2200;
-        $proteinG = 150;
-        $fatsG = 65;
-
-        if ($objetivo === 'ganar_musculo') {
-            $targetCalories = (int)round($peso * 34);
-            $proteinG = (int)round($peso * 2.0);
-            $fatsG = (int)round($peso * 0.9);
-        } elseif ($objetivo === 'perder_grasa') {
-            $targetCalories = (int)round($peso * 25);
-            $proteinG = (int)round($peso * 2.2);
-            $fatsG = (int)round($peso * 0.8);
-        } elseif ($objetivo === 'recomposicion') {
-            $targetCalories = (int)round($peso * 29);
-            $proteinG = (int)round($peso * 2.2);
-            $fatsG = (int)round($peso * 0.85);
-        } else {
-            $targetCalories = (int)round($peso * 30);
-            $proteinG = (int)round($peso * 1.8);
-            $fatsG = (int)round($peso * 0.9);
+        $macroTargets = calculateNutritionTargets($peso, $altura, $edad, $sexo, $nivelActividad, $objetivo);
+        if ($aguaLitros > 0) {
+            $macroTargets['waterMl'] = (int)round($aguaLitros * 1000);
         }
-        $carbsG = max(80, (int)round(($targetCalories - ($proteinG * 4 + $fatsG * 9)) / 4));
-        $waterMl = (int)round($aguaLitros * 1000);
+        saveNutritionGoals($conn, $newUserId, $macroTargets);
 
-        $goalStmt = $conn->prepare("INSERT INTO nutrition_goals (user_id, daily_calories, protein_g, carbs_g, fats_g, water_ml, is_active) VALUES (?, ?, ?, ?, ?, ?, 1) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP");
-        if ($goalStmt) {
-            $goalStmt->bind_param("iiiiii", $newUserId, $targetCalories, $proteinG, $carbsG, $fatsG, $waterMl);
-            $goalStmt->execute();
-            $goalStmt->close();
-        }
+        // Asegurar que exista rutina activa personalizada para el nuevo usuario
+        ensureUserActiveRoutine($conn, $newUserId);
 
         // 8. Regenerar sesión e iniciar sesión automáticamente
         if (session_status() === PHP_SESSION_ACTIVE) {

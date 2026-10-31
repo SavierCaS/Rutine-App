@@ -26,43 +26,78 @@ $userEmail = $_SESSION['email'] ?? 'atleta@kynap.com';
 $userAvatar = 'iconos/profile.svg';
 $chatActivado = 1;
 
-// Valores biométricos por defecto
-$userPeso = 75;
-$userAltura = 175;
+// Valores biométricos y encuesta de salud por defecto
+$userPeso = 75.0;
+$userAltura = 175.0;
 $userEdad = 25;
+$userSexo = 'masculino';
 $userObjetivo = 'ganar_musculo';
 $userNivelActividad = 'moderado';
-$userAgua = 3;
+$userAgua = 3.0;
+$userCondiciones = 'ninguna';
+$userAlergias = 'ninguna';
+$userPreferencia = 'omnivora';
 
 if ($dbAvailable) {
-    // 1. Obtener imagen de perfil y estado de chat
-    $stmtAccount = $conn->prepare("SELECT imagen_user, chat_activado FROM accounts WHERE id = ? LIMIT 1");
+    // 1. Obtener datos de cuenta actualizados desde users / accounts
+    $stmtAccount = $conn->prepare("SELECT nombre, email, imagen_user, chat_activado FROM users WHERE id = ? LIMIT 1");
+    if (!$stmtAccount) {
+        $stmtAccount = $conn->prepare("SELECT nombre, email, imagen_user, chat_activado FROM accounts WHERE id = ? LIMIT 1");
+    }
     if ($stmtAccount) {
         $stmtAccount->bind_param("i", $userId);
         $stmtAccount->execute();
-        $stmtAccount->bind_result($imgUser, $chatAct);
+        $stmtAccount->bind_result($dbNombre, $dbEmail, $imgUser, $chatAct);
         if ($stmtAccount->fetch()) {
+            if (!empty($dbNombre)) $userName = htmlspecialchars(ucwords(strtolower($dbNombre)));
+            if (!empty($dbEmail)) $userEmail = $dbEmail;
             if (!empty($imgUser)) $userAvatar = $imgUser;
             if ($chatAct !== null) $chatActivado = (int)$chatAct;
         }
         $stmtAccount->close();
     }
 
-    // 2. Obtener datos biométricos completos (incluyendo edad corregida)
-    $stmtBio = $conn->prepare("SELECT peso, altura, edad, objetivo, nivel_actividad, agua FROM usuarios WHERE user_id = ? LIMIT 1");
+    // 2. Obtener datos biométricos y encuesta completa desde user_biometrics (más reciente)
+    $stmtBio = $conn->prepare("SELECT peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia FROM user_biometrics WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+    if (!$stmtBio) {
+        $stmtBio = $conn->prepare("SELECT peso, altura, edad, sexo, objetivo, nivel_actividad, agua, condiciones, alergias, preferencia FROM usuarios WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+    }
+    $hasBioRow = false;
     if ($stmtBio) {
         $stmtBio->bind_param("i", $userId);
         $stmtBio->execute();
         $resBio = $stmtBio->get_result();
         if ($rowBio = $resBio->fetch_assoc()) {
+            $hasBioRow = true;
             $userPeso = (float)($rowBio['peso'] ?: $userPeso);
             $userAltura = (float)($rowBio['altura'] ?: $userAltura);
             $userEdad = (int)($rowBio['edad'] ?: $userEdad);
+            $userSexo = $rowBio['sexo'] ?: $userSexo;
             $userObjetivo = $rowBio['objetivo'] ?: $userObjetivo;
             $userNivelActividad = $rowBio['nivel_actividad'] ?: $userNivelActividad;
-            $userAgua = (int)($rowBio['agua'] ?: $userAgua);
+            $userAgua = (float)($rowBio['agua'] ?: $userAgua);
+            $userCondiciones = $rowBio['condiciones'] ?: $userCondiciones;
+            $userAlergias = $rowBio['alergias'] ?: $userAlergias;
+            $userPreferencia = $rowBio['preferencia'] ?: $userPreferencia;
         }
         $stmtBio->close();
+    }
+
+    // Si no había en user_biometrics, verificar en user_biometrics_history
+    if (!$hasBioRow) {
+        $hBio = $conn->prepare("SELECT peso, altura, edad, sexo FROM user_biometrics_history WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+        if ($hBio) {
+            $hBio->bind_param("i", $userId);
+            $hBio->execute();
+            $hRes = $hBio->get_result();
+            if ($hRow = $hRes->fetch_assoc()) {
+                $userPeso = (float)($hRow['peso'] ?: $userPeso);
+                $userAltura = (float)($hRow['altura'] ?: $userAltura);
+                $userEdad = (int)($hRow['edad'] ?: $userEdad);
+                $userSexo = $hRow['sexo'] ?: $userSexo;
+            }
+            $hBio->close();
+        }
     }
 }
 
@@ -799,31 +834,56 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
       <form id="profileConfigForm" action="#" method="POST" onsubmit="handleProfileUpdate(event)" style="display: flex; flex-direction: column; gap: 14px;">
         <div class="form-group" style="margin: 0;">
           <label for="cfgNombre">Nombre Completo</label>
-          <input type="text" id="cfgNombre" class="input-custom" required autocomplete="name">
+          <input type="text" id="cfgNombre" class="input-custom" value="<?php echo htmlspecialchars($userName, ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="name">
         </div>
         <div class="form-group" style="margin: 0;">
           <label for="cfgEmail">Correo Electrónico</label>
-          <input type="email" id="cfgEmail" class="input-custom" required autocomplete="email">
+          <input type="email" id="cfgEmail" class="input-custom" value="<?php echo htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="email">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group" style="margin: 0;">
             <label for="cfgPeso">Peso Actual (kg)</label>
-            <input type="number" id="cfgPeso" class="input-custom" step="0.5" min="30" max="300" required>
+            <input type="number" id="cfgPeso" class="input-custom" value="<?php echo $userPeso; ?>" step="0.5" min="30" max="300" required>
           </div>
           <div class="form-group" style="margin: 0;">
             <label for="cfgAltura">Altura (cm)</label>
-            <input type="number" id="cfgAltura" class="input-custom" min="100" max="250" required>
+            <input type="number" id="cfgAltura" class="input-custom" value="<?php echo $userAltura; ?>" min="100" max="250" required>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group" style="margin: 0;">
             <label for="cfgEdad">Edad (Años)</label>
-            <input type="number" id="cfgEdad" class="input-custom" min="12" max="100" required>
+            <input type="number" id="cfgEdad" class="input-custom" value="<?php echo $userEdad; ?>" min="12" max="100" required>
           </div>
           <div class="form-group" style="margin: 0;">
             <label for="cfgAgua">Meta de Agua (L)</label>
-            <input type="number" id="cfgAgua" class="input-custom" step="0.5" min="1" max="10" required>
+            <input type="number" id="cfgAgua" class="input-custom" value="<?php echo $userAgua; ?>" step="0.5" min="1" max="10" required>
           </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group" style="margin: 0;">
+            <label for="cfgObjetivo">Objetivo</label>
+            <select id="cfgObjetivo" class="input-custom">
+              <option value="ganar_musculo" <?php echo $userObjetivo === 'ganar_musculo' ? 'selected' : ''; ?>>Ganar Músculo</option>
+              <option value="perder_grasa" <?php echo $userObjetivo === 'perder_grasa' ? 'selected' : ''; ?>>Perder Grasa</option>
+              <option value="mantener" <?php echo ($userObjetivo === 'mantener' || $userObjetivo === 'mantener_peso') ? 'selected' : ''; ?>>Mantener Peso</option>
+              <option value="recomposicion" <?php echo $userObjetivo === 'recomposicion' ? 'selected' : ''; ?>>Recomposición</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label for="cfgNivelActividad">Actividad</label>
+            <select id="cfgNivelActividad" class="input-custom">
+              <option value="sedentario" <?php echo $userNivelActividad === 'sedentario' ? 'selected' : ''; ?>>Sedentario</option>
+              <option value="ligero" <?php echo $userNivelActividad === 'ligero' ? 'selected' : ''; ?>>Ligero</option>
+              <option value="moderado" <?php echo $userNivelActividad === 'moderado' ? 'selected' : ''; ?>>Moderado</option>
+              <option value="muy_activo" <?php echo ($userNivelActividad === 'muy_activo' || $userNivelActividad === 'activo') ? 'selected' : ''; ?>>Muy Activo</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <a href="configuration.php" style="font-size: 13px; color: var(--accent-cyan); text-decoration: none; font-weight: 600;">
+            ⚙️ Ver Configuración Avanzada & Medidas →
+          </a>
         </div>
         <button type="submit" class="btn-checkin" style="background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan)); color: var(--btn-cta-text, #ffffff); font-weight: 700; margin-top: 8px;">
           Guardar Configuración
@@ -990,9 +1050,13 @@ $userAuthToken = generateAuthToken($userId, $userEmail);
         peso: <?php echo $userPeso; ?>,
         altura: <?php echo $userAltura; ?>,
         edad: <?php echo $userEdad; ?>,
+        sexo: <?php echo json_encode($userSexo); ?>,
         objetivo: <?php echo json_encode($userObjetivo); ?>,
         nivel_actividad: <?php echo json_encode($userNivelActividad); ?>,
-        agua: <?php echo $userAgua; ?>
+        agua: <?php echo $userAgua; ?>,
+        condiciones: <?php echo json_encode($userCondiciones); ?>,
+        alergias: <?php echo json_encode($userAlergias); ?>,
+        preferencia: <?php echo json_encode($userPreferencia); ?>
       }
     };
   </script>
